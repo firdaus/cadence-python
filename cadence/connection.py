@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import dataclasses
 import os
 import socket
 from dataclasses import dataclass
 from io import BytesIO
-from typing import IO, List, Union
+from typing import IO, List, Union, Optional, Dict
 
 from cadence.frames import InitReqFrame, Frame, Arg, CallReqFrame, CallReqContinueFrame, CallResFrame, \
-    CallResContinueFrame, FrameWithArgs
+    CallResContinueFrame, FrameWithArgs, CallFlags
 from cadence.ioutils import IOWrapper
 from cadence.kvheaders import KVHeaders
 
@@ -30,13 +29,13 @@ class FragmentGenerator:
         args: List[bytes] = self.get_args()
         frames = []
         while args:
-            frame = self.get_initial_frame() if not frames else self.get_continue_frame()
+            frame: FrameWithArgs = self.get_initial_frame() if not frames else self.get_continue_frame()
             frame.id = message_id
 
             while args and not frame.is_full():
                 buf: bytes = args[0]
                 n = len(buf)
-                avail = frame.space_available() - 2 # two byte required for argument length
+                avail = frame.space_available() - 2  # two byte required for argument length
                 if avail <= 0:
                     break
 
@@ -55,6 +54,7 @@ class FragmentGenerator:
                     args[0] = buf
 
             if args:
+                assert isinstance(frame, (CallFlags, FrameWithArgs))
                 frame.set_more_fragments_follow(True)
 
             frames.append(frame)
@@ -85,6 +85,7 @@ class FragmentReader:
         while current_arg and frame_args_offset < len(frame.args):
             frame_arg = frame.args[frame_args_offset]
             current_arg.value += frame_arg.buf
+            assert isinstance(frame, (CallFlags, FrameWithArgs))
             if not frame.is_more_fragments_follow() or frame_args_offset + 1 < len(frame.args):
                 current_arg.complete = True
             current_arg = self.get_incomplete_arg()
@@ -110,6 +111,7 @@ class FragmentReader:
         raise NotImplementedError()
 
 
+# noinspection PyAbstractClass
 class ThriftArgScheme(FragmentGenerator, FragmentReader):
     def __init__(self):
         FragmentGenerator.__init__(self)
@@ -159,11 +161,11 @@ class ThriftArgScheme(FragmentGenerator, FragmentReader):
 
 class ThriftFunctionCall(ThriftArgScheme):
 
-    service: str
+    service: Optional[str]
     method_name: str
     thrift_payload: bytes
-    tchannel_headers: dict
-    application_headers: dict[str, str]
+    tchannel_headers: Optional[dict]
+    application_headers: Dict[str, str]
     ttl: int
 
     @classmethod
@@ -201,9 +203,10 @@ class ThriftFunctionCall(ThriftArgScheme):
 
     # Functions for frame reading
 
-    def on_load_frame(self, frame: Union[FrameWithArgs]):
+    def on_load_frame(self, frame: FrameWithArgs):
         if not frame.TYPE == CallReqFrame.TYPE:
             return
+        # noinspection PyTypeChecker
         frame: CallReqFrame = frame
         self.message_id = frame.id
         self.service = frame.service
@@ -228,7 +231,7 @@ class ThriftFunctionResponse(ThriftArgScheme):
 
     thrift_payload: bytes
     method_name: str
-    code: int
+    code: Optional[int]
 
     @classmethod
     def create(cls, code: int, thrift_payload):
@@ -263,6 +266,7 @@ class ThriftFunctionResponse(ThriftArgScheme):
     def on_load_frame(self, frame: Union[FrameWithArgs]):
         if not frame.TYPE == CallResFrame.TYPE:
             return
+        # noinspection PyTypeChecker
         frame: CallResFrame = frame
         self.message_id = frame.id
         self.code = frame.code
@@ -293,7 +297,7 @@ class TChannelConnection:
         s.connect((host, port))
         return cls(s)
 
-    def __init__(self, s:socket):
+    def __init__(self, s: socket):
         self.s = s
         self.file = self.s.makefile("rwb")
         self.wrapper = IOWrapper(self.file)
