@@ -222,8 +222,8 @@ class CallReqFrame(FrameWithArgs, CallFlags):
     TYPE = 0x03
 
     def __init__(self):
-        super().__init__()
-        self.flags = 0
+        FrameWithArgs.__init__(self)
+        CallFlags.__init__(self)
         self.ttl = 0
         self.tracing = bytes(25)
         self.service = ""
@@ -278,7 +278,8 @@ class CallResFrame(FrameWithArgs, CallFlags):
     TYPE = 0x04
 
     def __init__(self):
-        super().__init__()
+        FrameWithArgs.__init__(self)
+        CallFlags.__init__(self)
         self.code = 0
         self.tracing = bytes(25)
         self.headers = KVHeaders({}, 1)
@@ -326,8 +327,8 @@ class FrameContinue(FrameWithArgs, CallFlags):
     PREFIX = ""
 
     def __init__(self):
-        super().__init__()
-        self.flags = 0
+        FrameWithArgs.__init__(self)
+        CallFlags.__init__(self)
         self.csumtype = 0
 
     # noinspection PyPep8
