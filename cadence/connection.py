@@ -329,3 +329,16 @@ class TChannelConnection:
 
     def close(self):
         self.s.close()
+
+    def call_function(self, call: ThriftFunctionCall) -> ThriftFunctionResponse:
+        frames = call.build_frames(self.new_id())
+        for frame in frames:
+            self.write_frame(frame)
+        response = ThriftFunctionResponse()
+        while not response.is_complete():
+            frame = self.read_frame()
+            if frame.TYPE not in (CallResFrame.TYPE, CallResContinueFrame.TYPE):
+                raise Exception("Unexpected type: " + Frame.TYPE)
+            assert isinstance(frame, FrameWithArgs)
+            response.process_frame(frame)
+        return response
