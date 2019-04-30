@@ -1,16 +1,12 @@
 from __future__ import annotations
 from uuid import uuid4
 
-import thriftrw
 import os
 import socket
 
+from cadence.thrift import cadence
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
-
-this_dir = os.path.dirname(__file__)
-cadence_thrift = os.path.join(this_dir, "thrift/cadence.thrift")
-cadence = thriftrw.load(cadence_thrift)
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
