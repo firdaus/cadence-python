@@ -50,7 +50,8 @@ class Frame:
             0x03: CallReqFrame,
             0x04: CallResFrame,
             0x13: CallReqContinueFrame,
-            0x14: CallResContinueFrame
+            0x14: CallResContinueFrame,
+            0Xff: ErrorFrame
         }
 
         frame_cls: Optional[Type[Frame]] = frame_types.get(header.payload_type)
@@ -367,3 +368,37 @@ class CallResContinueFrame(FrameContinue):
     PREFIX = "callrescontinue"
     TYPE = 0x14
 
+
+class ErrorFrame(Frame):
+    """
+    code:1 tracing:25 message~2
+    """
+    TYPE = 0xff
+
+    message: str
+    tracing: bytes
+    code: int
+
+    def __init__(self):
+        super().__init__()
+        self.code = 0
+        self.tracing = bytes(25)
+        self.message = ""
+
+    def read_payload(self, fp: IOWrapper, size: int):
+        offset = 0
+        self.code = fp.read_byte("error.code"); offset += 1;
+        self.tracing = fp.read_bytes(25, "error.tracing"); offset += 25;
+        message_len = fp.read_short("error.message_len"); offset += 2;
+        self.message = fp.read_string(message_len, "error.message"); offset += message_len;
+        assert offset == size
+
+    def get_payload_size(self):
+        return _.code(1) + _.tracing(25) + _.message_len(2) + len(self.message)
+
+    def write_payload(self, fp: IOWrapper):
+        offset = 0
+        fp.write_byte(self.code); offset += 1;
+        fp.write_bytes(self.tracing); offset += 25;
+        fp.write_short(len(self.message)); offset += 2;
+        fp.write_string(self.message); offset += len(self.message)

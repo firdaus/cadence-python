@@ -1,6 +1,8 @@
 import os
 from io import BytesIO
 from unittest import TestCase
+
+from cadence.frames import ErrorFrame
 from ..ioutils import IOWrapper
 from ..frames import Frame, InitReqFrame, FrameHeader, InitResFrame, CallReqFrame, CallResFrame, \
     CallReqContinueFrame
@@ -167,6 +169,25 @@ SAMPLE_CALLRES = bytes.fromhex(
     "61 33 65 2d 35 63 38 35 2d 34 35 34 61 2d 61 "
     "30 33 31 2d 33 31 34 34 35 32 62 63 66 63 64 "
     "65 00 00"
+)
+
+SAMPLE_ERROR = bytes.fromhex(
+    "00 90"                                           # (size)
+    "ff"                                              # (type)
+    "00"                                              # (reserved)
+    "00 00 00 01"                                     # (id)
+    "00 00 00 00 00 00 00 00"                         # (reserved) 
+    "05"                                              # (code) - UNEXPECTED_ERROR
+    "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "   # (tracing)
+    "00 00 00 00 00 00 00 00 00 00" 
+    "00 64"                                           # (message_len)
+    "43 61 64 65 6e 63 65 20 69 6e 74 65 72 6e 61 "   # (message)
+    "6c 20 65 72 72 6f 72 2c 20 6d 73 67 3a 20 47 "   # "Cadence internal error, msg: GetDomain operation"
+    "65 74 44 6f 6d 61 69 6e 20 6f 70 65 72 61 74 "   # "failed. Error gocql: no hosts available in the pool"
+    "69 6f 6e 20 66 61 69 6c 65 64 2e 20 45 72 72 "
+    "6f 72 20 67 6f 63 71 6c 3a 20 6e 6f 20 68 6f "
+    "73 74 73 20 61 76 61 69 6c 61 62 6c 65 20 69 "
+    "6e 20 74 68 65 20 70 6f 6f 6c"
 )
 
 
@@ -379,3 +400,19 @@ class TestContinuation(TestCase):
         self.assertEqual(False, frame.is_more_fragments_follow())
         self.assertEqual(1, len(frame.args))
         self.assertEqual(False, frame.args[0].is_fragment)
+
+
+class TestErrorFrame(TestCase):
+    def test_read_write(self):
+        frame: Frame = Frame.read_frame(IOWrapper(BytesIO(SAMPLE_ERROR)))
+        self.assertEqual(0xff, frame.TYPE)
+        frame: ErrorFrame = frame
+        self.assertEqual(1, frame.id)
+        self.assertEqual(5, frame.code)
+        self.assertEqual(
+            "Cadence internal error, msg: GetDomain operation failed. Error gocql: no hosts available in the pool",
+            frame.message)
+
+        b = BytesIO()
+        frame.write(IOWrapper(b))
+        self.assertEqual(SAMPLE_ERROR, b.getvalue())
