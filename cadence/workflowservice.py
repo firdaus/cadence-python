@@ -7,6 +7,7 @@ import socket
 from cadence.thrift import cadence
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
+from cadence.types import copy_thrift_to_py, PollForActivityTaskResponse
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -41,7 +42,6 @@ class WorkflowService:
         start_request.input = input_value
         start_request.taskList = cadence.shared.TaskList()
         start_request.taskList.name = task_list
-        start_request.taskList.kind = cadence.shared.TaskListKind.NORMAL
         if not workflow_id:
             workflow_id = str(uuid4())
         start_request.workflowId = workflow_id
@@ -65,4 +65,16 @@ class WorkflowService:
         register_response = self.thrift_call("RegisterDomain", register_request)
         error = find_error(register_response)
         return None, error
+
+    def poll_for_activity_task(self, domain: str, task_list: str):
+        poll_activity_request = cadence.shared.PollForActivityTaskRequest()
+        poll_activity_request.domain = domain
+        poll_activity_request.taskList = cadence.shared.TaskList()
+        poll_activity_request.taskList.name = task_list
+
+        poll_activity_response = self.thrift_call("PollForActivityTask", poll_activity_request)
+        if not poll_activity_response.success:
+            return None, find_error(poll_activity_response)
+
+        return copy_thrift_to_py(poll_activity_response.success, PollForActivityTaskResponse)
 

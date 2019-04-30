@@ -39,5 +39,10 @@ class TestStartWorkflow(TestCase):
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
 
+    def test_poll_for_activity_task(self):
+        # response, err = self.service.poll_for_activity_task("test-domain", "test-tasklist")
+        # self.assertIsNotNone(response)
+        pass
+
     def tearDown(self) -> None:
         self.service.connection.close()
