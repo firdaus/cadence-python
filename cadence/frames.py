@@ -8,6 +8,7 @@ from .kvheaders import KVHeaders
 FRAME_HEADER_SIZE = 16
 
 
+# Helper class to make get_payload_size() functions more readable
 class LenHelper(object):
     def __getattr__(self, name):
         def fn(*args):
