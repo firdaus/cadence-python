@@ -28,6 +28,16 @@ class WorkflowService:
         self.task_start_to_close_timeout_seconds = 120
         self.identity = "%d@%s" % (os.getpid(), socket.gethostname())
 
+    def thrift_call(self, method_name, request):
+        fn = getattr(cadence.WorkflowService, method_name, None)
+        assert fn
+        request = fn.request(request)
+        request_payload = cadence.dumps(request)
+        call = ThriftFunctionCall.create(TCHANNEL_SERVICE, "WorkflowService::" + method_name, request_payload)
+        response = self.connection.call_function(call)
+        start_response = cadence.loads(fn.response, response.thrift_payload)
+        return start_response
+
     def start_workflow(self, domain, task_list, workflow_type_name, input_value=None, workflow_id=None):
         start_request = cadence.shared.StartWorkflowExecutionRequest()
         start_request.requestId = str(uuid4())
@@ -44,12 +54,7 @@ class WorkflowService:
         start_request.executionStartToCloseTimeoutSeconds = self.execution_start_to_close_timeout_seconds
         start_request.taskStartToCloseTimeoutSeconds = self.task_start_to_close_timeout_seconds
 
-        request = cadence.WorkflowService.StartWorkflowExecution.request(startRequest=start_request)
-        request_payload = cadence.dumps(request)
-
-        call = ThriftFunctionCall.create(TCHANNEL_SERVICE, "WorkflowService::StartWorkflowExecution", request_payload)
-        response = self.connection.call_function(call)
-        start_response = cadence.loads(cadence.WorkflowService.StartWorkflowExecution.response, response.thrift_payload)
+        start_response = self.thrift_call("StartWorkflowExecution", start_request)
         if not start_response.success:
             return None, find_error(start_response)
         return start_response.success.runId, None
