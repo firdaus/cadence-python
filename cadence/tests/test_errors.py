@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from cadence.errors import find_error, InternalServiceError, WorkflowExecutionAlreadyStartedError
-from cadence.workflowservice import cadence
+from cadence.thrift import cadence
 
 
 class TestError(TestCase):
