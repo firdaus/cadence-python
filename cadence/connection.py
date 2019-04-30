@@ -7,9 +7,10 @@ from io import BytesIO
 from typing import IO, List, Union, Optional, Dict
 
 from cadence.frames import InitReqFrame, Frame, Arg, CallReqFrame, CallReqContinueFrame, CallResFrame, \
-    CallResContinueFrame, FrameWithArgs, CallFlags
+    CallResContinueFrame, FrameWithArgs, CallFlags, ErrorFrame
 from cadence.ioutils import IOWrapper
 from cadence.kvheaders import KVHeaders
+from cadence.tchannel import TChannelException
 
 
 class FragmentGenerator:
@@ -325,7 +326,10 @@ class TChannelConnection:
         self.wrapper.flush()
 
     def read_frame(self):
-        return Frame.read_frame(self.wrapper)
+        frame = Frame.read_frame(self.wrapper)
+        if isinstance(frame, ErrorFrame):
+            raise TChannelException(error_frame=frame)
+        return frame
 
     def close(self):
         self.s.close()
