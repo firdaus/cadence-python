@@ -12,16 +12,16 @@ class TestStartWorkflow(TestCase):
 
     def test_start_workflow(self):
         (runId, err) = self.service.start_workflow("test-domain", "test-tasklist", "firdaus-workflow-type",
-                                            input_value="abc-firdaus")
+                                                   input_value="abc-firdaus")
         self.assertIsNotNone(runId)
         self.assertIsInstance(runId, str)
 
     def test_duplicate_workflow_ids(self):
         workflow_id = str(uuid4())
         (runId, err) = self.service.start_workflow("test-domain", "test-tasklist", "firdaus-workflow-type",
-                                            input_value="abc-firdaus", workflow_id=workflow_id)
+                                                   input_value="abc-firdaus", workflow_id=workflow_id)
         (runId, err) = self.service.start_workflow("test-domain", "test-tasklist", "firdaus-workflow-type",
-                                            input_value="abc-firdaus", workflow_id=workflow_id)
+                                                   input_value="abc-firdaus", workflow_id=workflow_id)
         self.assertIsNotNone(err)
         self.assertIsNone(runId)
         self.assertIsInstance(err, WorkflowExecutionAlreadyStartedError)
