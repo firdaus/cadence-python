@@ -58,3 +58,15 @@ class WorkflowService:
         if not start_response.success:
             return None, find_error(start_response)
         return start_response.success.runId, None
+
+    def register_domain(self, name: str, description: str = "", workflow_execution_retention_period_in_days=0):
+        register_request = cadence.shared.RegisterDomainRequest()
+        register_request.name = name
+        register_request.description = description
+        register_request.workflowExecutionRetentionPeriodInDays = workflow_execution_retention_period_in_days
+
+        # RegisterDomain returns void so there is no .success
+        register_response = self.thrift_call("RegisterDomain", register_request)
+        error = find_error(register_response)
+        return None, error
+
