@@ -2,13 +2,13 @@ from typing import IO
 
 
 class IOWrapper:
-    fp: IO
+    io_stream: IO
 
-    def __init__(self, fp: IO):
-        self.fp = fp
+    def __init__(self, io_stream: IO):
+        self.io_stream = io_stream
 
     def read_or_eof(self, size, field):
-        buf: bytes = self.fp.read(size)
+        buf: bytes = self.io_stream.read(size)
         if len(buf) != size:
             raise EOFError(field)
         return buf
@@ -31,19 +31,19 @@ class IOWrapper:
         return str(buf, "utf-8")
 
     def write_short(self, v: int):
-        self.fp.write(v.to_bytes(2, byteorder='big', signed= False))
+        self.io_stream.write(v.to_bytes(2, byteorder='big', signed= False))
 
     def write_long(self, v: int):
-        self.fp.write(v.to_bytes(4, byteorder='big', signed=False))
+        self.io_stream.write(v.to_bytes(4, byteorder='big', signed=False))
 
     def write_byte(self, v: int):
-        self.fp.write(v.to_bytes(1, byteorder='big', signed=False))
+        self.io_stream.write(v.to_bytes(1, byteorder='big', signed=False))
 
     def write_bytes(self, b: bytes):
-        self.fp.write(b)
+        self.io_stream.write(b)
 
     def write_string(self, s: str):
-        self.fp.write(bytes(s, "utf-8"))
+        self.io_stream.write(bytes(s, "utf-8"))
 
     def flush(self):
-        self.fp.flush()
+        self.io_stream.flush()

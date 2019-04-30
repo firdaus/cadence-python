@@ -225,7 +225,7 @@ class TestWriteHeader(TestCase):
         frame.id = 0
         fp = IOWrapper(BytesIO())
         frame.write_header(fp)
-        self.assertEqual(SAMPLE_FRAME_HEADER, fp.fp.getvalue())
+        self.assertEqual(SAMPLE_FRAME_HEADER, fp.io_stream.getvalue())
 
 
 class TestReadShort(TestCase):
@@ -290,7 +290,7 @@ class TestKVHeaders(TestCase):
         header: KVHeaders = KVHeaders.read_kv_headers(IOWrapper(BytesIO(SAMPLE_KVHEADERS)), 2, "kvheaders")
         fp = IOWrapper(BytesIO())
         header.write_headers(fp)
-        self.assertEqual(SAMPLE_KVHEADERS, fp.fp.getvalue())
+        self.assertEqual(SAMPLE_KVHEADERS, fp.io_stream.getvalue())
 
 
 class TestInitReqFrame(TestCase):
