@@ -55,7 +55,7 @@ class FragmentGenerator:
                     args[0] = buf
 
             if args:
-                assert isinstance(frame, (CallFlags, FrameWithArgs))
+                assert isinstance(frame, CallFlags) and isinstance(frame, FrameWithArgs)
                 frame.set_more_fragments_follow(True)
 
             frames.append(frame)
@@ -293,7 +293,7 @@ class TChannelConnection:
     s: socket.socket
 
     @classmethod
-    def open(cls, host: object, port: object) -> object:
+    def open(cls, host: object, port: object) -> TChannelConnection:
         s: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
         return cls(s)

@@ -51,5 +51,5 @@ class WorkflowService:
         response = self.connection.call_function(call)
         start_response = cadence.loads(cadence.WorkflowService.StartWorkflowExecution.response, response.thrift_payload)
         if not start_response.success:
-            return (None, find_error(start_response))
-        return (start_response.success.runId, None)
+            return None, find_error(start_response)
+        return start_response.success.runId, None
