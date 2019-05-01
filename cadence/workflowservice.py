@@ -79,3 +79,15 @@ class WorkflowService:
 
         return copy_thrift_to_py(poll_activity_response.success, PollForActivityTaskResponse), None
 
+    def respond_activity_task_completed(self, task_token: bytes, result: bytes):
+        respond_activity_completed_request = cadence.shared.RespondActivityTaskCompletedRequest()
+        respond_activity_completed_request.taskToken = task_token
+        respond_activity_completed_request.result = result
+        respond_activity_completed_request.identity = self.identity
+
+        respond_activity_completed_response = self.thrift_call("RespondActivityTaskCompleted",
+                                                               respond_activity_completed_request)
+        error = find_error(respond_activity_completed_request)
+        return None, error
+
+
