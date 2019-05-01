@@ -9,8 +9,8 @@ import socket
 from cadence.thrift import cadence
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
-from cadence.conversions import copy_thrift_to_py
-from cadence.types import PollForActivityTaskResponse
+from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
+from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -28,35 +28,22 @@ class WorkflowService:
         self.task_start_to_close_timeout_seconds = 120
         self.identity = "%d@%s" % (os.getpid(), socket.gethostname())
 
-    def thrift_call(self, method_name, request):
+    def thrift_call(self, method_name, request_argument):
+        thrift_request_argument = copy_py_to_thrift(request_argument)
         fn = getattr(cadence.WorkflowService, method_name, None)
         assert fn
-        request = fn.request(request)
+        request = fn.request(thrift_request_argument)
         request_payload = cadence.dumps(request)
         call = ThriftFunctionCall.create(TCHANNEL_SERVICE, "WorkflowService::" + method_name, request_payload)
         response = self.connection.call_function(call)
         start_response = cadence.loads(fn.response, response.thrift_payload)
         return start_response
 
-    def start_workflow(self, domain, task_list, workflow_type_name, input_value=None, workflow_id=None):
-        start_request = cadence.shared.StartWorkflowExecutionRequest()
-        start_request.requestId = str(uuid4())
-        start_request.domain = domain
-        start_request.input = input_value
-        start_request.taskList = cadence.shared.TaskList()
-        start_request.taskList.name = task_list
-        if not workflow_id:
-            workflow_id = str(uuid4())
-        start_request.workflowId = workflow_id
-        start_request.workflowType = cadence.shared.WorkflowType()
-        start_request.workflowType.name = workflow_type_name
-        start_request.executionStartToCloseTimeoutSeconds = self.execution_start_to_close_timeout_seconds
-        start_request.taskStartToCloseTimeoutSeconds = self.task_start_to_close_timeout_seconds
-
-        start_response = self.thrift_call("StartWorkflowExecution", start_request)
-        if not start_response.success:
-            return None, find_error(start_response)
-        return start_response.success.runId, None
+    def start_workflow(self, request: StartWorkflowExecutionRequest) -> Tuple[StartWorkflowExecutionResponse, object]:
+        response = self.thrift_call("StartWorkflowExecution", request)
+        if not response.success:
+            return None, find_error(response)
+        return copy_thrift_to_py(response.success), None
 
     def register_domain(self, name: str, description: str = "", workflow_execution_retention_period_in_days=0):
         register_request = cadence.shared.RegisterDomainRequest()
