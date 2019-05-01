@@ -1,0 +1,4444 @@
+{
+  "namespace": {
+    "java": {
+      "serviceName": "com.uber.cadence"
+    }
+  },
+  "exception": {
+    "BadRequestError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "InternalServiceError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "DomainAlreadyExistsError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "WorkflowExecutionAlreadyStartedError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "startRequestId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "EntityNotExistsError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "ServiceBusyError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "CancellationAlreadyRequestedError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "QueryFailedError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "DomainNotActiveError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      },
+      {
+        "type": "string",
+        "name": "domainName",
+        "id": 2,
+        "option": "required"
+      },
+      {
+        "type": "string",
+        "name": "currentCluster",
+        "id": 3,
+        "option": "required"
+      },
+      {
+        "type": "string",
+        "name": "activeCluster",
+        "id": 4,
+        "option": "required"
+      }
+    ],
+    "LimitExceededError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "AccessDeniedError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ],
+    "RetryTaskError": [
+      {
+        "type": "string",
+        "name": "message",
+        "id": 1,
+        "option": "required"
+      }
+    ]
+  },
+  "enum": {
+    "WorkflowIdReusePolicy": {
+      "items": [
+        {
+          "name": "AllowDuplicateFailedOnly"
+        },
+        {
+          "name": "AllowDuplicate"
+        },
+        {
+          "name": "RejectDuplicate"
+        }
+      ]
+    },
+    "DomainStatus": {
+      "items": [
+        {
+          "name": "REGISTERED"
+        },
+        {
+          "name": "DEPRECATED"
+        },
+        {
+          "name": "DELETED"
+        }
+      ]
+    },
+    "TimeoutType": {
+      "items": [
+        {
+          "name": "START_TO_CLOSE"
+        },
+        {
+          "name": "SCHEDULE_TO_START"
+        },
+        {
+          "name": "SCHEDULE_TO_CLOSE"
+        },
+        {
+          "name": "HEARTBEAT"
+        }
+      ]
+    },
+    "DecisionType": {
+      "items": [
+        {
+          "name": "ScheduleActivityTask"
+        },
+        {
+          "name": "RequestCancelActivityTask"
+        },
+        {
+          "name": "StartTimer"
+        },
+        {
+          "name": "CompleteWorkflowExecution"
+        },
+        {
+          "name": "FailWorkflowExecution"
+        },
+        {
+          "name": "CancelTimer"
+        },
+        {
+          "name": "CancelWorkflowExecution"
+        },
+        {
+          "name": "RequestCancelExternalWorkflowExecution"
+        },
+        {
+          "name": "RecordMarker"
+        },
+        {
+          "name": "ContinueAsNewWorkflowExecution"
+        },
+        {
+          "name": "StartChildWorkflowExecution"
+        },
+        {
+          "name": "SignalExternalWorkflowExecution"
+        }
+      ]
+    },
+    "EventType": {
+      "items": [
+        {
+          "name": "WorkflowExecutionStarted"
+        },
+        {
+          "name": "WorkflowExecutionCompleted"
+        },
+        {
+          "name": "WorkflowExecutionFailed"
+        },
+        {
+          "name": "WorkflowExecutionTimedOut"
+        },
+        {
+          "name": "DecisionTaskScheduled"
+        },
+        {
+          "name": "DecisionTaskStarted"
+        },
+        {
+          "name": "DecisionTaskCompleted"
+        },
+        {
+          "name": "DecisionTaskTimedOut"
+        },
+        {
+          "name": "DecisionTaskFailed"
+        },
+        {
+          "name": "ActivityTaskScheduled"
+        },
+        {
+          "name": "ActivityTaskStarted"
+        },
+        {
+          "name": "ActivityTaskCompleted"
+        },
+        {
+          "name": "ActivityTaskFailed"
+        },
+        {
+          "name": "ActivityTaskTimedOut"
+        },
+        {
+          "name": "ActivityTaskCancelRequested"
+        },
+        {
+          "name": "RequestCancelActivityTaskFailed"
+        },
+        {
+          "name": "ActivityTaskCanceled"
+        },
+        {
+          "name": "TimerStarted"
+        },
+        {
+          "name": "TimerFired"
+        },
+        {
+          "name": "CancelTimerFailed"
+        },
+        {
+          "name": "TimerCanceled"
+        },
+        {
+          "name": "WorkflowExecutionCancelRequested"
+        },
+        {
+          "name": "WorkflowExecutionCanceled"
+        },
+        {
+          "name": "RequestCancelExternalWorkflowExecutionInitiated"
+        },
+        {
+          "name": "RequestCancelExternalWorkflowExecutionFailed"
+        },
+        {
+          "name": "ExternalWorkflowExecutionCancelRequested"
+        },
+        {
+          "name": "MarkerRecorded"
+        },
+        {
+          "name": "WorkflowExecutionSignaled"
+        },
+        {
+          "name": "WorkflowExecutionTerminated"
+        },
+        {
+          "name": "WorkflowExecutionContinuedAsNew"
+        },
+        {
+          "name": "StartChildWorkflowExecutionInitiated"
+        },
+        {
+          "name": "StartChildWorkflowExecutionFailed"
+        },
+        {
+          "name": "ChildWorkflowExecutionStarted"
+        },
+        {
+          "name": "ChildWorkflowExecutionCompleted"
+        },
+        {
+          "name": "ChildWorkflowExecutionFailed"
+        },
+        {
+          "name": "ChildWorkflowExecutionCanceled"
+        },
+        {
+          "name": "ChildWorkflowExecutionTimedOut"
+        },
+        {
+          "name": "ChildWorkflowExecutionTerminated"
+        },
+        {
+          "name": "SignalExternalWorkflowExecutionInitiated"
+        },
+        {
+          "name": "SignalExternalWorkflowExecutionFailed"
+        },
+        {
+          "name": "ExternalWorkflowExecutionSignaled"
+        }
+      ]
+    },
+    "DecisionTaskFailedCause": {
+      "items": [
+        {
+          "name": "UNHANDLED_DECISION"
+        },
+        {
+          "name": "BAD_SCHEDULE_ACTIVITY_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_REQUEST_CANCEL_ACTIVITY_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_START_TIMER_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_CANCEL_TIMER_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_RECORD_MARKER_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_COMPLETE_WORKFLOW_EXECUTION_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_FAIL_WORKFLOW_EXECUTION_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_CANCEL_WORKFLOW_EXECUTION_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_CONTINUE_AS_NEW_ATTRIBUTES"
+        },
+        {
+          "name": "START_TIMER_DUPLICATE_ID"
+        },
+        {
+          "name": "RESET_STICKY_TASKLIST"
+        },
+        {
+          "name": "WORKFLOW_WORKER_UNHANDLED_FAILURE"
+        },
+        {
+          "name": "BAD_SIGNAL_WORKFLOW_EXECUTION_ATTRIBUTES"
+        },
+        {
+          "name": "BAD_START_CHILD_EXECUTION_ATTRIBUTES"
+        },
+        {
+          "name": "FORCE_CLOSE_DECISION"
+        },
+        {
+          "name": "FAILOVER_CLOSE_DECISION"
+        },
+        {
+          "name": "BAD_SIGNAL_INPUT_SIZE"
+        }
+      ]
+    },
+    "CancelExternalWorkflowExecutionFailedCause": {
+      "items": [
+        {
+          "name": "UNKNOWN_EXTERNAL_WORKFLOW_EXECUTION"
+        }
+      ]
+    },
+    "SignalExternalWorkflowExecutionFailedCause": {
+      "items": [
+        {
+          "name": "UNKNOWN_EXTERNAL_WORKFLOW_EXECUTION"
+        }
+      ]
+    },
+    "ChildWorkflowExecutionFailedCause": {
+      "items": [
+        {
+          "name": "WORKFLOW_ALREADY_RUNNING"
+        }
+      ]
+    },
+    "WorkflowExecutionCloseStatus": {
+      "items": [
+        {
+          "name": "COMPLETED"
+        },
+        {
+          "name": "FAILED"
+        },
+        {
+          "name": "CANCELED"
+        },
+        {
+          "name": "TERMINATED"
+        },
+        {
+          "name": "CONTINUED_AS_NEW"
+        },
+        {
+          "name": "TIMED_OUT"
+        }
+      ]
+    },
+    "ChildPolicy": {
+      "items": [
+        {
+          "name": "TERMINATE"
+        },
+        {
+          "name": "REQUEST_CANCEL"
+        },
+        {
+          "name": "ABANDON"
+        }
+      ]
+    },
+    "QueryTaskCompletedType": {
+      "items": [
+        {
+          "name": "COMPLETED"
+        },
+        {
+          "name": "FAILED"
+        }
+      ]
+    },
+    "PendingActivityState": {
+      "items": [
+        {
+          "name": "SCHEDULED"
+        },
+        {
+          "name": "STARTED"
+        },
+        {
+          "name": "CANCEL_REQUESTED"
+        }
+      ]
+    },
+    "HistoryEventFilterType": {
+      "items": [
+        {
+          "name": "ALL_EVENT"
+        },
+        {
+          "name": "CLOSE_EVENT"
+        }
+      ]
+    },
+    "TaskListKind": {
+      "items": [
+        {
+          "name": "NORMAL"
+        },
+        {
+          "name": "STICKY"
+        }
+      ]
+    },
+    "ContinueAsNewInitiator": {
+      "items": [
+        {
+          "name": "Decider"
+        },
+        {
+          "name": "RetryPolicy"
+        },
+        {
+          "name": "CronSchedule"
+        }
+      ]
+    },
+    "TaskListType": {
+      "items": [
+        {
+          "name": "Decision"
+        },
+        {
+          "name": "Activity"
+        }
+      ]
+    }
+  },
+  "struct": {
+    "Header": [
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "binary"
+        },
+        "name": "fields",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "WorkflowType": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "ActivityType": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "TaskList": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "TaskListKind",
+        "name": "kind",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "TaskListMetadata": [
+      {
+        "type": "double",
+        "name": "maxTasksPerSecond",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecution": [
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionInfo": [
+      {
+        "type": "WorkflowExecution",
+        "name": "execution",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "type",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startTime",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "closeTime",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionCloseStatus",
+        "name": "closeStatus",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "historyLength",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionConfiguration": [
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "ChildPolicy",
+        "name": "childPolicy",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "TransientDecisionInfo": [
+      {
+        "type": "HistoryEvent",
+        "name": "scheduledEvent",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "HistoryEvent",
+        "name": "startedEvent",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "ScheduleActivityTaskDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "activityId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityType",
+        "name": "activityType",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 25,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "scheduleToCloseTimeoutSeconds",
+        "id": 45,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "scheduleToStartTimeoutSeconds",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "startToCloseTimeoutSeconds",
+        "id": 55,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "heartbeatTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "RequestCancelActivityTaskDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "activityId",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "StartTimerDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "timerId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startToFireTimeoutSeconds",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "CompleteWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "binary",
+        "name": "result",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "FailWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "CancelTimerDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "timerId",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "CancelWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "RequestCancelExternalWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "childWorkflowOnly",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "SignalExternalWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "execution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "signalName",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "childWorkflowOnly",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "RecordMarkerDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "markerName",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "ContinueAsNewWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "backoffStartIntervalInSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "ContinueAsNewInitiator",
+        "name": "initiator",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "failureReason",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "failureDetails",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "lastCompletionResult",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cronSchedule",
+        "id": 120,
+        "option": "optional"
+      }
+    ],
+    "StartChildWorkflowExecutionDecisionAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "ChildPolicy",
+        "name": "childPolicy",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowIdReusePolicy",
+        "name": "workflowIdReusePolicy",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cronSchedule",
+        "id": 120,
+        "option": "optional"
+      }
+    ],
+    "Decision": [
+      {
+        "type": "DecisionType",
+        "name": "decisionType",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "ScheduleActivityTaskDecisionAttributes",
+        "name": "scheduleActivityTaskDecisionAttributes",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "StartTimerDecisionAttributes",
+        "name": "startTimerDecisionAttributes",
+        "id": 25,
+        "option": "optional"
+      },
+      {
+        "type": "CompleteWorkflowExecutionDecisionAttributes",
+        "name": "completeWorkflowExecutionDecisionAttributes",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "FailWorkflowExecutionDecisionAttributes",
+        "name": "failWorkflowExecutionDecisionAttributes",
+        "id": 35,
+        "option": "optional"
+      },
+      {
+        "type": "RequestCancelActivityTaskDecisionAttributes",
+        "name": "requestCancelActivityTaskDecisionAttributes",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "CancelTimerDecisionAttributes",
+        "name": "cancelTimerDecisionAttributes",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "CancelWorkflowExecutionDecisionAttributes",
+        "name": "cancelWorkflowExecutionDecisionAttributes",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "RequestCancelExternalWorkflowExecutionDecisionAttributes",
+        "name": "requestCancelExternalWorkflowExecutionDecisionAttributes",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "RecordMarkerDecisionAttributes",
+        "name": "recordMarkerDecisionAttributes",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "ContinueAsNewWorkflowExecutionDecisionAttributes",
+        "name": "continueAsNewWorkflowExecutionDecisionAttributes",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "StartChildWorkflowExecutionDecisionAttributes",
+        "name": "startChildWorkflowExecutionDecisionAttributes",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "SignalExternalWorkflowExecutionDecisionAttributes",
+        "name": "signalExternalWorkflowExecutionDecisionAttributes",
+        "id": 110,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionStartedEventAttributes": [
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "parentWorkflowDomain",
+        "id": 12,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "parentWorkflowExecution",
+        "id": 14,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "parentInitiatedEventId",
+        "id": 16,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "ChildPolicy",
+        "name": "childPolicy",
+        "id": 52,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "continuedExecutionRunId",
+        "id": 54,
+        "option": "optional"
+      },
+      {
+        "type": "ContinueAsNewInitiator",
+        "name": "initiator",
+        "id": 55,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "continuedFailureReason",
+        "id": 56,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "continuedFailureDetails",
+        "id": 57,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "lastCompletionResult",
+        "id": 58,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "attempt",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "expirationTimestamp",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cronSchedule",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "firstDecisionTaskBackoffSeconds",
+        "id": 110,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionCompletedEventAttributes": [
+      {
+        "type": "binary",
+        "name": "result",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionFailedEventAttributes": [
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionTimedOutEventAttributes": [
+      {
+        "type": "TimeoutType",
+        "name": "timeoutType",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionContinuedAsNewEventAttributes": [
+      {
+        "type": "string",
+        "name": "newExecutionRunId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "backoffStartIntervalInSeconds",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "ContinueAsNewInitiator",
+        "name": "initiator",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "failureReason",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "failureDetails",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "lastCompletionResult",
+        "id": 120,
+        "option": "optional"
+      }
+    ],
+    "DecisionTaskScheduledEventAttributes": [
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "startToCloseTimeoutSeconds",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "attempt",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "DecisionTaskStartedEventAttributes": [
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "DecisionTaskCompletedEventAttributes": [
+      {
+        "type": "binary",
+        "name": "executionContext",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "binaryChecksum",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "DecisionTaskTimedOutEventAttributes": [
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "TimeoutType",
+        "name": "timeoutType",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "DecisionTaskFailedEventAttributes": [
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskFailedCause",
+        "name": "cause",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 35,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskScheduledEventAttributes": [
+      {
+        "type": "string",
+        "name": "activityId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityType",
+        "name": "activityType",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 25,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "scheduleToCloseTimeoutSeconds",
+        "id": 45,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "scheduleToStartTimeoutSeconds",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "startToCloseTimeoutSeconds",
+        "id": 55,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "heartbeatTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 110,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskStartedEventAttributes": [
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "attempt",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskCompletedEventAttributes": [
+      {
+        "type": "binary",
+        "name": "result",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskFailedEventAttributes": [
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskTimedOutEventAttributes": [
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 5,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "TimeoutType",
+        "name": "timeoutType",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskCancelRequestedEventAttributes": [
+      {
+        "type": "string",
+        "name": "activityId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "RequestCancelActivityTaskFailedEventAttributes": [
+      {
+        "type": "string",
+        "name": "activityId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cause",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "ActivityTaskCanceledEventAttributes": [
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "latestCancelRequestedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "TimerStartedEventAttributes": [
+      {
+        "type": "string",
+        "name": "timerId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startToFireTimeoutSeconds",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "TimerFiredEventAttributes": [
+      {
+        "type": "string",
+        "name": "timerId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "TimerCanceledEventAttributes": [
+      {
+        "type": "string",
+        "name": "timerId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "CancelTimerFailedEventAttributes": [
+      {
+        "type": "string",
+        "name": "timerId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cause",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionCancelRequestedEventAttributes": [
+      {
+        "type": "string",
+        "name": "cause",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "externalInitiatedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "externalWorkflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionCanceledEventAttributes": [
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "MarkerRecordedEventAttributes": [
+      {
+        "type": "string",
+        "name": "markerName",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionSignaledEventAttributes": [
+      {
+        "type": "string",
+        "name": "signalName",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionTerminatedEventAttributes": [
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "RequestCancelExternalWorkflowExecutionInitiatedEventAttributes": [
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "childWorkflowOnly",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "RequestCancelExternalWorkflowExecutionFailedEventAttributes": [
+      {
+        "type": "CancelExternalWorkflowExecutionFailedCause",
+        "name": "cause",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "ExternalWorkflowExecutionCancelRequestedEventAttributes": [
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "SignalExternalWorkflowExecutionInitiatedEventAttributes": [
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "signalName",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "childWorkflowOnly",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "SignalExternalWorkflowExecutionFailedEventAttributes": [
+      {
+        "type": "SignalExternalWorkflowExecutionFailedCause",
+        "name": "cause",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "ExternalWorkflowExecutionSignaledEventAttributes": [
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "StartChildWorkflowExecutionInitiatedEventAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "ChildPolicy",
+        "name": "childPolicy",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowIdReusePolicy",
+        "name": "workflowIdReusePolicy",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cronSchedule",
+        "id": 130,
+        "option": "optional"
+      }
+    ],
+    "StartChildWorkflowExecutionFailedEventAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionFailedCause",
+        "name": "cause",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "ChildWorkflowExecutionStartedEventAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "ChildWorkflowExecutionCompletedEventAttributes": [
+      {
+        "type": "binary",
+        "name": "result",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "ChildWorkflowExecutionFailedEventAttributes": [
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "ChildWorkflowExecutionCanceledEventAttributes": [
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "ChildWorkflowExecutionTimedOutEventAttributes": [
+      {
+        "type": "TimeoutType",
+        "name": "timeoutType",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "ChildWorkflowExecutionTerminatedEventAttributes": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedEventId",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "HistoryEvent": [
+      {
+        "type": "i64",
+        "name": "eventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "timestamp",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "EventType",
+        "name": "eventType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "version",
+        "id": 35,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionStartedEventAttributes",
+        "name": "workflowExecutionStartedEventAttributes",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionCompletedEventAttributes",
+        "name": "workflowExecutionCompletedEventAttributes",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionFailedEventAttributes",
+        "name": "workflowExecutionFailedEventAttributes",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionTimedOutEventAttributes",
+        "name": "workflowExecutionTimedOutEventAttributes",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskScheduledEventAttributes",
+        "name": "decisionTaskScheduledEventAttributes",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskStartedEventAttributes",
+        "name": "decisionTaskStartedEventAttributes",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskCompletedEventAttributes",
+        "name": "decisionTaskCompletedEventAttributes",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskTimedOutEventAttributes",
+        "name": "decisionTaskTimedOutEventAttributes",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskFailedEventAttributes",
+        "name": "decisionTaskFailedEventAttributes",
+        "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskScheduledEventAttributes",
+        "name": "activityTaskScheduledEventAttributes",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskStartedEventAttributes",
+        "name": "activityTaskStartedEventAttributes",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskCompletedEventAttributes",
+        "name": "activityTaskCompletedEventAttributes",
+        "id": 150,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskFailedEventAttributes",
+        "name": "activityTaskFailedEventAttributes",
+        "id": 160,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskTimedOutEventAttributes",
+        "name": "activityTaskTimedOutEventAttributes",
+        "id": 170,
+        "option": "optional"
+      },
+      {
+        "type": "TimerStartedEventAttributes",
+        "name": "timerStartedEventAttributes",
+        "id": 180,
+        "option": "optional"
+      },
+      {
+        "type": "TimerFiredEventAttributes",
+        "name": "timerFiredEventAttributes",
+        "id": 190,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskCancelRequestedEventAttributes",
+        "name": "activityTaskCancelRequestedEventAttributes",
+        "id": 200,
+        "option": "optional"
+      },
+      {
+        "type": "RequestCancelActivityTaskFailedEventAttributes",
+        "name": "requestCancelActivityTaskFailedEventAttributes",
+        "id": 210,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityTaskCanceledEventAttributes",
+        "name": "activityTaskCanceledEventAttributes",
+        "id": 220,
+        "option": "optional"
+      },
+      {
+        "type": "TimerCanceledEventAttributes",
+        "name": "timerCanceledEventAttributes",
+        "id": 230,
+        "option": "optional"
+      },
+      {
+        "type": "CancelTimerFailedEventAttributes",
+        "name": "cancelTimerFailedEventAttributes",
+        "id": 240,
+        "option": "optional"
+      },
+      {
+        "type": "MarkerRecordedEventAttributes",
+        "name": "markerRecordedEventAttributes",
+        "id": 250,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionSignaledEventAttributes",
+        "name": "workflowExecutionSignaledEventAttributes",
+        "id": 260,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionTerminatedEventAttributes",
+        "name": "workflowExecutionTerminatedEventAttributes",
+        "id": 270,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionCancelRequestedEventAttributes",
+        "name": "workflowExecutionCancelRequestedEventAttributes",
+        "id": 280,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionCanceledEventAttributes",
+        "name": "workflowExecutionCanceledEventAttributes",
+        "id": 290,
+        "option": "optional"
+      },
+      {
+        "type": "RequestCancelExternalWorkflowExecutionInitiatedEventAttributes",
+        "name": "requestCancelExternalWorkflowExecutionInitiatedEventAttributes",
+        "id": 300,
+        "option": "optional"
+      },
+      {
+        "type": "RequestCancelExternalWorkflowExecutionFailedEventAttributes",
+        "name": "requestCancelExternalWorkflowExecutionFailedEventAttributes",
+        "id": 310,
+        "option": "optional"
+      },
+      {
+        "type": "ExternalWorkflowExecutionCancelRequestedEventAttributes",
+        "name": "externalWorkflowExecutionCancelRequestedEventAttributes",
+        "id": 320,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionContinuedAsNewEventAttributes",
+        "name": "workflowExecutionContinuedAsNewEventAttributes",
+        "id": 330,
+        "option": "optional"
+      },
+      {
+        "type": "StartChildWorkflowExecutionInitiatedEventAttributes",
+        "name": "startChildWorkflowExecutionInitiatedEventAttributes",
+        "id": 340,
+        "option": "optional"
+      },
+      {
+        "type": "StartChildWorkflowExecutionFailedEventAttributes",
+        "name": "startChildWorkflowExecutionFailedEventAttributes",
+        "id": 350,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionStartedEventAttributes",
+        "name": "childWorkflowExecutionStartedEventAttributes",
+        "id": 360,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionCompletedEventAttributes",
+        "name": "childWorkflowExecutionCompletedEventAttributes",
+        "id": 370,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionFailedEventAttributes",
+        "name": "childWorkflowExecutionFailedEventAttributes",
+        "id": 380,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionCanceledEventAttributes",
+        "name": "childWorkflowExecutionCanceledEventAttributes",
+        "id": 390,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionTimedOutEventAttributes",
+        "name": "childWorkflowExecutionTimedOutEventAttributes",
+        "id": 400,
+        "option": "optional"
+      },
+      {
+        "type": "ChildWorkflowExecutionTerminatedEventAttributes",
+        "name": "childWorkflowExecutionTerminatedEventAttributes",
+        "id": 410,
+        "option": "optional"
+      },
+      {
+        "type": "SignalExternalWorkflowExecutionInitiatedEventAttributes",
+        "name": "signalExternalWorkflowExecutionInitiatedEventAttributes",
+        "id": 420,
+        "option": "optional"
+      },
+      {
+        "type": "SignalExternalWorkflowExecutionFailedEventAttributes",
+        "name": "signalExternalWorkflowExecutionFailedEventAttributes",
+        "id": 430,
+        "option": "optional"
+      },
+      {
+        "type": "ExternalWorkflowExecutionSignaledEventAttributes",
+        "name": "externalWorkflowExecutionSignaledEventAttributes",
+        "id": 440,
+        "option": "optional"
+      }
+    ],
+    "History": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "HistoryEvent"
+        },
+        "name": "events",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "WorkflowExecutionFilter": [
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "WorkflowTypeFilter": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "StartTimeFilter": [
+      {
+        "type": "i64",
+        "name": "earliestTime",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "latestTime",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "DomainInfo": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "DomainStatus",
+        "name": "status",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "description",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "ownerEmail",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "string"
+        },
+        "name": "data",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "DomainConfiguration": [
+      {
+        "type": "i32",
+        "name": "workflowExecutionRetentionPeriodInDays",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "emitMetric",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "UpdateDomainInfo": [
+      {
+        "type": "string",
+        "name": "description",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "ownerEmail",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "string"
+        },
+        "name": "data",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "ClusterReplicationConfiguration": [
+      {
+        "type": "string",
+        "name": "clusterName",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "DomainReplicationConfiguration": [
+      {
+        "type": "string",
+        "name": "activeClusterName",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "ClusterReplicationConfiguration"
+        },
+        "name": "clusters",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "RegisterDomainRequest": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "description",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "ownerEmail",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "workflowExecutionRetentionPeriodInDays",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "emitMetric",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "ClusterReplicationConfiguration"
+        },
+        "name": "clusters",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "activeClusterName",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "string"
+        },
+        "name": "data",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "securityToken",
+        "id": 90,
+        "option": "optional"
+      }
+    ],
+    "ListDomainsRequest": [
+      {
+        "type": "i32",
+        "name": "pageSize",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "ListDomainsResponse": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "DescribeDomainResponse"
+        },
+        "name": "domains",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "DescribeDomainRequest": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "DescribeDomainResponse": [
+      {
+        "type": "DomainInfo",
+        "name": "domainInfo",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "DomainConfiguration",
+        "name": "configuration",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "DomainReplicationConfiguration",
+        "name": "replicationConfiguration",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "failoverVersion",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "isGlobalDomain",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "UpdateDomainRequest": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "UpdateDomainInfo",
+        "name": "updatedInfo",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "DomainConfiguration",
+        "name": "configuration",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "DomainReplicationConfiguration",
+        "name": "replicationConfiguration",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "securityToken",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "UpdateDomainResponse": [
+      {
+        "type": "DomainInfo",
+        "name": "domainInfo",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "DomainConfiguration",
+        "name": "configuration",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "DomainReplicationConfiguration",
+        "name": "replicationConfiguration",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "failoverVersion",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "isGlobalDomain",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "DeprecateDomainRequest": [
+      {
+        "type": "string",
+        "name": "name",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "securityToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "StartWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowIdReusePolicy",
+        "name": "workflowIdReusePolicy",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "ChildPolicy",
+        "name": "childPolicy",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cronSchedule",
+        "id": 130,
+        "option": "optional"
+      }
+    ],
+    "StartWorkflowExecutionResponse": [
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "PollForDecisionTaskRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "PollForDecisionTaskResponse": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "previousStartedEventId",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedEventId",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "attempt",
+        "id": 51,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "backlogCountHint",
+        "id": 54,
+        "option": "optional"
+      },
+      {
+        "type": "History",
+        "name": "history",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowQuery",
+        "name": "query",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "WorkflowExecutionTaskList",
+        "id": 90,
+        "option": "optional"
+      }
+    ],
+    "StickyExecutionAttributes": [
+      {
+        "type": "TaskList",
+        "name": "workerTaskList",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "scheduleToStartTimeoutSeconds",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "RespondDecisionTaskCompletedRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "Decision"
+        },
+        "name": "decisions",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "executionContext",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "StickyExecutionAttributes",
+        "name": "stickyAttributes",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "returnNewDecisionTask",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "forceCreateNewDecisionTask",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "binaryChecksum",
+        "id": 80,
+        "option": "optional"
+      }
+    ],
+    "RespondDecisionTaskCompletedResponse": [
+      {
+        "type": "PollForDecisionTaskResponse",
+        "name": "decisionTask",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "RespondDecisionTaskFailedRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "DecisionTaskFailedCause",
+        "name": "cause",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "PollForActivityTaskRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "TaskListMetadata",
+        "name": "taskListMetadata",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "PollForActivityTaskResponse": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "activityId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityType",
+        "name": "activityType",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledTimestamp",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "scheduleToCloseTimeoutSeconds",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedTimestamp",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "startToCloseTimeoutSeconds",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "heartbeatTimeoutSeconds",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "attempt",
+        "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledTimestampOfThisAttempt",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "heartbeatDetails",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 150,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowDomain",
+        "id": 160,
+        "option": "optional"
+      }
+    ],
+    "RecordActivityTaskHeartbeatRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "RecordActivityTaskHeartbeatByIDRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runID",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "activityID",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "RecordActivityTaskHeartbeatResponse": [
+      {
+        "type": "bool",
+        "name": "cancelRequested",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "RespondActivityTaskCompletedRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "result",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "RespondActivityTaskFailedRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "RespondActivityTaskCanceledRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "RespondActivityTaskCompletedByIDRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runID",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "activityID",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "result",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "RespondActivityTaskFailedByIDRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runID",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "activityID",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "RespondActivityTaskCanceledByIDRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runID",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "activityID",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "RequestCancelWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "GetWorkflowExecutionHistoryRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "execution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "maximumPageSize",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "waitForNewEvent",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "HistoryEventFilterType",
+        "name": "HistoryEventFilterType",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "GetWorkflowExecutionHistoryResponse": [
+      {
+        "type": "History",
+        "name": "history",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "SignalWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "signalName",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "SignalWithStartWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowType",
+        "name": "workflowType",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "input",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "executionStartToCloseTimeoutSeconds",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "taskStartToCloseTimeoutSeconds",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowIdReusePolicy",
+        "name": "workflowIdReusePolicy",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "signalName",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "signalInput",
+        "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "control",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "RetryPolicy",
+        "name": "retryPolicy",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "cronSchedule",
+        "id": 150,
+        "option": "optional"
+      }
+    ],
+    "TerminateWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "details",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "ListOpenWorkflowExecutionsRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "maximumPageSize",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "StartTimeFilter",
+        "name": "StartTimeFilter",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionFilter",
+        "name": "executionFilter",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowTypeFilter",
+        "name": "typeFilter",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "ListOpenWorkflowExecutionsResponse": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "WorkflowExecutionInfo"
+        },
+        "name": "executions",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "ListClosedWorkflowExecutionsRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "maximumPageSize",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "StartTimeFilter",
+        "name": "StartTimeFilter",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionFilter",
+        "name": "executionFilter",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowTypeFilter",
+        "name": "typeFilter",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionCloseStatus",
+        "name": "statusFilter",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "ListClosedWorkflowExecutionsResponse": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "WorkflowExecutionInfo"
+        },
+        "name": "executions",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "QueryWorkflowRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "execution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowQuery",
+        "name": "query",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "QueryWorkflowResponse": [
+      {
+        "type": "binary",
+        "name": "queryResult",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "WorkflowQuery": [
+      {
+        "type": "string",
+        "name": "queryType",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "queryArgs",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "ResetStickyTaskListRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "execution",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "ResetStickyTaskListResponse": [],
+    "RespondQueryTaskCompletedRequest": [
+      {
+        "type": "binary",
+        "name": "taskToken",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "QueryTaskCompletedType",
+        "name": "completedType",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "queryResult",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "errorMessage",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "DescribeWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "execution",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "PendingActivityInfo": [
+      {
+        "type": "string",
+        "name": "activityID",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "ActivityType",
+        "name": "activityType",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "PendingActivityState",
+        "name": "state",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "heartbeatDetails",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "lastHeartbeatTimestamp",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "lastStartedTimestamp",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "attempt",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "DescribeWorkflowExecutionResponse": [
+      {
+        "type": "WorkflowExecutionConfiguration",
+        "name": "executionConfiguration",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecutionInfo",
+        "name": "workflowExecutionInfo",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "PendingActivityInfo"
+        },
+        "name": "pendingActivities",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "DescribeTaskListRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "TaskList",
+        "name": "taskList",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "TaskListType",
+        "name": "taskListType",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "DescribeTaskListResponse": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "PollerInfo"
+        },
+        "name": "pollers",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "DescribeHistoryHostRequest": [
+      {
+        "type": "string",
+        "name": "hostAddress",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "shardIdForHost",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "executionForHost",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "DescribeHistoryHostResponse": [
+      {
+        "type": "i32",
+        "name": "numberOfShards",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "i32"
+        },
+        "name": "shardIDs",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "DomainCacheInfo",
+        "name": "domainCache",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "shardControllerStatus",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "address",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "DomainCacheInfo": [
+      {
+        "type": "i64",
+        "name": "numOfItemsInCacheByID",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "numOfItemsInCacheByName",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "PollerInfo": [
+      {
+        "type": "i64",
+        "name": "lastAccessTime",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "identity",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "RetryPolicy": [
+      {
+        "type": "i32",
+        "name": "initialIntervalInSeconds",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "double",
+        "name": "backoffCoefficient",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "maximumIntervalInSeconds",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "maximumAttempts",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "string"
+        },
+        "name": "nonRetriableErrorReasons",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "expirationIntervalInSeconds",
+        "id": 60,
+        "option": "optional"
+      }
+    ],
+    "HistoryBranchRange": [
+      {
+        "type": "string",
+        "name": "branchID",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "beginNodeID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "endNodeID",
+        "id": 30,
+        "option": "optional"
+      }
+    ],
+    "HistoryBranch": [
+      {
+        "type": "string",
+        "name": "treeID",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "branchID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "HistoryBranchRange"
+        },
+        "name": "ancestors",
+        "id": 30,
+        "option": "optional"
+      }
+    ]
+  }
+}
