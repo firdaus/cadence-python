@@ -11,8 +11,7 @@ class TestStartWorkflow(TestCase):
     def setUp(self) -> None:
         self.service = WorkflowService.create("localhost", 7933)
 
-    def test_start_workflow(self):
-        request = StartWorkflowExecutionRequest()
+        self.request = request = StartWorkflowExecutionRequest()
         request.domain = "test-domain"
         request.request_id = str(uuid4())
         request.task_list = TaskList()
@@ -24,19 +23,18 @@ class TestStartWorkflow(TestCase):
         request.execution_start_to_close_timeout_seconds = 86400
         request.task_start_to_close_timeout_seconds = 120
 
-        (response, err) = self.service.start_workflow(request)
+    def test_start_workflow(self):
+        (response, err) = self.service.start_workflow(self.request)
 
         self.assertIsNotNone(response)
         self.assertIsInstance(response, StartWorkflowExecutionResponse)
 
     def test_duplicate_workflow_ids(self):
-        workflow_id = str(uuid4())
-        (runId, err) = self.service.start_workflow("test-domain", "test-tasklist", "firdaus-workflow-type",
-                                                   input_value="abc-firdaus", workflow_id=workflow_id)
-        (runId, err) = self.service.start_workflow("test-domain", "test-tasklist", "firdaus-workflow-type",
-                                                   input_value="abc-firdaus", workflow_id=workflow_id)
+        (response, err) = self.service.start_workflow(self.request)
+        self.request.request_id = str(uuid4())
+        (response, err) = self.service.start_workflow(self.request)
         self.assertIsNotNone(err)
-        self.assertIsNone(runId)
+        self.assertIsNone(response)
         self.assertIsInstance(err, WorkflowExecutionAlreadyStartedError)
 
     def test_register_domain(self):
