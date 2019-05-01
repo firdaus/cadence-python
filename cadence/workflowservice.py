@@ -66,9 +66,10 @@ class WorkflowService:
         error = find_error(register_response)
         return None, error
 
-    def poll_for_activity_task(self, domain: str, task_list: str):
+    def poll_for_activity_task(self, domain: str, task_list: str) -> Tuple[PollForActivityTaskResponse, object]:
         poll_activity_request = cadence.shared.PollForActivityTaskRequest()
         poll_activity_request.domain = domain
+        poll_activity_request.identity = self.identity
         poll_activity_request.taskList = cadence.shared.TaskList()
         poll_activity_request.taskList.name = task_list
 
@@ -76,5 +77,5 @@ class WorkflowService:
         if not poll_activity_response.success:
             return None, find_error(poll_activity_response)
 
-        return copy_thrift_to_py(poll_activity_response.success, PollForActivityTaskResponse)
+        return copy_thrift_to_py(poll_activity_response.success, PollForActivityTaskResponse), None
 
