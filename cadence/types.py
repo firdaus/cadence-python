@@ -27,7 +27,7 @@ class PollForActivityTaskResponse:
     task_token: bytes = None
     workflow_execution: WorkflowExecution = None
     activity_id: str = None
-    activityType: ActivityType = None
+    activity_type: ActivityType = None
     input: bytes = None
     scheduled_timestamp: int = None
     schedule_to_close_timeout_seconds: int = None
