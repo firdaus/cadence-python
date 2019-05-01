@@ -10,7 +10,8 @@ from cadence.thrift import cadence
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
-from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse
+from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse, \
+    RegisterDomainRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -45,15 +46,11 @@ class WorkflowService:
             return None, find_error(response)
         return copy_thrift_to_py(response.success), None
 
-    def register_domain(self, name: str, description: str = "", workflow_execution_retention_period_in_days=0):
-        register_request = cadence.shared.RegisterDomainRequest()
-        register_request.name = name
-        register_request.description = description
-        register_request.workflowExecutionRetentionPeriodInDays = workflow_execution_retention_period_in_days
+    def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
 
         # RegisterDomain returns void so there is no .success
-        register_response = self.thrift_call("RegisterDomain", register_request)
-        error = find_error(register_response)
+        response = self.thrift_call("RegisterDomain", request)
+        error = find_error(response)
         return None, error
 
     def poll_for_activity_task(self, domain: str, task_list: str) -> Tuple[PollForActivityTaskResponse, object]:

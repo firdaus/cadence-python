@@ -2,7 +2,8 @@ from unittest import TestCase
 from uuid import uuid4
 
 from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError
-from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse
+from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
+    RegisterDomainRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -38,15 +39,21 @@ class TestStartWorkflow(TestCase):
         self.assertIsInstance(err, WorkflowExecutionAlreadyStartedError)
 
     def test_register_domain(self):
-        domain = str(uuid4())
-        response, err = self.service.register_domain(domain)
+        request = RegisterDomainRequest()
+        request.name = str(uuid4())
+        request.description = ""
+        request.workflowExecutionRetentionPeriodInDays = 1
+        response, err = self.service.register_domain(request)
         self.assertIsNone(response)  # RegisterDomain returns void
         self.assertIsNone(err)
 
     def test_duplicate_domains(self):
-        domain = str(uuid4())
-        response, err = self.service.register_domain(domain)
-        response, err = self.service.register_domain(domain)
+        request = RegisterDomainRequest()
+        request.name = str(uuid4())
+        request.description = ""
+        request.workflowExecutionRetentionPeriodInDays = 1
+        response, err = self.service.register_domain(request)
+        response, err = self.service.register_domain(request)
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
 
