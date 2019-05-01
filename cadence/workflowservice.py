@@ -80,7 +80,7 @@ class WorkflowService:
         if not poll_activity_response.success:
             return None, find_error(poll_activity_response)
 
-        return copy_thrift_to_py(poll_activity_response.success, PollForActivityTaskResponse), None
+        return copy_thrift_to_py(poll_activity_response.success), None
 
     def respond_activity_task_completed(self, task_token: bytes, result: bytes):
         respond_activity_completed_request = cadence.shared.RespondActivityTaskCompletedRequest()

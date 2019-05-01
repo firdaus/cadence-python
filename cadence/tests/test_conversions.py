@@ -29,7 +29,7 @@ class TestCopyThriftToPy(TestCase):
         self.thrift_object.workflowExecution.runId = "RUN_ID"
 
     def test_copy(self):
-        obj: PollForActivityTaskResponse = copy_thrift_to_py(self.thrift_object, PollForActivityTaskResponse)
+        obj: PollForActivityTaskResponse = copy_thrift_to_py(self.thrift_object)
         assert isinstance(obj, PollForActivityTaskResponse)
         self.assertEqual("TASK_TOKEN", obj.task_token)
         self.assertEqual("WORKFLOW_ID", obj.workflow_execution.workflow_id)

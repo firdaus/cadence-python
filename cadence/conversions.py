@@ -2,6 +2,7 @@ import typing
 import re
 from enum import Enum
 from cadence.thrift import cadence
+import cadence.types
 
 PRIMITIVES = [int, str, bytes, float, bool]
 
@@ -11,7 +12,8 @@ def camel_to_snake(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
-def copy_thrift_to_py(thrift_object, python_cls):
+def copy_thrift_to_py(thrift_object):
+    python_cls = get_python_type(type(thrift_object))
     hints = typing.get_type_hints(python_cls)
     obj = python_cls()
     for thrift_field in dir(thrift_object):
@@ -20,10 +22,12 @@ def copy_thrift_to_py(thrift_object, python_cls):
             continue
         field_type = hints[python_field]
         value = getattr(thrift_object, thrift_field)
+        if not value:
+            continue
         if field_type in PRIMITIVES:
             setattr(obj, python_field, value)
         else:
-            setattr(obj, python_field, copy_thrift_to_py(value, field_type))
+            setattr(obj, python_field, copy_thrift_to_py(value))
     return obj
 
 
@@ -53,6 +57,11 @@ def snake_to_camel(snake_str):
 
 def get_thrift_type(python_cls: type) -> type:
     thrift_cls = getattr(cadence.shared, python_cls.__name__, None)
+    assert thrift_cls, "Thrift class not found: " + python_cls.__name__
     return thrift_cls
 
 
+def get_python_type(thrift_class: type) -> type:
+    python_cls = getattr(cadence.types, thrift_class.__name__, None)
+    assert python_cls, "Python class not found: " + thrift_class.__name__
+    return python_cls
