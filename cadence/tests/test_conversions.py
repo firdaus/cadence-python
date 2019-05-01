@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from cadence.types import camel_to_snake, copy_thrift_to_py, PollForActivityTaskResponse
+from cadence.conversions import camel_to_snake, copy_thrift_to_py
+from cadence.types import PollForActivityTaskResponse
 from cadence.thrift import cadence
 
 

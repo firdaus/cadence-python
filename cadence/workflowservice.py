@@ -9,7 +9,8 @@ import socket
 from cadence.thrift import cadence
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
-from cadence.types import copy_thrift_to_py, PollForActivityTaskResponse
+from cadence.conversions import copy_thrift_to_py
+from cadence.types import PollForActivityTaskResponse
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
