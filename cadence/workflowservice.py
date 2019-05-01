@@ -11,7 +11,7 @@ from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
 from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse, \
-    RegisterDomainRequest
+    RegisterDomainRequest, PollForActivityTaskRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -23,11 +23,14 @@ class WorkflowService:
         connection = TChannelConnection.open(host, port)
         return cls(connection)
 
+    @classmethod
+    def get_identity(self):
+        return "%d@%s" % (os.getpid(), socket.gethostname())
+
     def __init__(self, connection: TChannelConnection):
         self.connection = connection
         self.execution_start_to_close_timeout_seconds = 86400
         self.task_start_to_close_timeout_seconds = 120
-        self.identity = "%d@%s" % (os.getpid(), socket.gethostname())
 
     def thrift_call(self, method_name, request_argument):
         thrift_request_argument = copy_py_to_thrift(request_argument)
@@ -47,24 +50,16 @@ class WorkflowService:
         return copy_thrift_to_py(response.success), None
 
     def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
-
         # RegisterDomain returns void so there is no .success
         response = self.thrift_call("RegisterDomain", request)
         error = find_error(response)
         return None, error
 
-    def poll_for_activity_task(self, domain: str, task_list: str) -> Tuple[PollForActivityTaskResponse, object]:
-        poll_activity_request = cadence.shared.PollForActivityTaskRequest()
-        poll_activity_request.domain = domain
-        poll_activity_request.identity = self.identity
-        poll_activity_request.taskList = cadence.shared.TaskList()
-        poll_activity_request.taskList.name = task_list
-
-        poll_activity_response = self.thrift_call("PollForActivityTask", poll_activity_request)
-        if not poll_activity_response.success:
-            return None, find_error(poll_activity_response)
-
-        return copy_thrift_to_py(poll_activity_response.success), None
+    def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
+        response = self.thrift_call("PollForActivityTask", request)
+        if not response.success:
+            return None, find_error(response)
+        return copy_thrift_to_py(response.success), None
 
     def respond_activity_task_completed(self, task_token: bytes, result: bytes):
         respond_activity_completed_request = cadence.shared.RespondActivityTaskCompletedRequest()

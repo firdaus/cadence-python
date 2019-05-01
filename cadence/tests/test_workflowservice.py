@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError
 from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
-    RegisterDomainRequest
+    RegisterDomainRequest, PollForActivityTaskRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -58,7 +58,12 @@ class TestStartWorkflow(TestCase):
         self.assertIsInstance(err, DomainAlreadyExistsError)
 
     def test_poll_for_activity_task(self):
-        # response, err = self.service.poll_for_activity_task("test-domain", "test-tasklist")
+        # request = PollForActivityTaskRequest()
+        # request.domain = "test-domain"
+        # request.identity = WorkflowService.get_identity()
+        # request.task_list = TaskList()
+        # request.task_list.name = "test-task-list"
+        # response, err = self.service.poll_for_activity_task(request)
         # self.assertIsNotNone(response)
         pass
 
