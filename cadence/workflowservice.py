@@ -11,7 +11,7 @@ from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
 from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse, \
-    RegisterDomainRequest, PollForActivityTaskRequest
+    RegisterDomainRequest, PollForActivityTaskRequest, RespondActivityTaskCompletedRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -61,15 +61,9 @@ class WorkflowService:
             return None, find_error(response)
         return copy_thrift_to_py(response.success), None
 
-    def respond_activity_task_completed(self, task_token: bytes, result: bytes):
-        respond_activity_completed_request = cadence.shared.RespondActivityTaskCompletedRequest()
-        respond_activity_completed_request.taskToken = task_token
-        respond_activity_completed_request.result = result
-        respond_activity_completed_request.identity = self.identity
-
-        respond_activity_completed_response = self.thrift_call("RespondActivityTaskCompleted",
-                                                               respond_activity_completed_request)
-        error = find_error(respond_activity_completed_request)
+    def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> [None, object]:
+        response = self.thrift_call("RespondActivityTaskCompleted", request)
+        error = find_error(response)
         return None, error
 
 
