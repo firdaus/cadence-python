@@ -1,7 +1,6 @@
 import typing
 import re
 from enum import Enum
-from cadence.thrift import cadence
 import cadence.types
 
 PRIMITIVES = [int, str, bytes, float, bool]
@@ -56,6 +55,7 @@ def snake_to_camel(snake_str):
 
 
 def get_thrift_type(python_cls: type) -> type:
+    from cadence.thrift import cadence
     thrift_cls = getattr(cadence.shared, python_cls.__name__, None)
     assert thrift_cls, "Thrift class not found: " + python_cls.__name__
     return thrift_cls
