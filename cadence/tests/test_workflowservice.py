@@ -11,7 +11,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     DescribeWorkflowExecutionRequest, WorkflowExecution, DescribeTaskListResponse, DescribeWorkflowExecutionResponse, \
     QueryWorkflowRequest, WorkflowQuery, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
     QueryTaskCompletedType, ListClosedWorkflowExecutionsRequest, ListClosedWorkflowExecutionsResponse, StartTimeFilter, \
-    ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest
+    ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -73,6 +73,24 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_signal_with_start_workflow_execution(self):
+        request = SignalWithStartWorkflowExecutionRequest()
+        request.signal_name = "dummy-signal"
+        request.domain = "test-domain"
+        request.request_id = str(uuid4())
+        request.task_list = TaskList()
+        request.task_list.name = "test-task-list"
+        request.input = "abc-firdaus"
+        request.workflow_id = str(uuid4())
+        request.workflow_type = WorkflowType()
+        request.workflow_type.name = "firdaus-workflow-type"
+        request.execution_start_to_close_timeout_seconds = 86400
+        request.task_start_to_close_timeout_seconds = 120
+        response, err = self.service.signal_with_start_workflow_execution(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response, StartWorkflowExecutionResponse)
 
     def test_terminate_workflow_execution(self):
         start_response, _ = self.service.start_workflow(self.request)
