@@ -6,7 +6,7 @@ from cadence.tchannel import TChannelException
 from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
     RegisterDomainRequest, PollForActivityTaskRequest, DescribeTaskListRequest, TaskListType, \
     DescribeWorkflowExecutionRequest, WorkflowExecution, DescribeTaskListResponse, DescribeWorkflowExecutionResponse, \
-    QueryWorkflowRequest, WorkflowQuery
+    QueryWorkflowRequest, WorkflowQuery, ResetStickyTaskListRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -68,6 +68,17 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_reset_sticky_task_list(self):
+        start_response, _ = self.service.start_workflow(self.request)
+        request = ResetStickyTaskListRequest()
+        request.domain = "test-domain"
+        request.execution = WorkflowExecution()
+        request.execution.workflow_id = self.request.workflow_id
+        request.execution.run_id = start_response.run_id
+        response, err = self.service.reset_sticky_task_list(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
 
     def test_query_workflow_timeout(self):
         start_response, _ = self.service.start_workflow(self.request)

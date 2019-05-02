@@ -12,7 +12,8 @@ from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
 from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse, \
     RegisterDomainRequest, PollForActivityTaskRequest, RespondActivityTaskCompletedRequest, DescribeTaskListResponse, \
-    DescribeWorkflowExecutionRequest, DescribeWorkflowExecutionResponse, QueryWorkflowRequest, QueryWorkflowResponse
+    DescribeWorkflowExecutionRequest, DescribeWorkflowExecutionResponse, QueryWorkflowRequest, QueryWorkflowResponse, \
+    ResetStickyTaskListResponse, ResetStickyTaskListRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -68,6 +69,9 @@ class WorkflowService:
 
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompleted", request)
+
+    def reset_sticky_task_list(self, request: ResetStickyTaskListRequest) -> Tuple[ResetStickyTaskListResponse, object]:
+        return self.call_return("ResetStickyTaskList", request, ResetStickyTaskListResponse)
 
     def query_workflow(self, request: QueryWorkflowRequest) -> Tuple[QueryWorkflowResponse, object]:
         return self.call_return("QueryWorkflow", request, QueryWorkflowResponse)
