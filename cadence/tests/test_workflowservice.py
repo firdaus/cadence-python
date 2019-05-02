@@ -1,6 +1,8 @@
 from unittest import TestCase
 from unittest.mock import create_autospec
 from uuid import uuid4
+import time
+import calendar
 
 from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError, EntityNotExistsError
 from cadence.tchannel import TChannelException
@@ -8,7 +10,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     RegisterDomainRequest, PollForActivityTaskRequest, DescribeTaskListRequest, TaskListType, \
     DescribeWorkflowExecutionRequest, WorkflowExecution, DescribeTaskListResponse, DescribeWorkflowExecutionResponse, \
     QueryWorkflowRequest, WorkflowQuery, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
-    QueryTaskCompletedType
+    QueryTaskCompletedType, ListClosedWorkflowExecutionsRequest, ListClosedWorkflowExecutionsResponse, StartTimeFilter
 from cadence.workflowservice import WorkflowService
 
 
@@ -70,6 +72,19 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_list_closed_workflow_executions(self):
+        request = ListClosedWorkflowExecutionsRequest()
+        request.domain = "test-domain"
+        request.start_time_filter = StartTimeFilter()
+        # Nano seconds?
+        request.start_time_filter.earliest_time = calendar.timegm(time.gmtime()) * 1e+9
+        request.start_time_filter.latest_time = calendar.timegm(time.gmtime()) * 1e+9
+
+        response, err = self.service.list_closed_workflow_executions(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response, ListClosedWorkflowExecutionsResponse)
 
     def test_respond_query_task_completed_invalid(self):
         request = RespondQueryTaskCompletedRequest()

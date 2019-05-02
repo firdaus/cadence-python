@@ -43,6 +43,10 @@ def copy_py_to_thrift(python_object):
         elif issubclass(field_type, Enum):
             setattr(thrift_object, thrift_field, value.value)
         else:
+            # Special handling for case of inconsistent naming in shared.thrift
+            # StartTimeFilter StartTimeFilter
+            if python_field == "start_time_filter":
+                thrift_field = "StartTimeFilter"
             setattr(thrift_object, thrift_field, copy_py_to_thrift(value))
     return thrift_object
 
