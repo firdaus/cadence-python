@@ -1,10 +1,11 @@
 from unittest import TestCase
 from uuid import uuid4
 
-from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError
+from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError, EntityNotExistsError
 from cadence.tchannel import TChannelException
 from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
-    RegisterDomainRequest, PollForActivityTaskRequest, DescribeTaskListRequest, TaskListType
+    RegisterDomainRequest, PollForActivityTaskRequest, DescribeTaskListRequest, TaskListType, \
+    DescribeWorkflowExecutionRequest, WorkflowExecution, DescribeTaskListResponse, DescribeWorkflowExecutionResponse
 from cadence.workflowservice import WorkflowService
 
 
@@ -66,6 +67,28 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_describe_workflow_execution(self):
+        start_response, _ = self.service.start_workflow(self.request)
+        request = DescribeWorkflowExecutionRequest()
+        request.domain = "test-domain"
+        request.execution = WorkflowExecution()
+        request.execution.workflow_id = self.request.workflow_id
+        request.execution.run_id = start_response.run_id
+        response, err = self.service.describe_workflow_execution(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response, DescribeWorkflowExecutionResponse)
+
+    def test_describe_workflow_execution_invalid_workflow(self):
+        request = DescribeWorkflowExecutionRequest()
+        request.domain = "test-domain"
+        request.execution = WorkflowExecution()
+        request.execution.workflow_id = str(uuid4())
+        request.execution.run_id = str(uuid4())
+        response, err = self.service.describe_workflow_execution(request)
+        self.assertIsNone(response)
+        self.assertIsInstance(err, EntityNotExistsError)
 
     def test_describe_task_list(self):
         request = DescribeTaskListRequest()

@@ -11,7 +11,8 @@ from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
 from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse, \
-    RegisterDomainRequest, PollForActivityTaskRequest, RespondActivityTaskCompletedRequest, DescribeTaskListResponse
+    RegisterDomainRequest, PollForActivityTaskRequest, RespondActivityTaskCompletedRequest, DescribeTaskListResponse, \
+    DescribeWorkflowExecutionRequest, DescribeWorkflowExecutionResponse
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -67,6 +68,9 @@ class WorkflowService:
 
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompleted", request)
+
+    def describe_workflow_execution(self, request: DescribeWorkflowExecutionRequest) -> Tuple[DescribeWorkflowExecutionResponse, object]:
+        return self.call_return("DescribeWorkflowExecution", request, DescribeWorkflowExecutionResponse)
 
     def describe_task_list(self, request) -> Tuple[DescribeTaskListResponse, object]:
         return self.call_return("DescribeTaskList", request, DescribeTaskListResponse)
