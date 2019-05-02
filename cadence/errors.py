@@ -100,6 +100,7 @@ CADENCE_ERROR_FIELDS = {
     "queryFailedError": QueryFailedError,
     "domainNotActiveError": DomainNotActiveError,
     "limitExceededError": LimitExceededError,
+    "workflowAlreadyStartedError": WorkflowExecutionAlreadyStartedError
 }
 
 IGNORE_FIELDS_IN_ERRORS = ("args", "type_spec", "from_primitive", "to_primitive", "with_traceback")
