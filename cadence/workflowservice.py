@@ -43,27 +43,29 @@ class WorkflowService:
         start_response = cadence.loads(fn.response, response.thrift_payload)
         return start_response
 
-    def start_workflow(self, request: StartWorkflowExecutionRequest) -> Tuple[StartWorkflowExecutionResponse, object]:
-        response = self.thrift_call("StartWorkflowExecution", request)
+    def call_return(self, method_name: str, request: object, expected_return_type: type) -> Tuple[object, object]:
+        response = self.thrift_call(method_name, request)
         if not response.success:
             return None, find_error(response)
-        return copy_thrift_to_py(response.success), None
+        return_value = copy_thrift_to_py(response.success)
+        assert isinstance(return_value, expected_return_type)
+        return return_value, None
+
+    def call_void(self, method_name, request):
+        response = self.thrift_call(method_name, request)
+        error = find_error(response)
+        return None, error
+
+    def start_workflow(self, request: StartWorkflowExecutionRequest) -> Tuple[StartWorkflowExecutionResponse, object]:
+        return self.call_return("StartWorkflowExecution", request, StartWorkflowExecutionResponse)
 
     def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
-        # RegisterDomain returns void so there is no .success
-        response = self.thrift_call("RegisterDomain", request)
-        error = find_error(response)
-        return None, error
+        return self.call_void("RegisterDomain", request)
 
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
-        response = self.thrift_call("PollForActivityTask", request)
-        if not response.success:
-            return None, find_error(response)
-        return copy_thrift_to_py(response.success), None
+        return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
 
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> [None, object]:
-        response = self.thrift_call("RespondActivityTaskCompleted", request)
-        error = find_error(response)
-        return None, error
+        return self.call_void("RespondActivityTaskCompleted", request)
 
 
