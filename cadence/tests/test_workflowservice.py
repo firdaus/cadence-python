@@ -74,8 +74,9 @@ class TestStartWorkflow(TestCase):
         request.task_list_type = TaskListType.Decision
         request.domain = "test-domain"
         response, err = self.service.describe_task_list(request)
-        self.assertIsNotNone(response)
         self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response, DescribeTaskListResponse)
         self.assertEqual(0, len(response.pollers))
 
     def tearDown(self) -> None:
