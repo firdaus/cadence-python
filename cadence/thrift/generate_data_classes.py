@@ -14,7 +14,7 @@ TYPE_MAP = {
 
 HEADER = """from __future__ import annotations
 from typing import List, Dict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 """
@@ -23,7 +23,7 @@ DATA_CLASS_TEMPLATE = """
 # noinspection PyPep8
 @dataclass
 class {{type_name}}:
-    {% for field in fields %}{{field.name|to_snake()}}: {{ field.type|python_type }} = None
+    {% for field in fields %}{{field.name|to_snake()}}: {{ field.type|python_type }} = {{field.type|python_value}}
     {%else%}pass
     {% endfor %}
 
@@ -52,9 +52,19 @@ def python_type(thrift_type):
     return thrift_type
 
 
+def python_value(thrift_type):
+    if isinstance(thrift_type, dict):
+        if thrift_type['name'] == "list":
+            return "field(default_factory=list)"
+        elif thrift_type['name'] == "map":
+            return "field(default_factory=dict)"
+    return "None"
+
+
 env = Environment()
 env.filters['to_snake'] = filter_to_snake
 env.filters['python_type'] = python_type
+env.filters['python_value'] = python_value
 
 
 def generate_data_class(type_name, fields):

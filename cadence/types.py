@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Dict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -243,7 +243,7 @@ class TaskListType(Enum):
 # noinspection PyPep8
 @dataclass
 class Header:
-    fields: Dict[str, bytes] = None
+    fields: Dict[str, bytes] = field(default_factory=dict)
     
 
 # noinspection PyPep8
@@ -906,7 +906,7 @@ class HistoryEvent:
 # noinspection PyPep8
 @dataclass
 class History:
-    events: List[HistoryEvent] = None
+    events: List[HistoryEvent] = field(default_factory=list)
     
 
 # noinspection PyPep8
@@ -935,7 +935,7 @@ class DomainInfo:
     status: DomainStatus = None
     description: str = None
     owner_email: str = None
-    data: Dict[str, str] = None
+    data: Dict[str, str] = field(default_factory=dict)
     
 
 # noinspection PyPep8
@@ -950,7 +950,7 @@ class DomainConfiguration:
 class UpdateDomainInfo:
     description: str = None
     owner_email: str = None
-    data: Dict[str, str] = None
+    data: Dict[str, str] = field(default_factory=dict)
     
 
 # noinspection PyPep8
@@ -963,7 +963,7 @@ class ClusterReplicationConfiguration:
 @dataclass
 class DomainReplicationConfiguration:
     active_cluster_name: str = None
-    clusters: List[ClusterReplicationConfiguration] = None
+    clusters: List[ClusterReplicationConfiguration] = field(default_factory=list)
     
 
 # noinspection PyPep8
@@ -974,9 +974,9 @@ class RegisterDomainRequest:
     owner_email: str = None
     workflow_execution_retention_period_in_days: int = None
     emit_metric: bool = None
-    clusters: List[ClusterReplicationConfiguration] = None
+    clusters: List[ClusterReplicationConfiguration] = field(default_factory=list)
     active_cluster_name: str = None
-    data: Dict[str, str] = None
+    data: Dict[str, str] = field(default_factory=dict)
     security_token: str = None
     
 
@@ -990,7 +990,7 @@ class ListDomainsRequest:
 # noinspection PyPep8
 @dataclass
 class ListDomainsResponse:
-    domains: List[DescribeDomainResponse] = None
+    domains: List[DescribeDomainResponse] = field(default_factory=list)
     next_page_token: bytes = None
     
 
@@ -1096,7 +1096,7 @@ class StickyExecutionAttributes:
 @dataclass
 class RespondDecisionTaskCompletedRequest:
     task_token: bytes = None
-    decisions: List[Decision] = None
+    decisions: List[Decision] = field(default_factory=list)
     execution_context: bytes = None
     identity: str = None
     sticky_attributes: StickyExecutionAttributes = None
@@ -1316,7 +1316,7 @@ class ListOpenWorkflowExecutionsRequest:
 # noinspection PyPep8
 @dataclass
 class ListOpenWorkflowExecutionsResponse:
-    executions: List[WorkflowExecutionInfo] = None
+    executions: List[WorkflowExecutionInfo] = field(default_factory=list)
     next_page_token: bytes = None
     
 
@@ -1335,7 +1335,7 @@ class ListClosedWorkflowExecutionsRequest:
 # noinspection PyPep8
 @dataclass
 class ListClosedWorkflowExecutionsResponse:
-    executions: List[WorkflowExecutionInfo] = None
+    executions: List[WorkflowExecutionInfo] = field(default_factory=list)
     next_page_token: bytes = None
     
 
@@ -1406,7 +1406,7 @@ class PendingActivityInfo:
 class DescribeWorkflowExecutionResponse:
     execution_configuration: WorkflowExecutionConfiguration = None
     workflow_execution_info: WorkflowExecutionInfo = None
-    pending_activities: List[PendingActivityInfo] = None
+    pending_activities: List[PendingActivityInfo] = field(default_factory=list)
     
 
 # noinspection PyPep8
@@ -1420,7 +1420,7 @@ class DescribeTaskListRequest:
 # noinspection PyPep8
 @dataclass
 class DescribeTaskListResponse:
-    pollers: List[PollerInfo] = None
+    pollers: List[PollerInfo] = field(default_factory=list)
     
 
 # noinspection PyPep8
@@ -1435,7 +1435,7 @@ class DescribeHistoryHostRequest:
 @dataclass
 class DescribeHistoryHostResponse:
     number_of_shards: int = None
-    shard_i_ds: List[int] = None
+    shard_i_ds: List[int] = field(default_factory=list)
     domain_cache: DomainCacheInfo = None
     shard_controller_status: str = None
     address: str = None
@@ -1462,7 +1462,7 @@ class RetryPolicy:
     backoff_coefficient: float = None
     maximum_interval_in_seconds: int = None
     maximum_attempts: int = None
-    non_retriable_error_reasons: List[str] = None
+    non_retriable_error_reasons: List[str] = field(default_factory=list)
     expiration_interval_in_seconds: int = None
     
 
@@ -1479,4 +1479,4 @@ class HistoryBranchRange:
 class HistoryBranch:
     tree_id: str = None
     branch_id: str = None
-    ancestors: List[HistoryBranchRange] = None
+    ancestors: List[HistoryBranchRange] = field(default_factory=list)
