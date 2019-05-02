@@ -13,20 +13,27 @@ def camel_to_snake(name):
 
 def copy_thrift_to_py(thrift_object):
     python_cls = get_python_type(type(thrift_object))
-    hints = typing.get_type_hints(python_cls)
-    obj = python_cls()
-    for thrift_field in dir(thrift_object):
-        python_field = camel_to_snake(thrift_field)
-        if python_field not in hints:
-            continue
-        field_type = hints[python_field]
-        value = getattr(thrift_object, thrift_field)
-        if not value:
-            continue
-        if field_type in PRIMITIVES:
-            setattr(obj, python_field, value)
-        else:
-            setattr(obj, python_field, copy_thrift_to_py(value))
+    if python_cls == list:
+        obj = []
+        for item in thrift_object:
+            obj.append(copy_thrift_to_py(item))
+    elif python_cls == dict:
+        raise NotImplementedError("Thrift dict to Python dict")
+    else:
+        hints = typing.get_type_hints(python_cls)
+        obj = python_cls()
+        for thrift_field in dir(thrift_object):
+            python_field = camel_to_snake(thrift_field)
+            if python_field not in hints:
+                continue
+            field_type = hints[python_field]
+            value = getattr(thrift_object, thrift_field)
+            if not value:
+                continue
+            if field_type in PRIMITIVES:
+                setattr(obj, python_field, value)
+            else:
+                setattr(obj, python_field, copy_thrift_to_py(value))
     return obj
 
 
@@ -66,6 +73,11 @@ def get_thrift_type(python_cls: type) -> type:
 
 
 def get_python_type(thrift_class: type) -> type:
-    python_cls = getattr(cadence.types, thrift_class.__name__, None)
-    assert python_cls, "Python class not found: " + thrift_class.__name__
-    return python_cls
+    if thrift_class == list:
+        return list
+    elif thrift_class == dict:
+        return dict
+    else:
+        python_cls = getattr(cadence.types, thrift_class.__name__, None)
+        assert python_cls, "Python class not found: " + thrift_class.__name__
+        return python_cls
