@@ -15,7 +15,8 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     DescribeWorkflowExecutionRequest, DescribeWorkflowExecutionResponse, QueryWorkflowRequest, QueryWorkflowResponse, \
     ResetStickyTaskListResponse, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
     ListClosedWorkflowExecutionsResponse, ListClosedWorkflowExecutionsRequest, ListOpenWorkflowExecutionsRequest, \
-    ListOpenWorkflowExecutionsResponse, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest
+    ListOpenWorkflowExecutionsResponse, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
+    SignalWorkflowExecutionRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -68,6 +69,9 @@ class WorkflowService:
 
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
         return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
+
+    def signal_workflow_execution(self, request: SignalWorkflowExecutionRequest) -> Tuple[None, object]:
+        return self.call_void("SignalWorkflowExecution", request)
 
     def signal_with_start_workflow_execution(self, request: SignalWithStartWorkflowExecutionRequest) -> \
             Tuple[StartWorkflowExecutionResponse, object]:
