@@ -11,7 +11,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     DescribeWorkflowExecutionRequest, WorkflowExecution, DescribeTaskListResponse, DescribeWorkflowExecutionResponse, \
     QueryWorkflowRequest, WorkflowQuery, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
     QueryTaskCompletedType, ListClosedWorkflowExecutionsRequest, ListClosedWorkflowExecutionsResponse, StartTimeFilter, \
-    ListOpenWorkflowExecutionsRequest
+    ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -73,6 +73,17 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_terminate_workflow_execution(self):
+        start_response, _ = self.service.start_workflow(self.request)
+        request = TerminateWorkflowExecutionRequest()
+        request.domain = "test-domain"
+        request.workflow_execution = WorkflowExecution()
+        request.workflow_execution.workflow_id = self.request.workflow_id
+        request.workflow_execution.run_id = start_response.run_id
+        response, err = self.service.terminate_workflow_execution(request)
+        self.assertIsNone(err)
+        self.assertIsNone(response)
 
     def test_list_open_workflow_executions(self):
         request = ListOpenWorkflowExecutionsRequest()

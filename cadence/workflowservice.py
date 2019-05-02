@@ -15,7 +15,7 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     DescribeWorkflowExecutionRequest, DescribeWorkflowExecutionResponse, QueryWorkflowRequest, QueryWorkflowResponse, \
     ResetStickyTaskListResponse, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
     ListClosedWorkflowExecutionsResponse, ListClosedWorkflowExecutionsRequest, ListOpenWorkflowExecutionsRequest, \
-    ListOpenWorkflowExecutionsResponse
+    ListOpenWorkflowExecutionsResponse, TerminateWorkflowExecutionRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -71,6 +71,9 @@ class WorkflowService:
 
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompleted", request)
+
+    def terminate_workflow_execution(self, request: TerminateWorkflowExecutionRequest) -> Tuple[None, object]:
+        return self.call_void("TerminateWorkflowExecution", request)
 
     def list_open_workflow_executions(self, request: ListOpenWorkflowExecutionsRequest) -> \
             Tuple[ListOpenWorkflowExecutionsResponse, object]:
