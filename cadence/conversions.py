@@ -37,6 +37,11 @@ def copy_thrift_to_py(thrift_object):
     return obj
 
 
+# sometimes workflow_id maps to either workflowId or workflowID
+def last_char_upper(s: str):
+    return s[:-1] + s[-1:].upper()
+
+
 def copy_py_to_thrift(python_object):
     thrift_cls = get_thrift_type(type(python_object))
     thrift_object = thrift_cls()
@@ -46,7 +51,10 @@ def copy_py_to_thrift(python_object):
             continue
         thrift_field = snake_to_camel(python_field)
         if field_type in PRIMITIVES:
-            setattr(thrift_object, thrift_field, value)
+            if hasattr(thrift_object, thrift_field):
+                setattr(thrift_object, thrift_field, value)
+            elif hasattr(thrift_object, last_char_upper(thrift_field)):
+                setattr(thrift_object, last_char_upper(thrift_field), value)
         elif issubclass(field_type, Enum):
             setattr(thrift_object, thrift_field, value.value)
         else:
