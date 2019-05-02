@@ -2,6 +2,7 @@ from unittest import TestCase
 from uuid import uuid4
 
 from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError
+from cadence.tchannel import TChannelException
 from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
     RegisterDomainRequest, PollForActivityTaskRequest
 from cadence.workflowservice import WorkflowService
@@ -57,15 +58,14 @@ class TestStartWorkflow(TestCase):
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
 
-    def test_poll_for_activity_task(self):
-        # request = PollForActivityTaskRequest()
-        # request.domain = "test-domain"
-        # request.identity = WorkflowService.get_identity()
-        # request.task_list = TaskList()
-        # request.task_list.name = "test-task-list"
-        # response, err = self.service.poll_for_activity_task(request)
-        # self.assertIsNotNone(response)
-        pass
+    def test_poll_for_activity_task_timeout(self):
+        request = PollForActivityTaskRequest()
+        request.domain = "test-domain"
+        request.identity = WorkflowService.get_identity()
+        request.task_list = TaskList()
+        request.task_list.name = "test-task-list"
+        with self.assertRaisesRegex(TChannelException, "timeout") as context:
+            self.service.poll_for_activity_task(request)
 
     def tearDown(self) -> None:
         self.service.connection.close()
