@@ -65,7 +65,7 @@ class WorkflowService:
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
         return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
 
-    def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> [None, object]:
+    def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompleted", request)
 
 
