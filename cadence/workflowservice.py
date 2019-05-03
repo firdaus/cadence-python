@@ -19,7 +19,7 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, \
-    RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest
+    RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest, RespondDecisionTaskFailedRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -70,6 +70,9 @@ class WorkflowService:
     def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
         return self.call_void("RegisterDomain", request)
 
+    def respond_decision_task_failed(self, request: RespondDecisionTaskFailedRequest) -> Tuple[None, object]:
+        return self.call_void("RespondDecisionTaskFailed", request)
+
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
         return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
 
@@ -77,7 +80,8 @@ class WorkflowService:
             Tuple[RecordActivityTaskHeartbeatResponse, object]:
         return self.call_return("RecordActivityTaskHeartbeat", request, RecordActivityTaskHeartbeatResponse)
 
-    def record_activity_task_heartbeat_by_id(self, request: RecordActivityTaskHeartbeatByIDRequest) -> Tuple[RecordActivityTaskHeartbeatResponse, object]:
+    def record_activity_task_heartbeat_by_id(self, request: RecordActivityTaskHeartbeatByIDRequest) -> \
+            Tuple[RecordActivityTaskHeartbeatResponse, object]:
         return self.call_return("RecordActivityTaskHeartbeatByID", request, RecordActivityTaskHeartbeatResponse)
 
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:

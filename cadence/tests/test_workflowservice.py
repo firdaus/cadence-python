@@ -14,7 +14,8 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
-    RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest
+    RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest, \
+    RespondDecisionTaskFailedRequest, DecisionTaskFailedCause
 from cadence.workflowservice import WorkflowService
 
 
@@ -67,6 +68,16 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.register_domain(request)
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
+
+    def test_respond_decision_task_failed(self):
+        request = RespondDecisionTaskFailedRequest()
+        request.task_token = "{}"
+        request.identity = "123@localhost"
+        request.cause = DecisionTaskFailedCause.BAD_REQUEST_CANCEL_ACTIVITY_ATTRIBUTES
+        response, err = self.service.respond_decision_task_failed(request)
+        self.assertIsNotNone(err)
+        self.assertIsNone(response)
+        self.assertRegex(str(err), "Domain not set")
 
     def test_poll_for_activity_task_timeout(self):
         request = PollForActivityTaskRequest()
