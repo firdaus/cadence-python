@@ -12,7 +12,8 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     QueryWorkflowRequest, WorkflowQuery, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
     QueryTaskCompletedType, ListClosedWorkflowExecutionsRequest, ListClosedWorkflowExecutionsResponse, StartTimeFilter, \
     ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
-    SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest
+    SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
+    RespondActivityTaskCanceledRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -74,6 +75,16 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_respond_activity_task_canceled_invalid(self):
+        request = RespondActivityTaskCanceledRequest()
+        request.task_token = '{"domainId": "%s", "workflowId": "%s"}' % (str(uuid4()), str(uuid4()))
+        request.identity = "123@localhost"
+        response, err = self.service.respond_activity_task_canceled(request)
+        self.assertIsNotNone(err)
+        self.assertRegex(str(err), "Domain .* does not exist")
+        self.assertIsNone(response)
+
 
     def test_respond_activity_task_canceled_by_id_invalid(self):
         start_response, _ = self.service.start_workflow(self.request)
