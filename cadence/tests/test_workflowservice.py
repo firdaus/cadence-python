@@ -17,7 +17,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest, \
     RespondDecisionTaskFailedRequest, DecisionTaskFailedCause, RespondDecisionTaskCompletedRequest, \
     PollForDecisionTaskRequest, GetWorkflowExecutionHistoryRequest, DeprecateDomainRequest, UpdateDomainRequest, \
-    DomainConfiguration
+    DomainConfiguration, ListDomainsRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -70,6 +70,14 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.register_domain(request)
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
+
+    def test_list_domains(self):
+        request = ListDomainsRequest()
+        request.page_size = 20
+        response, err = self.service.list_domains(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response.domains, list)
 
     def test_update_domain(self):
         register_request = RegisterDomainRequest()
