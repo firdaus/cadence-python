@@ -30,8 +30,10 @@ def copy_thrift_to_py(thrift_object):
             value = getattr(thrift_object, thrift_field)
             if not value:
                 continue
-            if field_type in PRIMITIVES or type(value) in PRIMITIVES:
+            if field_type in PRIMITIVES:
                 setattr(obj, python_field, value)
+            elif issubclass(field_type, Enum):
+                setattr(obj, python_field, field_type.value_for(value))
             else:
                 setattr(obj, python_field, copy_thrift_to_py(value))
     return obj

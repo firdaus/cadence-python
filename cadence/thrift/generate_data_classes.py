@@ -15,7 +15,7 @@ TYPE_MAP = {
 HEADER = """from __future__ import annotations
 from typing import List, Dict
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import IntEnum
 
 """
 
@@ -30,9 +30,13 @@ class {{type_name}}:
 """
 
 ENUM_TEMPLATE = """
-class {{type_name}}(Enum):
+class {{type_name}}(IntEnum):
     {% for item in items %}{{item.name}} = {{loop.index0}}
     {% endfor %}
+    @classmethod
+    def value_for(cls, n: int) -> {{type_name}}:
+        return next(filter(lambda i: i == n, cls), None)
+
     
 """
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Dict
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import IntEnum
 
 
 # noinspection PyPep8
@@ -81,26 +81,38 @@ class RetryTaskError:
     message: str = None
     
 
-class WorkflowIdReusePolicy(Enum):
+class WorkflowIdReusePolicy(IntEnum):
     AllowDuplicateFailedOnly = 0
     AllowDuplicate = 1
     RejectDuplicate = 2
     
+    @classmethod
+    def value_for(cls, n: int) -> WorkflowIdReusePolicy:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class DomainStatus(Enum):
+class DomainStatus(IntEnum):
     REGISTERED = 0
     DEPRECATED = 1
     DELETED = 2
     
+    @classmethod
+    def value_for(cls, n: int) -> DomainStatus:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class TimeoutType(Enum):
+class TimeoutType(IntEnum):
     START_TO_CLOSE = 0
     SCHEDULE_TO_START = 1
     SCHEDULE_TO_CLOSE = 2
     HEARTBEAT = 3
     
+    @classmethod
+    def value_for(cls, n: int) -> TimeoutType:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class DecisionType(Enum):
+class DecisionType(IntEnum):
     ScheduleActivityTask = 0
     RequestCancelActivityTask = 1
     StartTimer = 2
@@ -114,8 +126,12 @@ class DecisionType(Enum):
     StartChildWorkflowExecution = 10
     SignalExternalWorkflowExecution = 11
     
+    @classmethod
+    def value_for(cls, n: int) -> DecisionType:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class EventType(Enum):
+class EventType(IntEnum):
     WorkflowExecutionStarted = 0
     WorkflowExecutionCompleted = 1
     WorkflowExecutionFailed = 2
@@ -158,8 +174,12 @@ class EventType(Enum):
     SignalExternalWorkflowExecutionFailed = 39
     ExternalWorkflowExecutionSignaled = 40
     
+    @classmethod
+    def value_for(cls, n: int) -> EventType:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class DecisionTaskFailedCause(Enum):
+class DecisionTaskFailedCause(IntEnum):
     UNHANDLED_DECISION = 0
     BAD_SCHEDULE_ACTIVITY_ATTRIBUTES = 1
     BAD_REQUEST_CANCEL_ACTIVITY_ATTRIBUTES = 2
@@ -180,20 +200,36 @@ class DecisionTaskFailedCause(Enum):
     FAILOVER_CLOSE_DECISION = 17
     BAD_SIGNAL_INPUT_SIZE = 18
     
+    @classmethod
+    def value_for(cls, n: int) -> DecisionTaskFailedCause:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class CancelExternalWorkflowExecutionFailedCause(Enum):
+class CancelExternalWorkflowExecutionFailedCause(IntEnum):
     UNKNOWN_EXTERNAL_WORKFLOW_EXECUTION = 0
     
+    @classmethod
+    def value_for(cls, n: int) -> CancelExternalWorkflowExecutionFailedCause:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class SignalExternalWorkflowExecutionFailedCause(Enum):
+class SignalExternalWorkflowExecutionFailedCause(IntEnum):
     UNKNOWN_EXTERNAL_WORKFLOW_EXECUTION = 0
     
+    @classmethod
+    def value_for(cls, n: int) -> SignalExternalWorkflowExecutionFailedCause:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class ChildWorkflowExecutionFailedCause(Enum):
+class ChildWorkflowExecutionFailedCause(IntEnum):
     WORKFLOW_ALREADY_RUNNING = 0
     
+    @classmethod
+    def value_for(cls, n: int) -> ChildWorkflowExecutionFailedCause:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class WorkflowExecutionCloseStatus(Enum):
+class WorkflowExecutionCloseStatus(IntEnum):
     COMPLETED = 0
     FAILED = 1
     CANCELED = 2
@@ -201,44 +237,76 @@ class WorkflowExecutionCloseStatus(Enum):
     CONTINUED_AS_NEW = 4
     TIMED_OUT = 5
     
+    @classmethod
+    def value_for(cls, n: int) -> WorkflowExecutionCloseStatus:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class ChildPolicy(Enum):
+class ChildPolicy(IntEnum):
     TERMINATE = 0
     REQUEST_CANCEL = 1
     ABANDON = 2
     
+    @classmethod
+    def value_for(cls, n: int) -> ChildPolicy:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class QueryTaskCompletedType(Enum):
+class QueryTaskCompletedType(IntEnum):
     COMPLETED = 0
     FAILED = 1
     
+    @classmethod
+    def value_for(cls, n: int) -> QueryTaskCompletedType:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class PendingActivityState(Enum):
+class PendingActivityState(IntEnum):
     SCHEDULED = 0
     STARTED = 1
     CANCEL_REQUESTED = 2
     
+    @classmethod
+    def value_for(cls, n: int) -> PendingActivityState:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class HistoryEventFilterType(Enum):
+class HistoryEventFilterType(IntEnum):
     ALL_EVENT = 0
     CLOSE_EVENT = 1
     
+    @classmethod
+    def value_for(cls, n: int) -> HistoryEventFilterType:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class TaskListKind(Enum):
+class TaskListKind(IntEnum):
     NORMAL = 0
     STICKY = 1
     
+    @classmethod
+    def value_for(cls, n: int) -> TaskListKind:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class ContinueAsNewInitiator(Enum):
+class ContinueAsNewInitiator(IntEnum):
     Decider = 0
     RetryPolicy = 1
     CronSchedule = 2
     
+    @classmethod
+    def value_for(cls, n: int) -> ContinueAsNewInitiator:
+        return next(filter(lambda i: i == n, cls), None)
+
     
-class TaskListType(Enum):
+class TaskListType(IntEnum):
     Decision = 0
     Activity = 1
     
+    @classmethod
+    def value_for(cls, n: int) -> TaskListType:
+        return next(filter(lambda i: i == n, cls), None)
+
     
 # noinspection PyPep8
 @dataclass
