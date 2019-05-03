@@ -71,7 +71,7 @@ class WorkflowService:
     def start_workflow(self, request: StartWorkflowExecutionRequest) -> Tuple[StartWorkflowExecutionResponse, object]:
         return self.call_return("StartWorkflowExecution", request, StartWorkflowExecutionResponse)
 
-    def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
+    def register_domain(self, request: RegisterDomainRequest) -> Tuple[None, object]:
         return self.call_void("RegisterDomain", request)
 
     def describe_domain(self, request: DescribeDomainRequest) -> Tuple[DescribeDomainResponse, object]:
@@ -83,7 +83,7 @@ class WorkflowService:
     def update_domain(self, request: UpdateDomainRequest) -> Tuple[UpdateDomainResponse, object]:
         return self.call_return("UpdateDomain", request, UpdateDomainResponse)
 
-    def deprecate_domain(self, request: DeprecateDomainRequest) -> [None, object]:
+    def deprecate_domain(self, request: DeprecateDomainRequest) -> Tuple[None, object]:
         return self.call_void("DeprecateDomain", request)
 
     def get_workflow_execution_history(self, request: GetWorkflowExecutionHistoryRequest) -> \
