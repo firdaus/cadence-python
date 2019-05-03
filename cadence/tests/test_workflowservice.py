@@ -37,6 +37,7 @@ class TestStartWorkflow(TestCase):
         request.workflow_type.name = "firdaus-workflow-type"
         request.execution_start_to_close_timeout_seconds = 86400
         request.task_start_to_close_timeout_seconds = 120
+        time.sleep(0.5)
 
     def test_start_workflow(self):
         (response, err) = self.service.start_workflow(self.request)
