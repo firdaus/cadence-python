@@ -72,6 +72,9 @@ class WorkflowService:
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
         return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
 
+    def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
+        return self.call_void("RespondActivityTaskCompleted", request)
+
     def respond_activity_task_completed_by_id(self, request: RespondActivityTaskCompletedByIDRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompletedByID", request)
 
@@ -98,9 +101,6 @@ class WorkflowService:
     def signal_with_start_workflow_execution(self, request: SignalWithStartWorkflowExecutionRequest) -> \
             Tuple[StartWorkflowExecutionResponse, object]:
         return self.call_return("SignalWithStartWorkflowExecution", request, StartWorkflowExecutionResponse)
-
-    def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
-        return self.call_void("RespondActivityTaskCompleted", request)
 
     def terminate_workflow_execution(self, request: TerminateWorkflowExecutionRequest) -> Tuple[None, object]:
         return self.call_void("TerminateWorkflowExecution", request)

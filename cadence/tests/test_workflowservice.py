@@ -77,6 +77,15 @@ class TestStartWorkflow(TestCase):
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
 
+    def test_respond_query_task_completed_invalid(self):
+        request = RespondQueryTaskCompletedRequest()
+        request.task_token = "{}"
+        request.completed_type = QueryTaskCompletedType.COMPLETED
+        request.query_result = ""
+        response, err = self.service.respond_query_task_completed(request)
+        self.assertIsNotNone(err)
+        self.assertRegex(str(err), "Invalid TaskToken")
+
     def test_respond_activity_task_completed_by_id(self):
         start_response, _ = self.service.start_workflow(self.request)
         request = RespondActivityTaskCompletedByIDRequest()
@@ -209,15 +218,6 @@ class TestStartWorkflow(TestCase):
         self.assertIsNone(err)
         self.assertIsNotNone(response)
         self.assertIsInstance(response, ListClosedWorkflowExecutionsResponse)
-
-    def test_respond_query_task_completed_invalid(self):
-        request = RespondQueryTaskCompletedRequest()
-        request.task_token = "{}"
-        request.completed_type = QueryTaskCompletedType.COMPLETED
-        request.query_result = ""
-        response, err = self.service.respond_query_task_completed(request)
-        self.assertIsNotNone(err)
-        self.assertRegex(str(err), "Invalid TaskToken")
 
     def test_reset_sticky_task_list(self):
         start_response, _ = self.service.start_workflow(self.request)
