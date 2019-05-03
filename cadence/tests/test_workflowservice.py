@@ -15,7 +15,8 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest, \
-    RespondDecisionTaskFailedRequest, DecisionTaskFailedCause, RespondDecisionTaskCompletedRequest
+    RespondDecisionTaskFailedRequest, DecisionTaskFailedCause, RespondDecisionTaskCompletedRequest, \
+    PollForDecisionTaskRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -68,6 +69,15 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.register_domain(request)
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
+
+    def test_poll_for_decision_task(self):
+        request = PollForDecisionTaskRequest()
+        request.identity = "123@localhost"
+        request.domain = "test-domain"
+        request.task_list = TaskList()
+        request.task_list.name = "test-task-list" + str(uuid4())
+        with self.assertRaisesRegex(TChannelException, "timeout") as context:
+            self.service.poll_for_decision_task(request)
 
     def test_respond_decision_task_completed(self):
         request = RespondDecisionTaskCompletedRequest()
