@@ -19,7 +19,8 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, \
-    RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest, RespondDecisionTaskFailedRequest
+    RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest, RespondDecisionTaskFailedRequest, \
+    RespondDecisionTaskCompletedRequest, RespondDecisionTaskCompletedResponse
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -69,6 +70,10 @@ class WorkflowService:
 
     def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
         return self.call_void("RegisterDomain", request)
+
+    def respond_decision_task_completed(self, request: RespondDecisionTaskCompletedRequest) -> \
+            Tuple[RespondDecisionTaskCompletedResponse, object]:
+        return self.call_return("RespondDecisionTaskCompleted", request, RespondDecisionTaskCompletedResponse)
 
     def respond_decision_task_failed(self, request: RespondDecisionTaskFailedRequest) -> Tuple[None, object]:
         return self.call_void("RespondDecisionTaskFailed", request)
