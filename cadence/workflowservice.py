@@ -18,7 +18,8 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     ListOpenWorkflowExecutionsResponse, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
-    RespondActivityTaskCompletedByIDRequest
+    RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, \
+    RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -71,6 +72,13 @@ class WorkflowService:
 
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
         return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
+
+    def record_activity_task_heartbeat(self, request: RecordActivityTaskHeartbeatRequest) -> \
+            Tuple[RecordActivityTaskHeartbeatResponse, object]:
+        return self.call_return("RecordActivityTaskHeartbeat", request, RecordActivityTaskHeartbeatResponse)
+
+    def record_activity_task_heartbeat_by_id(self, request: RecordActivityTaskHeartbeatByIDRequest) -> Tuple[RecordActivityTaskHeartbeatResponse, object]:
+        return self.call_return("RecordActivityTaskHeartbeatByID", request, RecordActivityTaskHeartbeatResponse)
 
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompleted", request)

@@ -14,7 +14,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
-    RespondActivityTaskCompletedByIDRequest
+    RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -76,6 +76,27 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_record_activity_task_heartbeat(self):
+        request = RecordActivityTaskHeartbeatRequest()
+        request.task_token = "{}"
+        request.identity = "123@localhost"
+        response, err = self.service.record_activity_task_heartbeat(request)
+        self.assertIsNotNone(err)
+        self.assertRegex(str(err), "Domain not set")
+
+    def test_record_activity_task_heartbeat_by_id(self):
+        start_response, _ = self.service.start_workflow(self.request)
+        request = RecordActivityTaskHeartbeatByIDRequest()
+        request.identity = "123@localhost"
+        request.domain = "test-domain"
+        request.workflow_id = self.request.workflow_id
+        request.run_id = start_response.run_id
+        request.activity_id = "dummy-activity-id"
+        response, err = self.service.record_activity_task_heartbeat_by_id(request)
+        self.assertIsNotNone(err)
+        self.assertIsNone(response)
+        self.assertRegex(str(err), "No such activityID")
 
     def test_respond_query_task_completed_invalid(self):
         request = RespondQueryTaskCompletedRequest()
