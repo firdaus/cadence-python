@@ -13,7 +13,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     QueryTaskCompletedType, ListClosedWorkflowExecutionsRequest, ListClosedWorkflowExecutionsResponse, StartTimeFilter, \
     ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
-    RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest
+    RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -75,6 +75,15 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_respond_activity_task_failed(self):
+        request = RespondActivityTaskFailedRequest()
+        request.task_token = '{"domainId": "%s", "workflowId": "%s"}' % (str(uuid4()), str(uuid4()))
+        request.identity = "123@localhost"
+        response, err = self.service.respond_activity_task_failed(request)
+        self.assertIsNotNone(err)
+        self.assertRegex(str(err), "Domain .* does not exist")
+        self.assertIsNone(response)
 
     def test_respond_activity_task_failed_by_id_invalid(self):
         start_response, _ = self.service.start_workflow(self.request)
