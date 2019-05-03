@@ -16,7 +16,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest, \
     RespondDecisionTaskFailedRequest, DecisionTaskFailedCause, RespondDecisionTaskCompletedRequest, \
-    PollForDecisionTaskRequest, GetWorkflowExecutionHistoryRequest
+    PollForDecisionTaskRequest, GetWorkflowExecutionHistoryRequest, DeprecateDomainRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -69,6 +69,16 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.register_domain(request)
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
+
+    def test_deprecate_domain(self):
+        register_request = RegisterDomainRequest()
+        register_request.name = str(uuid4())
+        self.service.register_domain(register_request)
+        request = DeprecateDomainRequest()
+        request.name = register_request.name
+        response, err = self.service.deprecate_domain(request)
+        self.assertIsNone(err)
+        self.assertIsNone(response)
 
     def test_get_workflow_execution_history(self):
         response, err = self.service.start_workflow(self.request)

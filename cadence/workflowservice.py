@@ -21,7 +21,8 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, \
     RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest, RespondDecisionTaskFailedRequest, \
     RespondDecisionTaskCompletedRequest, RespondDecisionTaskCompletedResponse, PollForDecisionTaskResponse, \
-    PollForDecisionTaskRequest, GetWorkflowExecutionHistoryResponse, GetWorkflowExecutionHistoryRequest
+    PollForDecisionTaskRequest, GetWorkflowExecutionHistoryResponse, GetWorkflowExecutionHistoryRequest, \
+    DeprecateDomainRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -71,6 +72,9 @@ class WorkflowService:
 
     def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
         return self.call_void("RegisterDomain", request)
+
+    def deprecate_domain(self, request: DeprecateDomainRequest) -> [None, object]:
+        return self.call_void("DeprecateDomain", request)
 
     def get_workflow_execution_history(self, request: GetWorkflowExecutionHistoryRequest) -> \
             Tuple[GetWorkflowExecutionHistoryResponse, object]:
