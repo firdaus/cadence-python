@@ -17,7 +17,7 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     ListClosedWorkflowExecutionsResponse, ListClosedWorkflowExecutionsRequest, ListOpenWorkflowExecutionsRequest, \
     ListOpenWorkflowExecutionsResponse, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
-    RespondActivityTaskCanceledRequest
+    RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -70,6 +70,9 @@ class WorkflowService:
 
     def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
         return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
+
+    def respond_activity_task_failed_by_id(self, request: RespondActivityTaskFailedByIDRequest) -> Tuple[None, object]:
+        return self.call_void("RespondActivityTaskFailedByID", request)
 
     def respond_activity_task_canceled(self, request: RespondActivityTaskCanceledRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCanceled", request)
