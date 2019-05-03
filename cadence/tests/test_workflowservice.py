@@ -16,7 +16,7 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, RecordActivityTaskHeartbeatRequest, \
     RespondDecisionTaskFailedRequest, DecisionTaskFailedCause, RespondDecisionTaskCompletedRequest, \
-    PollForDecisionTaskRequest
+    PollForDecisionTaskRequest, GetWorkflowExecutionHistoryRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -69,6 +69,19 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.register_domain(request)
         self.assertIsNotNone(err)
         self.assertIsInstance(err, DomainAlreadyExistsError)
+
+    def test_get_workflow_execution_history(self):
+        response, err = self.service.start_workflow(self.request)
+        request = GetWorkflowExecutionHistoryRequest()
+        request.domain = "test-domain"
+        request.execution = WorkflowExecution()
+        request.execution.workflow_id = self.request.workflow_id
+        request.execution.run_id = response.run_id
+        response, err = self.service.get_workflow_execution_history(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsNotNone(response.history)
+        self.assertIsNotNone(response.history.events)
 
     def test_poll_for_decision_task(self):
         request = PollForDecisionTaskRequest()

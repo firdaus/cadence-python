@@ -21,7 +21,7 @@ from cadence.types import PollForActivityTaskResponse, StartWorkflowExecutionReq
     RespondActivityTaskCompletedByIDRequest, RecordActivityTaskHeartbeatByIDRequest, \
     RecordActivityTaskHeartbeatResponse, RecordActivityTaskHeartbeatRequest, RespondDecisionTaskFailedRequest, \
     RespondDecisionTaskCompletedRequest, RespondDecisionTaskCompletedResponse, PollForDecisionTaskResponse, \
-    PollForDecisionTaskRequest
+    PollForDecisionTaskRequest, GetWorkflowExecutionHistoryResponse, GetWorkflowExecutionHistoryRequest
 
 TCHANNEL_SERVICE = "cadence-frontend"
 
@@ -71,6 +71,10 @@ class WorkflowService:
 
     def register_domain(self, request: RegisterDomainRequest) -> [None, object]:
         return self.call_void("RegisterDomain", request)
+
+    def get_workflow_execution_history(self, request: GetWorkflowExecutionHistoryRequest) -> \
+            Tuple[GetWorkflowExecutionHistoryResponse, object]:
+        return self.call_return("GetWorkflowExecutionHistory", request, GetWorkflowExecutionHistoryResponse)
 
     def poll_for_decision_task(self, request: PollForDecisionTaskRequest) -> \
             Tuple[PollForDecisionTaskResponse, object]:
