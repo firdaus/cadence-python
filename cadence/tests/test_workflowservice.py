@@ -13,7 +13,8 @@ from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType,
     QueryTaskCompletedType, ListClosedWorkflowExecutionsRequest, ListClosedWorkflowExecutionsResponse, StartTimeFilter, \
     ListOpenWorkflowExecutionsRequest, TerminateWorkflowExecutionRequest, SignalWithStartWorkflowExecutionRequest, \
     SignalWorkflowExecutionRequest, RequestCancelWorkflowExecutionRequest, RespondActivityTaskCanceledByIDRequest, \
-    RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest
+    RespondActivityTaskCanceledRequest, RespondActivityTaskFailedByIDRequest, RespondActivityTaskFailedRequest, \
+    RespondActivityTaskCompletedByIDRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -75,6 +76,19 @@ class TestStartWorkflow(TestCase):
         request.task_list.name = "test-task-list"
         with self.assertRaisesRegex(TChannelException, "timeout") as context:
             self.service.poll_for_activity_task(request)
+
+    def test_respond_activity_task_completed_by_id(self):
+        start_response, _ = self.service.start_workflow(self.request)
+        request = RespondActivityTaskCompletedByIDRequest()
+        request.identity = "123@localhost"
+        request.domain = "test-domain"
+        request.workflow_id = self.request.workflow_id
+        request.run_id = start_response.run_id
+        request.activity_id = "dummy-activity-id"
+        response, err = self.service.respond_activity_task_completed_by_id(request)
+        self.assertIsNotNone(err)
+        self.assertIsNone(response)
+        self.assertRegex(str(err), "No such activityID")
 
     def test_respond_activity_task_failed(self):
         request = RespondActivityTaskFailedRequest()
