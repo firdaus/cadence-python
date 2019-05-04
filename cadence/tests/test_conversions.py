@@ -1,7 +1,8 @@
 from unittest import TestCase
 
 from cadence.conversions import camel_to_snake, copy_thrift_to_py, snake_to_camel, copy_py_to_thrift
-from cadence.types import PollForActivityTaskResponse, WorkflowExecution, HistoryEvent, EventType
+from cadence.types import PollForActivityTaskResponse, WorkflowExecution, HistoryEvent, EventType, History, \
+    RegisterDomainRequest, RetryPolicy
 from cadence.thrift import cadence_thrift
 
 
@@ -42,6 +43,28 @@ class TestCopyThriftToPy(TestCase):
         self.assertEqual(EventType.DecisionTaskStarted, obj.event_type)
         self.assertIsInstance(obj.event_type, EventType)
 
+    def test_list(self):
+        thrift_obj = cadence_thrift.shared.History()
+        thrift_obj.events = []
+        thrift_obj.events.append(cadence_thrift.shared.HistoryEvent())
+        obj: History = copy_thrift_to_py(thrift_obj)
+        self.assertIsInstance(obj, History)
+        self.assertEqual(1, len(obj.events))
+
+    def test_list_primitive(self):
+        thrift_object = cadence_thrift.shared.RetryPolicy()
+        thrift_object.nonRetriableErrorReasons = ["abc"]
+        obj: RetryPolicy = copy_thrift_to_py(thrift_object)
+        self.assertIsInstance(obj, RetryPolicy)
+        self.assertIn("abc", obj.non_retriable_error_reasons)
+
+    def test_dict(self):
+        thrift_obj = cadence_thrift.shared.RegisterDomainRequest()
+        thrift_obj.data = {"name": "test"}
+        obj: RegisterDomainRequest = copy_thrift_to_py(thrift_obj)
+        self.assertIsInstance(obj, RegisterDomainRequest)
+        self.assertEqual("test", obj.data["name"])
+
 
 class TestCopyPyToThrift(TestCase):
     def setUp(self) -> None:
@@ -67,3 +90,24 @@ class TestCopyPyToThrift(TestCase):
         self.assertIsInstance(thrift_object.eventType, int)
         self.assertEqual(int(EventType.ActivityTaskFailed), thrift_object.eventType)
 
+    def test_list(self):
+        history = History()
+        history_event = HistoryEvent()
+        history.events.append(history_event)
+        thrift_object = copy_py_to_thrift(history)
+        self.assertIsInstance(thrift_object, cadence_thrift.shared.History)
+        self.assertEqual(1, len(thrift_object.events))
+
+    def test_list_primitive(self):
+        retry_policy = RetryPolicy()
+        retry_policy.non_retriable_error_reasons.append("abc")
+        thrift_object = copy_py_to_thrift(retry_policy)
+        self.assertIsInstance(thrift_object, cadence_thrift.shared.RetryPolicy)
+        self.assertIn("abc", thrift_object.nonRetriableErrorReasons)
+
+    def test_dict(self):
+        register_domain = RegisterDomainRequest()
+        register_domain.data["name"] = "test"
+        thrift_object = copy_py_to_thrift(register_domain)
+        self.assertIsInstance(thrift_object, cadence_thrift.shared.RegisterDomainRequest)
+        self.assertEqual("test", thrift_object.data["name"])
