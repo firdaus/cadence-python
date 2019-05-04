@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from cadence.conversions import camel_to_snake, copy_thrift_to_py, snake_to_camel, copy_py_to_thrift
 from cadence.types import PollForActivityTaskResponse, WorkflowExecution, HistoryEvent, EventType
-from cadence.thrift import cadence
+from cadence.thrift import cadence_thrift
 
 
 class TestCamelToSnake(TestCase):
@@ -22,9 +22,9 @@ class TestSnakeToCamel(TestCase):
 class TestCopyThriftToPy(TestCase):
 
     def setUp(self) -> None:
-        self.thrift_object = cadence.shared.PollForActivityTaskResponse()
+        self.thrift_object = cadence_thrift.shared.PollForActivityTaskResponse()
         self.thrift_object.taskToken = "TASK_TOKEN"
-        self.thrift_object.workflowExecution = cadence.shared.WorkflowExecution()
+        self.thrift_object.workflowExecution = cadence_thrift.shared.WorkflowExecution()
         self.thrift_object.workflowExecution.workflowId = "WORKFLOW_ID"
         self.thrift_object.workflowExecution.runId = "RUN_ID"
 
@@ -36,7 +36,7 @@ class TestCopyThriftToPy(TestCase):
         self.assertEqual("RUN_ID", obj.workflow_execution.run_id)
 
     def test_copy_with_enum(self):
-        thrift_obj = cadence.shared.HistoryEvent(eventType=5)
+        thrift_obj = cadence_thrift.shared.HistoryEvent(eventType=5)
         obj: HistoryEvent = copy_thrift_to_py(thrift_obj)
         self.assertIsInstance(obj, HistoryEvent)
         self.assertEqual(EventType.DecisionTaskStarted, obj.event_type)
@@ -53,7 +53,7 @@ class TestCopyPyToThrift(TestCase):
 
     def test_copy(self):
         thrift_object = copy_py_to_thrift(self.python_object)
-        self.assertIsInstance(thrift_object, cadence.shared.PollForActivityTaskResponse)
+        self.assertIsInstance(thrift_object, cadence_thrift.shared.PollForActivityTaskResponse)
         self.assertEqual("TASK_TOKEN", thrift_object.taskToken)
         self.assertEqual("WORKFLOW_ID", thrift_object.workflowExecution.workflowId)
         self.assertEqual("RUN_ID", thrift_object.workflowExecution.runId)
@@ -62,7 +62,7 @@ class TestCopyPyToThrift(TestCase):
         event: HistoryEvent = HistoryEvent()
         event.event_type = EventType.ActivityTaskFailed
         thrift_object = copy_py_to_thrift(event)
-        self.assertIsInstance(thrift_object, cadence.shared.HistoryEvent)
+        self.assertIsInstance(thrift_object, cadence_thrift.shared.HistoryEvent)
         self.assertEqual(EventType.ActivityTaskFailed, thrift_object.eventType)
         self.assertIsInstance(thrift_object.eventType, int)
         self.assertEqual(int(EventType.ActivityTaskFailed), thrift_object.eventType)

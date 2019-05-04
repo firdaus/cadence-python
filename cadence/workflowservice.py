@@ -6,7 +6,7 @@ from uuid import uuid4
 import os
 import socket
 
-from cadence.thrift import cadence
+from cadence.thrift import cadence_thrift
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
@@ -46,13 +46,13 @@ class WorkflowService:
 
     def thrift_call(self, method_name, request_argument):
         thrift_request_argument = copy_py_to_thrift(request_argument)
-        fn = getattr(cadence.WorkflowService, method_name, None)
+        fn = getattr(cadence_thrift.WorkflowService, method_name, None)
         assert fn
         request = fn.request(thrift_request_argument)
-        request_payload = cadence.dumps(request)
+        request_payload = cadence_thrift.dumps(request)
         call = ThriftFunctionCall.create(TCHANNEL_SERVICE, "WorkflowService::" + method_name, request_payload)
         response = self.connection.call_function(call)
-        start_response = cadence.loads(fn.response, response.thrift_payload)
+        start_response = cadence_thrift.loads(fn.response, response.thrift_payload)
         return start_response
 
     def call_return(self, method_name: str, request: object, expected_return_type: type) -> Tuple[object, object]:
