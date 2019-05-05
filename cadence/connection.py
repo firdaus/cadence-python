@@ -177,7 +177,10 @@ class ThriftFunctionCall(ThriftArgScheme):
         o.thrift_payload = thrift_payload
         o.tchannel_headers = cls.default_tchannel_headers()
         o.application_headers = cls.default_application_headers()
-        o.ttl = 1000
+        # PollForActivityTask is hardcoded on the server to timeout at
+        # 60 seconds, so the ttl needs to be slightly more so that it
+        # does not fail.
+        o.ttl = 61000
         return o
 
     @staticmethod
