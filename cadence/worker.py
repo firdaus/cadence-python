@@ -33,6 +33,8 @@ class Worker:
     def register_activities_implementation(self, activities_instance: object, activities_cls_name: str = None):
         cls_name = activities_cls_name if activities_cls_name else type(activities_instance).__name__
         for method_name, fn in inspect.getmembers(activities_instance, predicate=inspect.ismethod):
+            if method_name.startswith("_"):
+                continue
             self.activities[f'{cls_name}::{camel_to_snake(method_name)}'] = fn
             self.activities[f'{cls_name}::{snake_to_camel(method_name)}'] = fn
 
