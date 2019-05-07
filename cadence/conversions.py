@@ -83,6 +83,8 @@ def copy_py_to_thrift(python_object, field_type=None):
             # StartTimeFilter StartTimeFilter
             if python_field == "start_time_filter":
                 thrift_field = "StartTimeFilter"
+            elif python_field == "history_event_filter_type":
+                thrift_field = "HistoryEventFilterType"
             thrift_value = copy_py_to_thrift(value, field_type)
             if hasattr(thrift_object, thrift_field):
                 setattr(thrift_object, thrift_field, thrift_value)
