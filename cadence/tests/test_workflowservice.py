@@ -6,7 +6,7 @@ import calendar
 
 from cadence.errors import WorkflowExecutionAlreadyStartedError, DomainAlreadyExistsError, EntityNotExistsError
 from cadence.tchannel import TChannelException
-from cadence.types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
+from cadence.cadence_types import StartWorkflowExecutionRequest, TaskList, WorkflowType, StartWorkflowExecutionResponse, \
     RegisterDomainRequest, PollForActivityTaskRequest, DescribeTaskListRequest, TaskListType, \
     DescribeWorkflowExecutionRequest, WorkflowExecution, DescribeTaskListResponse, DescribeWorkflowExecutionResponse, \
     QueryWorkflowRequest, WorkflowQuery, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \

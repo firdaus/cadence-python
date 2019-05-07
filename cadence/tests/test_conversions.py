@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from cadence.conversions import camel_to_snake, copy_thrift_to_py, snake_to_camel, copy_py_to_thrift
-from cadence.types import PollForActivityTaskResponse, WorkflowExecution, HistoryEvent, EventType, History, \
+from cadence.cadence_types import PollForActivityTaskResponse, WorkflowExecution, HistoryEvent, EventType, History, \
     RegisterDomainRequest, RetryPolicy
 from cadence.thrift import cadence_thrift
 

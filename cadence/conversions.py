@@ -2,7 +2,7 @@ import typing
 import inspect
 import re
 from enum import Enum, IntEnum
-import cadence.types
+import cadence.cadence_types
 from cadence.thrift import cadence_thrift
 
 PRIMITIVES = [int, str, bytes, float, bool]
@@ -105,6 +105,6 @@ def get_thrift_type(python_cls: type) -> type:
 
 
 def get_python_type(thrift_class: type) -> type:
-    python_cls = getattr(cadence.types, thrift_class.__name__, None)
+    python_cls = getattr(cadence.cadence_types, thrift_class.__name__, None)
     assert python_cls, "Python class not found: " + thrift_class.__name__
     return python_cls

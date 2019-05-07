@@ -8,7 +8,7 @@ import logging
 import datetime
 
 from cadence.conversions import camel_to_snake, snake_to_camel
-from cadence.types import PollForActivityTaskResponse, PollForActivityTaskRequest, TaskList, \
+from cadence.cadence_types import PollForActivityTaskResponse, PollForActivityTaskRequest, TaskList, \
     RespondActivityTaskCompletedRequest, TaskListMetadata, TaskListKind, RespondActivityTaskFailedRequest
 from cadence.workflowservice import WorkflowService
 
