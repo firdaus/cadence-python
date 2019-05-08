@@ -10,7 +10,8 @@ class GreetingActivitiesImpl:
         return greeting + " " + name + "!"
 
 
-factory = WorkerFactory("localhost", 7933, "sample")
-worker = factory.new_worker("python-tasklist")
-worker.register_activities_implementation(GreetingActivitiesImpl(), "GreetingActivities")
-factory.start()
+if __name__ == "__main__":
+    factory = WorkerFactory("localhost", 7933, "sample")
+    worker = factory.new_worker("python-tasklist")
+    worker.register_activities_implementation(GreetingActivitiesImpl(), "GreetingActivities")
+    factory.start()
