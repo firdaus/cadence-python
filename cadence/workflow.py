@@ -107,10 +107,14 @@ def workflow_method(func=None,
                     task_list=None):
     def wrapper(fn):
         def stub_fn(self, *args):
-            assert self._workflow_client is not None
-            return exec_workflow_sync(self._workflow_client, stub_fn, args,
-                                      workflow_options=self._workflow_options)
+            if hasattr(self, "_workflow_client"):
+                assert self._workflow_client is not None
+                return exec_workflow_sync(self._workflow_client, stub_fn, args,
+                                          workflow_options=self._workflow_options)
+            else:
+                fn(*args)
 
+        stub_fn._workflow_method = True
         stub_fn._name = name if name else get_workflow_method_name(fn)
         stub_fn._workflow_id = workflow_id
         stub_fn._workflow_id_reuse_policy = workflow_id_reuse_policy

@@ -1,6 +1,8 @@
 import unittest
 
 from cadence.cadence_types import WorkflowIdReusePolicy
+from cadence.worker import Worker
+from cadence.workerfactory import WorkerFactory
 from cadence.workflow import workflow_method
 
 
@@ -60,4 +62,16 @@ class TestWorkflowMethod(unittest.TestCase):
         self.assertEqual(123456, fn._task_start_to_close_timeout_seconds)
         self.assertEqual("TASK_LIST", fn._task_list)
 
+    def test_register(self):
+        factory = WorkerFactory("localhost", 7933, "sample")
+        worker: Worker = factory.new_worker("python-tasklist")
+        worker.register_workflow_implementation_type(DummyWorkflow)
+        self.assertIn("DummyWorkflow::method_annotated_plain", worker.workflow_methods)
+        self.assertIn("DummyWorkflow::methodAnnotatedPlain", worker.workflow_methods)
+        self.assertIn("DummyWorkflow::method_annotated_decorator_call", worker.workflow_methods)
+        self.assertIn("DummyWorkflow::methodAnnotatedDecoratorCall", worker.workflow_methods)
+        self.assertIn("NAME", worker.workflow_methods)
 
+        (cls, fn) = worker.workflow_methods.get("DummyWorkflow::method_annotated_plain")
+        self.assertEqual(DummyWorkflow, cls)
+        self.assertEqual(fn, DummyWorkflow.method_annotated_plain)
