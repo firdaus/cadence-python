@@ -36,7 +36,7 @@ class WorkflowService:
         return cls(connection)
 
     @classmethod
-    def get_identity(self):
+    def get_identity(cls):
         return "%d@%s" % (os.getpid(), socket.gethostname())
 
     def __init__(self, connection: TChannelConnection):
