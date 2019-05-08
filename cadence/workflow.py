@@ -1,13 +1,18 @@
 from __future__ import annotations
 import inspect
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict
 from uuid import uuid4
 
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
-    GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType
+    GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent
 from cadence.workflowservice import WorkflowService
+
+
+@dataclass
+class Workflow:
+    history: List[HistoryEvent] = field(default_factory=list)
 
 
 @dataclass
@@ -112,7 +117,7 @@ def workflow_method(func=None,
                 return exec_workflow_sync(self._workflow_client, stub_fn, args,
                                           workflow_options=self._workflow_options)
             else:
-                fn(*args)
+                return fn(self, *args)
 
         stub_fn._workflow_method = True
         stub_fn._name = name if name else get_workflow_method_name(fn)

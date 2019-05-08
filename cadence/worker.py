@@ -4,7 +4,6 @@ import inspect
 import threading
 import logging
 
-from cadence.activity_loop import activity_task_loop
 from cadence.conversions import camel_to_snake, snake_to_camel
 from cadence.workflowservice import WorkflowService
 
@@ -45,5 +44,11 @@ class Worker:
                     self.workflow_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = (cls, fn)
 
     def start(self):
-        thread = threading.Thread(target=activity_task_loop, args=(self,))
-        thread.start()
+        from cadence.activity_loop import activity_task_loop
+        from cadence.decision_loop import decision_task_loop
+        if self.activities:
+            thread = threading.Thread(target=activity_task_loop, args=(self,))
+            thread.start()
+        if self.workflow_methods:
+            thread = threading.Thread(target=decision_task_loop, args=(self,))
+            thread.start()
