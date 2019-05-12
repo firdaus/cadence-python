@@ -3,16 +3,96 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+from dataclasses import dataclass
+from typing import List
+
+from more_itertools import peekable
 
 from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForDecisionTaskResponse, \
     RespondDecisionTaskCompletedRequest, \
-    CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse
+    CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
+    HistoryEvent, EventType
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
 from cadence.workflow import Workflow
 from cadence.workflowservice import WorkflowService
 
 logger = logging.getLogger(__name__)
+
+
+def is_decision_event(event: HistoryEvent) -> bool:
+    decision_event_types = (EventType.ActivityTaskScheduled,
+                            EventType.StartChildWorkflowExecutionInitiated,
+                            EventType.TimerStarted,
+                            EventType.WorkflowExecutionCompleted,
+                            EventType.WorkflowExecutionFailed,
+                            EventType.WorkflowExecutionCanceled,
+                            EventType.WorkflowExecutionContinuedAsNew,
+                            EventType.ActivityTaskCancelRequested,
+                            EventType.RequestCancelActivityTaskFailed,
+                            EventType.TimerCanceled,
+                            EventType.CancelTimerFailed,
+                            EventType.RequestCancelExternalWorkflowExecutionInitiated,
+                            EventType.MarkerRecorded,
+                            EventType.SignalExternalWorkflowExecutionInitiated)
+    return event.event_type in decision_event_types
+
+
+class HistoryHelper:
+
+    def __init__(self, events: List[HistoryEvent]):
+        self.events = peekable(events)
+
+    def has_next(self) -> bool:
+        try:
+            self.events.peek()
+            return True
+        except StopIteration:
+            return False
+
+    def next(self) -> DecisionEvents:
+        events = self.events
+        if not self.has_next():
+            return None
+        decision_events: List[HistoryEvent] = []
+        new_events: List[HistoryEvent] = []
+        replay = True
+        next_decision_event_id = -1
+        event: HistoryEvent
+        for event in events:
+            event_type = event.event_type
+            if event_type == EventType.DecisionTaskStarted or not self.has_next():
+                if not self.has_next():
+                    replay = False
+                    next_decision_event_id = event.event_id + 2
+                    break
+                peeked: HistoryEvent = events.peek()
+                peeked_type = peeked.event_type
+                if peeked_type == EventType.DecisionTaskTimedOut or peeked_type == EventType.DecisionTaskFailed:
+                    continue
+                elif peeked_type == EventType.DecisionTaskCompleted:
+                    next(events)
+                    next_decision_event_id = peeked.event_id + 1
+                    break
+                else:
+                    raise Exception(
+                        "Unexpected event after DecisionTaskStarted: {} DecisionTaskStarted Event: {}".format(peeked))
+            new_events.append(event)
+        while self.has_next():
+            if not is_decision_event(events.peek()):
+                break;
+            decision_events.append(next(events))
+        result = DecisionEvents(new_events, decision_events, replay, next_decision_event_id)
+        logger.debug("HistoryHelper next={}", result)
+        return result
+
+
+@dataclass
+class DecisionEvents:
+    events: List[HistoryEvent]
+    decision_events: List[HistoryEvent]
+    replay: bool
+    next_decision_event_id: int
 
 
 def one_iteration(worker: Worker, service: WorkflowService):
