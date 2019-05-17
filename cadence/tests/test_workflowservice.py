@@ -132,8 +132,10 @@ class TestStartWorkflow(TestCase):
         request.domain = "test-domain"
         request.task_list = TaskList()
         request.task_list.name = "test-task-list" + str(uuid4())
-        with self.assertRaisesRegex(TChannelException, "timeout") as context:
-            self.service.poll_for_decision_task(request)
+        response, err = self.service.poll_for_decision_task(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsNone(response.task_token)
 
     def test_respond_decision_task_completed(self):
         request = RespondDecisionTaskCompletedRequest()
@@ -160,8 +162,10 @@ class TestStartWorkflow(TestCase):
         request.identity = WorkflowService.get_identity()
         request.task_list = TaskList()
         request.task_list.name = "test-task-list"
-        with self.assertRaisesRegex(TChannelException, "timeout") as context:
-            self.service.poll_for_activity_task(request)
+        response, err = self.service.poll_for_activity_task(request)
+        self.assertIsNone(err)
+        self.assertIsNotNone(response)
+        self.assertIsNone(response.task_token)
 
     def test_record_activity_task_heartbeat(self):
         request = RecordActivityTaskHeartbeatRequest()
