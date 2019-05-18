@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'cadence-python'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+application {
+    mainClassName = 'JavaGateway'
+}
+
+dependencies {
+    compile name: 'py4j0.10.8.1'
+    compile group: 'com.uber.cadence', name: 'cadence-client', version: '2.2.0'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
