@@ -4,3 +4,7 @@ class IllegalStateException(BaseException):
 
 class IllegalArgumentException(BaseException):
     pass
+
+
+class WorkflowTypeNotFound(Exception):
+    pass

@@ -49,7 +49,7 @@ class Worker:
 
     def start(self):
         from cadence.activity_loop import activity_task_loop
-        from cadence.decision_loop import decision_task_loop
+        from cadence.decision_loop import DecisionTaskLoop
         self.threads_stopped = 0
         self.threads_started = 0
         self.stop_requested = False
@@ -58,7 +58,8 @@ class Worker:
             thread.start()
             self.threads_started += 1
         if self.workflow_methods:
-            thread = threading.Thread(target=decision_task_loop, args=(self,))
+            decision_task_loop = DecisionTaskLoop(worker=self)
+            thread = threading.Thread(target=decision_task_loop.run)
             thread.start()
             self.threads_started += 1
 
