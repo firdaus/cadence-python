@@ -1,4 +1,5 @@
-import logging
+import logging.config
+
 
 def init_test_logging():
     logging.config.dictConfig({
