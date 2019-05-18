@@ -4,7 +4,7 @@ import datetime
 import json
 import logging
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict, Optional
 
 from more_itertools import peekable
 
@@ -50,7 +50,7 @@ class HistoryHelper:
         except StopIteration:
             return False
 
-    def next(self) -> DecisionEvents:
+    def next(self) -> Optional[DecisionEvents]:
         events = self.events
         if not self.has_next():
             return None
@@ -58,6 +58,7 @@ class HistoryHelper:
         new_events: List[HistoryEvent] = []
         replay = True
         next_decision_event_id = -1
+        # noinspection PyUnusedLocal
         event: HistoryEvent
         for event in events:
             event_type = event.event_type
@@ -76,14 +77,14 @@ class HistoryHelper:
                     break
                 else:
                     raise Exception(
-                        "Unexpected event after DecisionTaskStarted: {} DecisionTaskStarted Event: {}".format(peeked))
+                        "Unexpected event after DecisionTaskStarted: {}".format(peeked))
             new_events.append(event)
         while self.has_next():
             if not is_decision_event(events.peek()):
-                break;
+                break
             decision_events.append(next(events))
         result = DecisionEvents(new_events, decision_events, replay, next_decision_event_id)
-        logger.debug("HistoryHelper next={}", result)
+        logger.debug("HistoryHelper next=%s", result)
         return result
 
 
