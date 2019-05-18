@@ -100,7 +100,7 @@ def create_close_history_event_request(workflow_client: WorkflowClient, workflow
 
 
 def get_workflow_method_name(method):
-    return method.__qualname__.replace(".", "::")
+    return "::".join(method.__qualname__.split(".")[-2:])
 
 
 def workflow_method(func=None,
