@@ -167,3 +167,6 @@ class WorkflowService:
 
     def describe_task_list(self, request) -> Tuple[DescribeTaskListResponse, object]:
         return self.call_return("DescribeTaskList", request, DescribeTaskListResponse)
+
+    def close(self):
+        self.connection.close()
