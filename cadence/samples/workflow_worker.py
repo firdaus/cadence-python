@@ -1,18 +1,15 @@
 import logging
 
 from cadence.workerfactory import WorkerFactory
-from cadence.workflow import workflow_method, Workflow
+from cadence.workflow import workflow_method
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class GreetingWorkflowImpl:
 
-    def __init__(self, workflow: Workflow):
-        self.workflow = workflow
-
     @workflow_method(name='GreetingWorkflow::getGreeting')
-    def get_greeting(self, name):
+    async def get_greeting(self, name):
         return f"Hello, return value from Python {name}"
 
 
