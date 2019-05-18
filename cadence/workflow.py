@@ -11,11 +11,6 @@ from cadence.workflowservice import WorkflowService
 
 
 @dataclass
-class Workflow:
-    history: List[HistoryEvent] = field(default_factory=list)
-
-
-@dataclass
 class WorkflowClient:
     service: WorkflowService
     domain: domain
@@ -118,7 +113,6 @@ def workflow_method(func=None,
                                           workflow_options=self._workflow_options)
             else:
                 return fn(self, *args)
-
         stub_fn._workflow_method = True
         stub_fn._name = name if name else get_workflow_method_name(fn)
         stub_fn._workflow_id = workflow_id
