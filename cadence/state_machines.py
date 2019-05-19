@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
-from typing import Callable, List
+from typing import Callable, List, Optional
 
-from cadence.cadence_types import Decision, HistoryEvent
+from cadence.cadence_types import Decision, HistoryEvent, ScheduleActivityTaskDecisionAttributes, \
+    RequestCancelActivityTaskDecisionAttributes, DecisionType
 from cadence.decisions import DecisionState, DecisionId
-from cadence.exceptions import IllegalStateException
+from cadence.exceptions import IllegalStateException, IllegalArgumentException
 
 
 class DecisionStateMachine:
-    def get_decision(self) -> Decision:
+    def get_decision(self) -> Optional[Decision]:
         raise NotImplementedError
 
     def cancel(self, immediate_cancellation_callback: Callable) -> bool:
@@ -79,7 +80,7 @@ class DecisionStateMachineBase(DecisionStateMachine):
         else:
             pass
 
-    def cancel(self, immediate_cancellation_callback: Callable) -> bool:
+    def cancel(self, immediate_cancellation_callback: Optional[Callable]) -> bool:
         self.state_history.append("cancel")
         result = False
         if self.state == DecisionState.CREATED:
@@ -156,3 +157,56 @@ class DecisionStateMachineBase(DecisionStateMachine):
 
     def fail_state_transition(self):
         raise IllegalStateException("id=" + str(self.id) + ", transitions=" + str(self.state_history))
+
+
+@dataclass
+class ActivityDecisionStateMachine(DecisionStateMachineBase):
+    """
+    This class has feature parity with the Java version even though it implements parts of features
+    not yet implemented in the Python version.
+    """
+    schedule_attributes: ScheduleActivityTaskDecisionAttributes = None
+
+    def __post_init__(self):
+        if not self.schedule_attributes:
+            raise IllegalArgumentException("schedule_attributes is mandatory")
+
+    def get_decision(self) -> Optional[Decision]:
+        if self.state == DecisionState.CREATED:
+            return self.create_schedule_activity_task_decision()
+        elif self.state == DecisionState.CANCELED_AFTER_INITIATED:
+            return self.create_request_cancel_activity_task_decision()
+        else:
+            return None
+
+    def handle_decision_task_started_event(self):
+        if self.state == DecisionState.CANCELED_AFTER_INITIATED:
+            self.state_history.append("handle_decision_task_started_event")
+            self.state = DecisionState.CANCELLATION_DECISION_SENT
+            self.state_history.append(str(self.state))
+        else:
+            super().handle_decision_task_started_event()
+
+    def handle_cancellation_failure_event(self, event: HistoryEvent):
+        if self.state == DecisionState.CANCELLATION_DECISION_SENT:
+            self.state_history.append("handle_cancellation_failure_event")
+            self.state = DecisionState.INITIATED
+            self.state_history.append(str(self.state))
+        else:
+            super().handle_cancellation_failure_event(event)
+
+    def create_schedule_activity_task_decision(self):
+        decision = Decision()
+        decision.schedule_activity_task_decision_attributes = self.schedule_attributes
+        decision.decision_type = DecisionType.ScheduleActivityTask
+        return decision
+
+    def create_request_cancel_activity_task_decision(self):
+        try_cancel = RequestCancelActivityTaskDecisionAttributes()
+        try_cancel.activity_id = self.schedule_attributes.activity_id
+        decision = Decision()
+        decision.request_cancel_activity_task_decision_attributes = try_cancel
+        decision.decision_type = DecisionType.RequestCancelActivityTask
+        return decision
+
+
