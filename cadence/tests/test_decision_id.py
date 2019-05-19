@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from cadence.decision_loop import DecisionId, DecisionTarget
+from cadence.decisions import DecisionTarget, DecisionId
 
 
 class TestDecisionId(TestCase):
