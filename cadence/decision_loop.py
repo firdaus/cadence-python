@@ -5,6 +5,7 @@ import contextvars
 import datetime
 import json
 import logging
+import threading
 from asyncio import Task
 from dataclasses import dataclass, field
 from enum import Enum
@@ -243,6 +244,10 @@ class DecisionTaskLoop:
 
     def __post_init__(self):
         pass
+
+    def start(self):
+        thread = threading.Thread(target=self.run)
+        thread.start()
 
     def run(self):
         try:

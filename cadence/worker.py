@@ -59,8 +59,7 @@ class Worker:
             self.threads_started += 1
         if self.workflow_methods:
             decision_task_loop = DecisionTaskLoop(worker=self)
-            thread = threading.Thread(target=decision_task_loop.run)
-            thread.start()
+            decision_task_loop.start()
             self.threads_started += 1
 
     def stop(self):
