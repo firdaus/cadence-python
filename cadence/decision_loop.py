@@ -321,10 +321,11 @@ class DecisionTaskLoop:
                 decisions = self.process_task(decision_task)
                 self.respond_decisions(decision_task.task_token, decisions)
         finally:
+            # noinspection PyPep8,PyBroadException
             try:
                 self.service.close()
             except:
-                pass
+                logger.warning("service.close() failed", exc_info=1)
             self.worker.notify_thread_stopped()
 
     def poll(self) -> Optional[PollForDecisionTaskResponse]:
