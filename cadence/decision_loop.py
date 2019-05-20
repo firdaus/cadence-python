@@ -18,8 +18,7 @@ from more_itertools import peekable
 from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForDecisionTaskResponse, \
     RespondDecisionTaskCompletedRequest, \
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
-    HistoryEvent, EventType, WorkflowType
-from cadence.decisions import DecisionId
+    HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine
@@ -192,7 +191,10 @@ class DecisionContext:
     event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
 
     next_decision_event_id: int = 0
+    id_counter: int = 0
+    decision_events: DecisionEvents = None
     decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
+
     def decide(self, events: List[HistoryEvent]):
         helper = HistoryHelper(events)
         while helper.has_next():
@@ -201,6 +203,7 @@ class DecisionContext:
         return self.get_decisions()
 
     def process_decision_events(self, decision_events: DecisionEvents):
+        self.handle_decision_task_started(decision_events)
         for event in decision_events.events:
             self.process_event(event)
         self.event_loop.run_event_loop_once()
@@ -223,6 +226,10 @@ class DecisionContext:
                 workflow_input = [workflow_input]
         self.workflow_task = WorkflowTask(task_id=self.execution_id, workflow_input=workflow_input,
                                           worker=self.worker, workflow_type=self.workflow_type, decision_context=self)
+
+    def handle_decision_task_started(self, decision_events: DecisionEvents):
+        self.decision_events = decision_events
+        self.next_decision_event_id = decision_events.next_decision_event_id
 
     def complete_workflow_execution(self, ret_value):
         # PORT: addAllMissingVersionMarker(false, Optional.empty());

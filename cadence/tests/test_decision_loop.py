@@ -2,9 +2,13 @@ import json
 import os
 from typing import List
 from unittest import TestCase
+from unittest.mock import Mock
 
-from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse
-from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop
+from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
+    ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes
+from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, DecisionContext
+from cadence.decisions import DecisionId, DecisionTarget
+from cadence.state_machines import ActivityDecisionStateMachine
 from cadence.tests import init_test_logging
 from cadence.tests.utils import json_to_data_class
 from cadence.worker import Worker
@@ -13,6 +17,7 @@ from cadence.workflow import workflow_method
 __location__ = os.path.dirname(__file__)
 
 init_test_logging()
+
 
 def make_history(event_types: List[EventType]) -> List[HistoryEvent]:
     history = []
@@ -173,3 +178,20 @@ class TestDecisionTaskLoop(TestCase):
         decisions = self.loop.process_task(self.poll_response)
         complete_workflow = decisions[0].complete_workflow_execution_decision_attributes
         self.assertEqual('"value"', complete_workflow.result)
+
+
+class TestDecideNextDecisionId(TestCase):
+    def setUp(self) -> None:
+        events = make_history([
+            EventType.WorkflowExecutionStarted,
+            EventType.DecisionTaskScheduled,
+            EventType.DecisionTaskStarted])
+        events[0].workflow_execution_started_event_attributes = WorkflowExecutionStartedEventAttributes()
+        helper = HistoryHelper(events)
+        self.decision_events = helper.next()
+        self.context = DecisionContext(execution_id="", workflow_type=Mock(), worker=Mock())
+        self.context.event_loop = Mock()
+
+    def test_first_decision_next_decision_id(self):
+        self.context.process_decision_events(self.decision_events)
+        self.assertEqual(5, self.context.next_decision_event_id)
