@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes
-from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, DecisionContext
+from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.state_machines import ActivityDecisionStateMachine
 from cadence.tests import init_test_logging
@@ -182,15 +182,15 @@ class TestDecisionTaskLoop(TestCase):
 
 class TestScheduleActivityTask(TestCase):
     def setUp(self) -> None:
-        self.context = DecisionContext(execution_id="", workflow_type=Mock(), worker=Mock())
+        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=Mock())
 
     def test_schedule_activity_task(self):
         schedule_attributes = ScheduleActivityTaskDecisionAttributes()
-        self.context.schedule_activity_task(schedule_attributes)
+        self.decider.schedule_activity_task(schedule_attributes)
         expected_decision_id = DecisionId(DecisionTarget.ACTIVITY, 0)
-        self.assertEqual(1, self.context.next_decision_event_id)
-        self.assertEqual(1, len(self.context.decisions))
-        state_machine: ActivityDecisionStateMachine = self.context.decisions[expected_decision_id]
+        self.assertEqual(1, self.decider.next_decision_event_id)
+        self.assertEqual(1, len(self.decider.decisions))
+        state_machine: ActivityDecisionStateMachine = self.decider.decisions[expected_decision_id]
         self.assertIs(schedule_attributes, state_machine.schedule_attributes)
         self.assertEqual(expected_decision_id, state_machine.id)
 
@@ -204,9 +204,9 @@ class TestDecideNextDecisionId(TestCase):
         events[0].workflow_execution_started_event_attributes = WorkflowExecutionStartedEventAttributes()
         helper = HistoryHelper(events)
         self.decision_events = helper.next()
-        self.context = DecisionContext(execution_id="", workflow_type=Mock(), worker=Mock())
-        self.context.event_loop = Mock()
+        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=Mock())
+        self.decider.event_loop = Mock()
 
     def test_first_decision_next_decision_id(self):
-        self.context.process_decision_events(self.decision_events)
-        self.assertEqual(5, self.context.next_decision_event_id)
+        self.decider.process_decision_events(self.decision_events)
+        self.assertEqual(5, self.decider.next_decision_event_id)

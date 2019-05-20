@@ -120,7 +120,7 @@ class WorkflowTask:
     workflow_input: List
     worker: Worker
     workflow_type: WorkflowType
-    decision_context: DecisionContext
+    decider: ReplayDecider
     status: Status = Status.CREATED
     workflow_instance: object = None
     ret_value: object = None
@@ -153,7 +153,7 @@ class WorkflowTask:
             self.ret_value = await workflow_proc(self.workflow_instance, *self.workflow_input)
             logger.info(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) returned {self.ret_value}")
-            self.decision_context.complete_workflow_execution(self.ret_value)
+            self.decider.complete_workflow_execution(self.ret_value)
         except BaseException as ex:
             logger.error(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
@@ -183,7 +183,7 @@ class EventLoopWrapper:
 
 
 @dataclass
-class DecisionContext:
+class ReplayDecider:
     execution_id: str
     workflow_type: WorkflowType
     worker: Worker
@@ -225,7 +225,7 @@ class DecisionContext:
             if not isinstance(workflow_input, list):
                 workflow_input = [workflow_input]
         self.workflow_task = WorkflowTask(task_id=self.execution_id, workflow_input=workflow_input,
-                                          worker=self.worker, workflow_type=self.workflow_type, decision_context=self)
+                                          worker=self.worker, workflow_type=self.workflow_type, decider=self)
 
     def handle_decision_task_started(self, decision_events: DecisionEvents):
         self.decision_events = decision_events
@@ -284,7 +284,7 @@ def noop(*args):
 
 
 event_handlers = {
-    EventType.WorkflowExecutionStarted: DecisionContext.handle_workflow_execution_started,
+    EventType.WorkflowExecutionStarted: ReplayDecider.handle_workflow_execution_started,
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
     EventType.ActivityTaskScheduled: None,
@@ -297,7 +297,7 @@ event_handlers = {
 class DecisionTaskLoop:
     worker: Worker
     service: WorkflowService = None
-    decision_contexts: Dict[str, DecisionContext] = field(default_factory=dict)
+    deciders: Dict[str, ReplayDecider] = field(default_factory=dict)
 
     def __post_init__(self):
         pass
@@ -354,9 +354,9 @@ class DecisionTaskLoop:
 
     def process_task(self, decision_task: PollForDecisionTaskResponse) -> List[Decision]:
         execution_id = str(decision_task.workflow_execution)
-        decision_context = DecisionContext(execution_id, decision_task.workflow_type, self.worker)
-        decisions: List[Decision] = decision_context.decide(decision_task.history.events)
-        decision_context.destroy()
+        decider= ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decisions: List[Decision] = decider.decide(decision_task.history.events)
+        decider.destroy()
         return decisions
 
     def respond_decisions(self, task_token: bytes, decisions: List[Decision]):
