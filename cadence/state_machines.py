@@ -210,3 +210,26 @@ class ActivityDecisionStateMachine(DecisionStateMachineBase):
         return decision
 
 
+# noinspection PyAbstractClass
+@dataclass
+class CompleteWorkflowStateMachine(DecisionStateMachine):
+    id: DecisionId
+    decision: Optional[Decision]
+
+    def get_id(self) -> DecisionId:
+        return self.id
+
+    def get_decision(self) -> Optional[Decision]:
+        return self.decision
+
+    def handle_initiation_failed_event(self, event: HistoryEvent):
+        self.decision = None
+
+    def get_state(self) -> DecisionState:
+        return DecisionState.CREATED
+
+    def is_done(self) -> bool:
+        return self.decision is not None
+
+    def handle_decision_task_started_event(self):
+        pass

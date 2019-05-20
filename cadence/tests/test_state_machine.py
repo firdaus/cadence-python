@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from cadence.cadence_types import ScheduleActivityTaskDecisionAttributes, DecisionType, HistoryEvent
+from cadence.cadence_types import ScheduleActivityTaskDecisionAttributes, DecisionType, HistoryEvent, Decision
 from cadence.decisions import DecisionId, DecisionTarget, DecisionState
 from cadence.exceptions import IllegalStateException
-from cadence.state_machines import DecisionStateMachineBase, ActivityDecisionStateMachine
+from cadence.state_machines import DecisionStateMachineBase, ActivityDecisionStateMachine, CompleteWorkflowStateMachine
 
 
 class DecisionStateMachineBaseTest(TestCase):
@@ -136,3 +136,29 @@ class ActivityDecisionStateMachineTest(TestCase):
         self.state_machine.state = DecisionState.COMPLETED_AFTER_CANCELLATION_DECISION_SENT
         self.state_machine.handle_cancellation_failure_event(HistoryEvent())
         self.assertEqual(DecisionState.COMPLETED, self.state_machine.state)
+
+
+class CompleteWorkflowStateMachineTest(TestCase):
+    def setUp(self) -> None:
+        self.decision_id = DecisionId(DecisionTarget.SELF, 256)
+        self.decision = Decision()
+        self.state_machine = CompleteWorkflowStateMachine(self.decision_id, self.decision)
+
+    def test_get_id(self):
+        self.assertIs(self.decision_id, self.state_machine.get_id())
+
+    def test_get_decision(self):
+        self.assertIs(self.decision, self.state_machine.get_decision())
+
+    def test_handle_initiation_failed_event(self):
+        self.state_machine.handle_initiation_failed_event(HistoryEvent())
+        self.assertIsNone(self.state_machine.get_decision())
+
+    def test_get_state(self):
+        self.assertEqual(DecisionState.CREATED, self.state_machine.get_state())
+
+    def test_is_done(self):
+        self.assertTrue(self.state_machine.is_done())
+
+    def test_handle_decision_tast_started_event(self):
+        self.state_machine.handle_decision_task_started_event()
