@@ -165,8 +165,9 @@ class WorkflowTask:
         return self.status == Status.DONE
 
     def destroy(self):
-        self.status = Status.DONE
-        self.task.cancel()
+        if self.status == Status.RUNNING:
+            self.status = Status.DONE
+            self.task.cancel()
 
 
 def run_event_loop_once():
@@ -247,6 +248,10 @@ class DecisionContext:
 
         return decisions
 
+    def destroy(self):
+        if self.workflow_task:
+            self.workflow_task.destroy()
+
 
 # noinspection PyUnusedLocal
 def noop(*args):
@@ -324,7 +329,9 @@ class DecisionTaskLoop:
     def process_task(self, decision_task: PollForDecisionTaskResponse) -> List[Decision]:
         execution_id = str(decision_task.workflow_execution)
         decision_context = DecisionContext(execution_id, decision_task.workflow_type, self.worker)
-        return decision_context.decide(decision_task.history.events)
+        decisions: List[Decision] = decision_context.decide(decision_task.history.events)
+        decision_context.destroy()
+        return decisions
 
     def respond_decisions(self, task_token: bytes, decisions: List[Decision]):
         service = self.service
