@@ -7,6 +7,7 @@ import json
 import logging
 import threading
 from asyncio import Task
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Optional
@@ -18,7 +19,9 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType
 from cadence.decisions import DecisionId
+from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound
+from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
 from cadence.workflowservice import WorkflowService
@@ -150,7 +153,7 @@ class WorkflowTask:
             self.ret_value = await workflow_proc(self.workflow_instance, *self.workflow_input)
             logger.info(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) returned {self.ret_value}")
-            self.decision_context.complete_workflow(self.ret_value)
+            self.decision_context.complete_workflow_execution(self.ret_value)
         except BaseException as ex:
             logger.error(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
@@ -178,8 +181,9 @@ class DecisionContext:
     workflow_type: WorkflowType
     worker: Worker
     workflow_task: WorkflowTask = None
-    decisions: List[Decision] = field(default_factory=list)
 
+    next_decision_event_id: int = 0
+    decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
     def decide(self, events: List[HistoryEvent]):
         helper = HistoryHelper(events)
         while helper.has_next():
@@ -208,17 +212,39 @@ class DecisionContext:
         self.workflow_task = WorkflowTask(task_id=self.execution_id, workflow_input=workflow_input,
                                           worker=self.worker, workflow_type=self.workflow_type, decision_context=self)
 
-    def complete_workflow(self, ret_value):
+    def complete_workflow_execution(self, ret_value):
+        # PORT: addAllMissingVersionMarker(false, Optional.empty());
+        decision = Decision()
         attr = CompleteWorkflowExecutionDecisionAttributes()
         attr.result = json.dumps(ret_value)
-        decision = Decision()
-        decision.decision_type = DecisionType.CompleteWorkflowExecution
         decision.complete_workflow_execution_decision_attributes = attr
-        self.decisions.append(decision)
+        decision.decision_type = DecisionType.CompleteWorkflowExecution
+        decision_id = DecisionId(DecisionTarget.SELF, 0)
+        self.add_decision(decision_id, CompleteWorkflowStateMachine(decision_id, decision))
+
+    def add_decision(self, decision_id: DecisionId, decision: DecisionStateMachine):
+        self.decisions[decision_id] = decision
+        self.next_decision_event_id += 1
 
     def get_decisions(self) -> List[Decision]:
-        decisions = self.decisions.copy()
-        self.decisions.clear()
+        decisions = []
+        for state_machine in self.decisions.values():
+            decisions.append(state_machine.get_decision())
+
+        # PORT: // Include FORCE_IMMEDIATE_DECISION timer only if there are more then 100 events
+        # PORT: int size = result.size();
+        # PORT: if (size > MAXIMUM_DECISIONS_PER_COMPLETION &&
+        # PORT:         !isCompletionEvent(result.get(MAXIMUM_DECISIONS_PER_COMPLETION - 2))) {
+        # PORT:     result = result.subList(0, MAXIMUM_DECISIONS_PER_COMPLETION - 1);
+        # PORT:     StartTimerDecisionAttributes attributes = new StartTimerDecisionAttributes();
+        # PORT:     attributes.setStartToFireTimeoutSeconds(0);
+        # PORT:     attributes.setTimerId(FORCE_IMMEDIATE_DECISION_TIMER);
+        # PORT:     Decision d = new Decision();
+        # PORT:     d.setStartTimerDecisionAttributes(attributes);
+        # PORT:     d.setDecisionType(DecisionType.StartTimer);
+        # PORT:     result.add(d);
+        # PORT: }
+
         return decisions
 
 
