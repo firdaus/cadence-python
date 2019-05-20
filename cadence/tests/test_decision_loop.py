@@ -180,6 +180,21 @@ class TestDecisionTaskLoop(TestCase):
         self.assertEqual('"value"', complete_workflow.result)
 
 
+class TestScheduleActivityTask(TestCase):
+    def setUp(self) -> None:
+        self.context = DecisionContext(execution_id="", workflow_type=Mock(), worker=Mock())
+
+    def test_schedule_activity_task(self):
+        schedule_attributes = ScheduleActivityTaskDecisionAttributes()
+        self.context.schedule_activity_task(schedule_attributes)
+        expected_decision_id = DecisionId(DecisionTarget.ACTIVITY, 0)
+        self.assertEqual(1, self.context.next_decision_event_id)
+        self.assertEqual(1, len(self.context.decisions))
+        state_machine: ActivityDecisionStateMachine = self.context.decisions[expected_decision_id]
+        self.assertIs(schedule_attributes, state_machine.schedule_attributes)
+        self.assertEqual(expected_decision_id, state_machine.id)
+
+
 class TestDecideNextDecisionId(TestCase):
     def setUp(self) -> None:
         events = make_history([

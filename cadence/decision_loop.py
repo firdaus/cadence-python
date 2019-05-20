@@ -241,6 +241,13 @@ class DecisionContext:
         decision_id = DecisionId(DecisionTarget.SELF, 0)
         self.add_decision(decision_id, CompleteWorkflowStateMachine(decision_id, decision))
 
+    def schedule_activity_task(self, schedule: ScheduleActivityTaskDecisionAttributes) -> int:
+        # PORT: addAllMissingVersionMarker(false, Optional.empty());
+        next_decision_event_id = self.next_decision_event_id
+        decision_id = DecisionId(DecisionTarget.ACTIVITY, next_decision_event_id)
+        self.add_decision(decision_id, ActivityDecisionStateMachine(decision_id, schedule_attributes=schedule))
+        return next_decision_event_id
+
     def add_decision(self, decision_id: DecisionId, decision: DecisionStateMachine):
         self.decisions[decision_id] = decision
         self.next_decision_event_id += 1
