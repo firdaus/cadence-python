@@ -7,6 +7,7 @@ import json
 import logging
 import threading
 from asyncio import Task
+from asyncio.events import AbstractEventLoop
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
@@ -170,10 +171,16 @@ class WorkflowTask:
             self.task.cancel()
 
 
-def run_event_loop_once():
-    event_loop = asyncio.get_event_loop()
-    event_loop.call_soon(event_loop.stop)
-    event_loop.run_forever()
+@dataclass
+class EventLoopWrapper:
+    event_loop: AbstractEventLoop = None
+
+    def __post_init__(self):
+        self.event_loop = asyncio.get_event_loop()
+
+    def run_event_loop_once(self):
+        self.event_loop.call_soon(self.event_loop.stop)
+        self.event_loop.run_forever()
 
 
 @dataclass
@@ -182,6 +189,7 @@ class DecisionContext:
     workflow_type: WorkflowType
     worker: Worker
     workflow_task: WorkflowTask = None
+    event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
 
     next_decision_event_id: int = 0
     decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
@@ -189,12 +197,15 @@ class DecisionContext:
         helper = HistoryHelper(events)
         while helper.has_next():
             decision_events = helper.next()
-            for event in decision_events.events:
-                self.process_event(event)
-            run_event_loop_once()
-            for event in decision_events.decision_events:
-                self.process_event(event)
+            self.process_decision_events(decision_events)
         return self.get_decisions()
+
+    def process_decision_events(self, decision_events: DecisionEvents):
+        for event in decision_events.events:
+            self.process_event(event)
+        self.event_loop.run_event_loop_once()
+        for event in decision_events.decision_events:
+            self.process_event(event)
 
     def process_event(self, event: HistoryEvent):
         event_handler = event_handlers.get(event.event_type)
