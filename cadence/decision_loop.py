@@ -130,7 +130,7 @@ class WorkflowTask:
     task: Task = None
 
     @staticmethod
-    def current():
+    def current() -> WorkflowTask:
         return current_workflow_task.get()
 
     def __post_init__(self):
