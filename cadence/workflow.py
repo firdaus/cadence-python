@@ -104,15 +104,18 @@ def workflow_method(func=None,
                     workflow_id_reuse_policy=WorkflowIdReusePolicy.AllowDuplicateFailedOnly,
                     execution_start_to_close_timeout_seconds=7200,  # (2 hours)
                     task_start_to_close_timeout_seconds=10,  # same timeout as Java library
-                    task_list=None):
+                    task_list=None,
+                    impl=False):
     def wrapper(fn):
-        def stub_fn(self, *args):
-            if hasattr(self, "_workflow_client"):
+        if impl:
+            async def stub_fn(self, *args):
+                return await fn(self, *args)
+        else:
+            def stub_fn(self, *args):
                 assert self._workflow_client is not None
                 return exec_workflow_sync(self._workflow_client, stub_fn, args,
                                           workflow_options=self._workflow_options)
-            else:
-                return fn(self, *args)
+
         stub_fn._workflow_method = True
         stub_fn._name = name if name else get_workflow_method_name(fn)
         stub_fn._workflow_id = workflow_id
