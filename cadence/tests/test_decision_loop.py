@@ -6,7 +6,7 @@ from unittest.mock import Mock, MagicMock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision
-from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider
+from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import NonDeterministicWorkflowException
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine
@@ -273,3 +273,17 @@ class TestReplayDecider(TestCase):
         self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
         self.decider.notify_decision_sent()
         state_machine.handle_decision_task_started_event.assert_called_once()
+
+    def test_process_decision_events_notifies_when_replay(self):
+        self.decider.event_loop = Mock()
+        events = [
+            HistoryEvent(event_type=EventType.WorkflowExecutionStarted, workflow_execution_started_event_attributes=WorkflowExecutionStartedEventAttributes()),
+            HistoryEvent(event_type=EventType.DecisionTaskScheduled)
+        ]
+        decision_events = DecisionEvents(events, [], replay=True,next_decision_event_id=5)
+        self.decider.notify_decision_sent = MagicMock()
+        self.decider.process_decision_events(decision_events)
+        self.decider.notify_decision_sent.assert_called_once()
+
+    def tearDown(self) -> None:
+        self.decider.destroy()

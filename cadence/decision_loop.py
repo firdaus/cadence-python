@@ -257,6 +257,8 @@ class ReplayDecider:
         for event in decision_events.events:
             self.process_event(event)
         self.event_loop.run_event_loop_once()
+        if decision_events.replay:
+            self.notify_decision_sent()
         for event in decision_events.decision_events:
             self.process_event(event)
 
