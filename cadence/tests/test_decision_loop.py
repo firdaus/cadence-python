@@ -212,6 +212,18 @@ class TestDecideNextDecisionId(TestCase):
         self.assertEqual(5, self.decider.next_decision_event_id)
 
 
+class ReplayDeciderDestroyTest(TestCase):
+
+    def setUp(self) -> None:
+        self.workflow_task = Mock()
+        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=Mock())
+        self.decider.workflow_task = self.workflow_task
+
+    def test_destroy(self):
+        self.decider.destroy()
+        self.workflow_task.destroy.assert_called()
+
+
 class TestReplayDecider(TestCase):
 
     def setUp(self) -> None:

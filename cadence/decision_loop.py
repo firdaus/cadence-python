@@ -17,6 +17,7 @@ from typing import List, Dict, Optional, Any
 
 from more_itertools import peekable
 
+from cadence.activity_method import ExecuteActivityParameters
 from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForDecisionTaskResponse, \
     RespondDecisionTaskCompletedRequest, \
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
@@ -187,6 +188,43 @@ class EventLoopWrapper:
 
     def create_future(self) -> Future[Any]:
         return self.event_loop.create_future()
+
+
+@dataclass
+class DecisionContext:
+    decider: ReplayDecider
+    scheduled_activities: Dict[int, Future[bytes]] = field(default_factory=dict)
+
+    async def schedule_activity_task(self, parameters: ExecuteActivityParameters):
+        attr = ScheduleActivityTaskDecisionAttributes()
+        attr.activity_type = parameters.activity_type
+        attr.input = parameters.input
+        if parameters.heartbeat_timeout_seconds > 0:
+            attr.heartbeat_timeout_seconds = parameters.heartbeat_timeout_seconds
+        attr.schedule_to_close_timeout_seconds = parameters.schedule_to_close_timeout_seconds
+        attr.schedule_to_start_timeout_seconds = parameters.schedule_to_start_timeout_seconds
+        attr.start_to_close_timeout_seconds = parameters.start_to_close_timeout_seconds
+        attr.activity_id = parameters.activity_id
+        if not attr.activity_id:
+            attr.activity_id = self.decider.get_and_increment_next_id()
+        attr.task_list = TaskList()
+        attr.task_list.name = parameters.task_list
+
+        # PORT: RetryParameters retryParameters = parameters.getRetryParameters();
+        # PORT: if (retryParameters != null) {
+        # PORT:    attributes.setRetryPolicy(retryParameters.toRetryPolicy());
+        # PORT: }
+
+        scheduled_event_id = self.decider.schedule_activity_task(schedule=attr)
+        future = self.decider.event_loop.create_future()
+        self.scheduled_activities[scheduled_event_id] = future
+        await future
+        assert future.done()
+        exception = future.exception()
+        if exception:
+            raise exception
+        raw_bytes = future.result()
+        return json.loads(str(raw_bytes, "utf-8"))
 
 @dataclass
 class ReplayDecider:
