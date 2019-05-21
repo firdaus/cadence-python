@@ -194,6 +194,13 @@ class TestScheduleActivityTask(TestCase):
         self.assertIs(schedule_attributes, state_machine.schedule_attributes)
         self.assertEqual(expected_decision_id, state_machine.id)
 
+    def test_activity_id(self):
+        activity_id = 20
+        schedule_attributes = ScheduleActivityTaskDecisionAttributes()
+        schedule_attributes.activity_id = activity_id
+        self.decider.schedule_activity_task(schedule_attributes)
+        self.assertEqual(0, self.decider.activity_id_to_scheduled_event_id[activity_id])
+
 
 class TestDecideNextDecisionId(TestCase):
     def setUp(self) -> None:

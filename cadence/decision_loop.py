@@ -240,6 +240,8 @@ class ReplayDecider:
     decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
     decision_context: DecisionContext = None
 
+    activity_id_to_scheduled_event_id: Dict[str, int] = field(default_factory=dict)
+
     def __post_init__(self):
         self.decision_context = DecisionContext(decider=self)
 
@@ -293,6 +295,7 @@ class ReplayDecider:
         # PORT: addAllMissingVersionMarker(false, Optional.empty());
         next_decision_event_id = self.next_decision_event_id
         decision_id = DecisionId(DecisionTarget.ACTIVITY, next_decision_event_id)
+        self.activity_id_to_scheduled_event_id[schedule.activity_id] = next_decision_event_id
         self.add_decision(decision_id, ActivityDecisionStateMachine(decision_id, schedule_attributes=schedule))
         return next_decision_event_id
 
