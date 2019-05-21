@@ -266,7 +266,9 @@ class ReplayDecider:
     def get_decisions(self) -> List[Decision]:
         decisions = []
         for state_machine in self.decisions.values():
-            decisions.append(state_machine.get_decision())
+            d = state_machine.get_decision()
+            if d:
+                decisions.append(d)
 
         # PORT: // Include FORCE_IMMEDIATE_DECISION timer only if there are more then 100 events
         # PORT: int size = result.size();

@@ -221,3 +221,19 @@ class TestReplayDecider(TestCase):
         self.assertEqual("0", self.decider.get_and_increment_next_id())
         self.assertEqual("1", self.decider.get_and_increment_next_id())
 
+    def test_get_decisions(self):
+        decision = Decision()
+        state_machine: DecisionStateMachine = Mock()
+        state_machine.get_decision = MagicMock(return_value=decision)
+        self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
+        decisions = self.decider.get_decisions()
+        self.assertEqual(1, len(decisions))
+        self.assertIs(decision, decisions[0])
+
+    def test_get_decisions_null(self):
+        state_machine: DecisionStateMachine = Mock()
+        state_machine.get_decision = MagicMock(return_value=None)
+        self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
+        decisions = self.decider.get_decisions()
+        self.assertEqual(0, len(decisions))
+
