@@ -5,7 +5,8 @@ from unittest import TestCase
 from unittest.mock import Mock, MagicMock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
-    ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision
+    ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision, \
+    ActivityTaskStartedEventAttributes
 from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import NonDeterministicWorkflowException
@@ -294,6 +295,26 @@ class TestReplayDecider(TestCase):
         self.assertTrue(ret)
         state_machine.handle_completion_event.assert_called_once()
         state_machine.is_done.assert_called_once()
+
+    def test_handle_activity_task_scheduled(self):
+        state_machine: DecisionStateMachine = Mock()
+        self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
+        event = HistoryEvent(event_id=10)
+        self.decider.handle_activity_task_scheduled(event)
+        state_machine.handle_initiated_event.assert_called()
+        args, kwargs = state_machine.handle_initiated_event.call_args_list[0]
+        self.assertIn(event, args)
+
+    def test_handle_activity_task_started(self):
+        state_machine: DecisionStateMachine = Mock()
+        self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
+        event = HistoryEvent(event_id=15)
+        event.activity_task_started_event_attributes = ActivityTaskStartedEventAttributes()
+        event.activity_task_started_event_attributes.scheduled_event_id = 10
+        self.decider.handle_activity_task_started(event)
+        state_machine.handle_started_event.assert_called()
+        args, kwargs = state_machine.handle_started_event.call_args_list[0]
+        self.assertIn(event, args)
 
     def tearDown(self) -> None:
         self.decider.destroy()

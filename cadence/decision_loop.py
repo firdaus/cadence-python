@@ -349,6 +349,24 @@ class ReplayDecider:
         decision.handle_completion_event()
         return decision.is_done()
 
+    def handle_activity_task_scheduled(self, event: HistoryEvent):
+        decision = self.get_decision(DecisionId(DecisionTarget.ACTIVITY, event.event_id))
+        decision.handle_initiated_event(event)
+
+    def handle_activity_task_started(self, event: HistoryEvent):
+        attr = event.activity_task_started_event_attributes
+        decision = self.get_decision(DecisionId(DecisionTarget.ACTIVITY, attr.scheduled_event_id))
+        decision.handle_started_event(event)
+
+    def handle_activity_task_completed(self, event: HistoryEvent):
+        self.decision_context.handle_activity_task_completed(event)
+
+    def handle_activity_task_failed(self, event: HistoryEvent):
+        self.decision_context.handle_activity_task_failed(event)
+
+    def handle_activity_task_timed_out(self, event: HistoryEvent):
+        self.decision_context.handle_activity_task_timed_out(event)
+
     def add_decision(self, decision_id: DecisionId, decision: DecisionStateMachine):
         self.decisions[decision_id] = decision
         self.next_decision_event_id += 1
@@ -401,9 +419,12 @@ event_handlers = {
     EventType.WorkflowExecutionStarted: ReplayDecider.handle_workflow_execution_started,
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
-    EventType.ActivityTaskScheduled: None,
-    EventType.ActivityTaskStarted: None,
-    EventType.ActivityTaskCompleted: None
+    EventType.DecisionTaskTimedOut: noop,  # TODO: check
+    EventType.ActivityTaskScheduled: ReplayDecider.handle_activity_task_scheduled,
+    EventType.ActivityTaskStarted: ReplayDecider.handle_activity_task_started,
+    EventType.ActivityTaskCompleted: ReplayDecider.handle_activity_task_completed,
+    EventType.ActivityTaskFailed: ReplayDecider.handle_activity_task_failed,
+    EventType.ActivityTaskTimedOut: ReplayDecider.handle_activity_task_timed_out
 }
 
 
