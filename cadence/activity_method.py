@@ -39,14 +39,14 @@ def activity_method(func: Callable = None, name: str = "", schedule_to_close_tim
                     heartbeat_timeout_seconds: int = 0, task_list: str = ""):
     def wrapper(fn: Callable):
         # noinspection PyProtectedMember
-        def stub_activity_fn(self, *args):
+        async def stub_activity_fn(self, *args):
             assert self._decision_context
             assert stub_activity_fn._execute_parameters
             parameters = copy.deepcopy(stub_activity_fn._execute_parameters)
             parameters.input = json.dumps(args if args else None).encode("utf-8")
             from cadence.decision_loop import DecisionContext
             decision_context: DecisionContext = self._decision_context
-            return decision_context.schedule_activity_task(parameters=parameters)
+            return await decision_context.schedule_activity_task(parameters=parameters)
 
         if not task_list:
             raise Exception("task_list parameter is mandatory")
