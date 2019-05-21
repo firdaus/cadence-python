@@ -267,3 +267,9 @@ class TestReplayDecider(TestCase):
         decision_id = DecisionId(DecisionTarget.ACTIVITY, 20)
         with self.assertRaises(NonDeterministicWorkflowException):
             self.decider.get_decision(decision_id)
+
+    def test_notify_decision_sent(self):
+        state_machine: DecisionStateMachine = Mock()
+        self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
+        self.decider.notify_decision_sent()
+        state_machine.handle_decision_task_started_event.assert_called_once()

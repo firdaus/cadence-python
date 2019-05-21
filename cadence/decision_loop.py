@@ -277,6 +277,11 @@ class ReplayDecider:
         self.workflow_task = WorkflowTask(task_id=self.execution_id, workflow_input=workflow_input,
                                           worker=self.worker, workflow_type=self.workflow_type, decider=self)
 
+    def notify_decision_sent(self):
+        for state_machine in self.decisions.values():
+            if state_machine.get_decision():
+                state_machine.handle_decision_task_started_event()
+
     def handle_decision_task_started(self, decision_events: DecisionEvents):
         self.decision_events = decision_events
         self.next_decision_event_id = decision_events.next_decision_event_id
