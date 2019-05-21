@@ -2,13 +2,13 @@ import json
 import os
 from typing import List
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
-    ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes
+    ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision
 from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider
 from cadence.decisions import DecisionId, DecisionTarget
-from cadence.state_machines import ActivityDecisionStateMachine
+from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine
 from cadence.tests import init_test_logging
 from cadence.tests.utils import json_to_data_class
 from cadence.worker import Worker
@@ -230,7 +230,7 @@ class TestReplayDecider(TestCase):
         self.assertEqual(1, len(decisions))
         self.assertIs(decision, decisions[0])
 
-    def test_get_decisions_null(self):
+    def test_get_decisions_none(self):
         state_machine: DecisionStateMachine = Mock()
         state_machine.get_decision = MagicMock(return_value=None)
         self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
