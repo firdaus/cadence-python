@@ -7,6 +7,7 @@ import json
 import logging
 import threading
 from asyncio import Task
+from asyncio.base_futures import CancelledError
 from asyncio.events import AbstractEventLoop
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -154,7 +155,9 @@ class WorkflowTask:
             logger.info(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) returned {self.ret_value}")
             self.decider.complete_workflow_execution(self.ret_value)
-        except BaseException as ex:
+        except CancelledError:
+            logger.debug("Coroutine cancelled (expected)")
+        except Exception as ex:
             logger.error(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
             self.exception_thrown = ex
