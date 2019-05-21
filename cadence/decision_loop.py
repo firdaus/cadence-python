@@ -9,10 +9,11 @@ import threading
 from asyncio import Task
 from asyncio.base_futures import CancelledError
 from asyncio.events import AbstractEventLoop
+from asyncio.futures import Future
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 from more_itertools import peekable
 
@@ -184,6 +185,8 @@ class EventLoopWrapper:
         self.event_loop.call_soon(self.event_loop.stop)
         self.event_loop.run_forever()
 
+    def create_future(self) -> Future[Any]:
+        return self.event_loop.create_future()
 
 @dataclass
 class ReplayDecider:
