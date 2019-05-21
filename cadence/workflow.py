@@ -10,6 +10,18 @@ from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionR
 from cadence.workflowservice import WorkflowService
 
 
+class Workflow:
+
+    @staticmethod
+    def new_activity_stub(activities_cls):
+        from cadence.decision_loop import WorkflowTask
+        task = WorkflowTask.current()
+        assert task
+        cls = activities_cls()
+        cls._decision_context = task.decider.decision_context
+        return cls
+
+
 @dataclass
 class WorkflowClient:
     service: WorkflowService

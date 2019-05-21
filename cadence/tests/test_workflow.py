@@ -1,9 +1,12 @@
 import unittest
+from unittest import TestCase
+from unittest.mock import Mock
 
 from cadence.cadence_types import WorkflowIdReusePolicy
+from cadence.decision_loop import WorkflowTask, current_workflow_task
 from cadence.worker import Worker
 from cadence.workerfactory import WorkerFactory
-from cadence.workflow import workflow_method
+from cadence.workflow import workflow_method, Workflow
 
 
 class DummyWorkflow:
@@ -75,3 +78,21 @@ class TestWorkflowMethod(unittest.TestCase):
         (cls, fn) = worker.workflow_methods.get("DummyWorkflow::method_annotated_plain")
         self.assertEqual(DummyWorkflow, cls)
         self.assertEqual(fn, DummyWorkflow.method_annotated_plain)
+
+
+class TestNewActivityStub(TestCase):
+
+    def setUp(self) -> None:
+        pass
+
+    def test_new_activity_stub(self):
+        class Activities:
+            def do_stuff(self):
+                pass
+
+        workflow_task: WorkflowTask = Mock()
+        workflow_task.decider = Mock()
+        workflow_task.decider.decision_context = Mock()
+        current_workflow_task.set(workflow_task)
+        stub = Workflow.new_activity_stub(Activities)
+        self.assertEqual(workflow_task.decider.decision_context, stub._decision_context)
