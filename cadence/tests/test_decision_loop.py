@@ -8,6 +8,7 @@ from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskRe
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision
 from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider
 from cadence.decisions import DecisionId, DecisionTarget
+from cadence.exceptions import NonDeterministicWorkflowException
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine
 from cadence.tests import init_test_logging
 from cadence.tests.utils import json_to_data_class
@@ -256,3 +257,13 @@ class TestReplayDecider(TestCase):
         decisions = self.decider.get_decisions()
         self.assertEqual(0, len(decisions))
 
+    def test_get_decision(self):
+        state_machine = DecisionStateMachine()
+        decision_id = DecisionId(DecisionTarget.ACTIVITY, 20)
+        self.decider.decisions[decision_id] = state_machine
+        self.assertIs(state_machine, self.decider.get_decision(decision_id))
+
+    def test_get_decision_not_found(self):
+        decision_id = DecisionId(DecisionTarget.ACTIVITY, 20)
+        with self.assertRaises(NonDeterministicWorkflowException):
+            self.decider.get_decision(decision_id)

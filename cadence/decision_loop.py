@@ -308,6 +308,12 @@ class ReplayDecider:
         self.id_counter += 1
         return ret_value
 
+    def get_decision(self, decision_id: DecisionId) -> DecisionStateMachine:
+        result: DecisionStateMachine = self.decisions.get(decision_id)
+        if not result:
+            raise NonDeterministicWorkflowException(f"Unknown {decision_id}.")
+        return result
+
     def get_decisions(self) -> List[Decision]:
         decisions = []
         for state_machine in self.decisions.values():
