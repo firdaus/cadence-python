@@ -210,3 +210,14 @@ class TestDecideNextDecisionId(TestCase):
     def test_first_decision_next_decision_id(self):
         self.decider.process_decision_events(self.decision_events)
         self.assertEqual(5, self.decider.next_decision_event_id)
+
+
+class TestReplayDecider(TestCase):
+
+    def setUp(self) -> None:
+        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=Mock())
+
+    def test_get_and_increment_next_id(self):
+        self.assertEqual("0", self.decider.get_and_increment_next_id())
+        self.assertEqual("1", self.decider.get_and_increment_next_id())
+

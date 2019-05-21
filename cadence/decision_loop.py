@@ -258,6 +258,11 @@ class ReplayDecider:
         self.decisions[decision_id] = decision
         self.next_decision_event_id += 1
 
+    def get_and_increment_next_id(self) -> str:
+        ret_value = str(self.id_counter)
+        self.id_counter += 1
+        return ret_value
+
     def get_decisions(self) -> List[Decision]:
         decisions = []
         for state_machine in self.decisions.values():
