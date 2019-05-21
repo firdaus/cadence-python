@@ -6,8 +6,12 @@ from unittest import TestCase
 from unittest.mock import Mock, MagicMock
 
 from cadence.activity_method import ExecuteActivityParameters
-from cadence.cadence_types import ActivityType, ScheduleActivityTaskDecisionAttributes
+from cadence.cadence_types import ActivityType, ScheduleActivityTaskDecisionAttributes, HistoryEvent, EventType, \
+    ActivityTaskCompletedEventAttributes, ActivityTaskFailedEventAttributes, ActivityTaskTimedOutEventAttributes, \
+    TimeoutType
 from cadence.decision_loop import DecisionContext, ReplayDecider
+from cadence.exceptions import NonDeterministicWorkflowException, ActivityTaskFailedException, \
+    ActivityTaskTimeoutException
 
 
 def run_once(loop):
@@ -93,3 +97,66 @@ class TestScheduleActivity(TestCase):
 
     def tearDown(self) -> None:
         self.task.cancel()
+
+
+class TestHandleActivityTaskEvents(TestCase):
+    def setUp(self) -> None:
+        self.decider: ReplayDecider = Mock()
+        self.decider.handle_activity_task_closed = MagicMock(return_value=True)
+        self.context = DecisionContext(decider=self.decider)
+        self.future: Future = Future()
+        self.context.scheduled_activities[20] = self.future
+
+    def test_handle_activity_task_completed(self):
+        event = HistoryEvent(event_type=EventType.ActivityTaskCompleted)
+        attr = ActivityTaskCompletedEventAttributes()
+        self.payload = {"name": "bob"}
+        attr.scheduled_event_id = 20
+        attr.result = bytes(json.dumps(self.payload), "utf-8")
+        event.activity_task_completed_event_attributes = attr
+        self.context.handle_activity_task_completed(event)
+        self.assertTrue(self.future.done())
+        result = self.future.result()
+        self.assertIs(attr.result, result)
+        self.assertEqual(0, len(self.context.scheduled_activities))
+
+    def test_non_deterministic(self):
+        event = HistoryEvent(event_type=EventType.ActivityTaskCompleted)
+        attr = ActivityTaskCompletedEventAttributes()
+        attr.scheduled_event_id = 9999
+        event.activity_task_completed_event_attributes = attr
+        with self.assertRaises(NonDeterministicWorkflowException):
+            self.context.handle_activity_task_completed(event)
+        self.assertFalse(self.future.done())
+
+    def test_activity_task_failed(self):
+        event = HistoryEvent(event_type=EventType.ActivityTaskFailed)
+        attr = ActivityTaskFailedEventAttributes()
+        attr.scheduled_event_id = 20
+        event.activity_task_failed_event_attributes = attr
+        attr.reason = "the-reason"
+        attr.details = bytes("details", "utf-8")
+        self.context.handle_activity_task_failed(event)
+        self.assertTrue(self.future.done())
+        exception = self.future.exception()
+        self.assertIsInstance(exception, ActivityTaskFailedException)
+        self.assertEqual(attr.reason, exception.reason)
+        self.assertEqual(attr.details, exception.details)
+        self.assertEqual(0, len(self.context.scheduled_activities))
+
+    def test_activity_task_timed_out(self):
+        event = HistoryEvent(event_type=EventType.ActivityTaskTimedOut)
+        event.event_id = 25
+        attr = ActivityTaskTimedOutEventAttributes()
+        attr.scheduled_event_id = 20
+        attr.details = bytes("details", "utf-8")
+        attr.timeout_type = TimeoutType.HEARTBEAT
+        event.activity_task_timed_out_event_attributes = attr
+        self.context.handle_activity_task_timed_out(event)
+        self.assertTrue(self.future.done())
+        exception = self.future.exception()
+        self.assertIsInstance(exception, ActivityTaskTimeoutException)
+        self.assertEqual(event.event_id, exception.event_id)
+        self.assertEqual(attr.timeout_type, exception.timeout_type)
+        self.assertEqual(attr.details, exception.details)
+        self.assertEqual(0, len(self.context.scheduled_activities))

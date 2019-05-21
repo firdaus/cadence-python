@@ -277,13 +277,23 @@ class TestReplayDecider(TestCase):
     def test_process_decision_events_notifies_when_replay(self):
         self.decider.event_loop = Mock()
         events = [
-            HistoryEvent(event_type=EventType.WorkflowExecutionStarted, workflow_execution_started_event_attributes=WorkflowExecutionStartedEventAttributes()),
+            HistoryEvent(event_type=EventType.WorkflowExecutionStarted,
+                         workflow_execution_started_event_attributes=WorkflowExecutionStartedEventAttributes()),
             HistoryEvent(event_type=EventType.DecisionTaskScheduled)
         ]
-        decision_events = DecisionEvents(events, [], replay=True,next_decision_event_id=5)
+        decision_events = DecisionEvents(events, [], replay=True, next_decision_event_id=5)
         self.decider.notify_decision_sent = MagicMock()
         self.decider.process_decision_events(decision_events)
         self.decider.notify_decision_sent.assert_called_once()
+
+    def test_activity_task_closed(self):
+        state_machine: DecisionStateMachine = Mock()
+        state_machine.is_done = MagicMock(return_value=True)
+        self.decider.decisions[DecisionId(DecisionTarget.ACTIVITY, 10)] = state_machine
+        ret = self.decider.handle_activity_task_closed(10)
+        self.assertTrue(ret)
+        state_machine.handle_completion_event.assert_called_once()
+        state_machine.is_done.assert_called_once()
 
     def tearDown(self) -> None:
         self.decider.destroy()

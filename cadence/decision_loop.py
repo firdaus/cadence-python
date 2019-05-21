@@ -23,7 +23,8 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes
 from cadence.decisions import DecisionId, DecisionTarget
-from cadence.exceptions import WorkflowTypeNotFound
+from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
+    ActivityTaskTimeoutException
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
@@ -226,6 +227,42 @@ class DecisionContext:
         raw_bytes = future.result()
         return json.loads(str(raw_bytes, "utf-8"))
 
+    def handle_activity_task_completed(self, event: HistoryEvent):
+        attr = event.activity_task_completed_event_attributes
+        if self.decider.handle_activity_task_closed(attr.scheduled_event_id):
+            future = self.scheduled_activities.get(attr.scheduled_event_id)
+            if future:
+                self.scheduled_activities.pop(attr.scheduled_event_id)
+                future.set_result(attr.result)
+            else:
+                raise NonDeterministicWorkflowException(
+                    f"Trying to complete activity event {attr.scheduled_event_id} that is not in scheduled_activities")
+
+    def handle_activity_task_failed(self, event: HistoryEvent):
+        attr = event.activity_task_failed_event_attributes
+        if self.decider.handle_activity_task_closed(attr.scheduled_event_id):
+            future = self.scheduled_activities.get(attr.scheduled_event_id)
+            if future:
+                self.scheduled_activities.pop(attr.scheduled_event_id)
+                ex = ActivityTaskFailedException(attr.reason, attr.details)
+                future.set_exception(ex)
+            else:
+                raise NonDeterministicWorkflowException(
+                    f"Trying to complete activity event {attr.scheduled_event_id} that is not in scheduled_activities")
+
+    def handle_activity_task_timed_out(self, event: HistoryEvent):
+        attr = event.activity_task_timed_out_event_attributes
+        if self.decider.handle_activity_task_closed(attr.scheduled_event_id):
+            future = self.scheduled_activities.get(attr.scheduled_event_id)
+            if future:
+                self.scheduled_activities.pop(attr.scheduled_event_id)
+                ex = ActivityTaskTimeoutException(event.event_id, attr.timeout_type, attr.details)
+                future.set_exception(ex)
+            else:
+                raise NonDeterministicWorkflowException(
+                    f"Trying to complete activity event {attr.scheduled_event_id} that is not in scheduled_activities")
+
+
 @dataclass
 class ReplayDecider:
     execution_id: str
@@ -305,6 +342,12 @@ class ReplayDecider:
         self.activity_id_to_scheduled_event_id[schedule.activity_id] = next_decision_event_id
         self.add_decision(decision_id, ActivityDecisionStateMachine(decision_id, schedule_attributes=schedule))
         return next_decision_event_id
+
+    def handle_activity_task_closed(self, scheduled_event_id: int) -> bool:
+        decision: DecisionStateMachine = self.get_decision(DecisionId(DecisionTarget.ACTIVITY, scheduled_event_id))
+        assert decision
+        decision.handle_completion_event()
+        return decision.is_done()
 
     def add_decision(self, decision_id: DecisionId, decision: DecisionStateMachine):
         self.decisions[decision_id] = decision
