@@ -4,8 +4,8 @@ from cadence.workflow import workflow_method, WorkflowClient, WorkflowExecutionF
 
 class GreetingWorkflow:
 
-    @workflow_method(name='GreetingWorkflow::getGreeting', execution_start_to_close_timeout_seconds=10,
-                     task_list='HelloActivity')
+    @workflow_method(name='GreetingWorkflow::getGreeting', execution_start_to_close_timeout_seconds=60*10,
+                     task_list='python-tasklist')
     def get_greeting(self, name):
         pass
 
@@ -14,7 +14,8 @@ if __name__ == '__main__':
     client = WorkflowClient.new_client(domain="sample")
     greeting_workflow: GreetingWorkflow = client.new_workflow_stub(GreetingWorkflow)
     try:
-        result = greeting_workflow.get_greeting("World")
+        result = greeting_workflow.get_greeting("Python")
+        print(result)
     except WorkflowExecutionTerminatedException as ex:
         print(f"Workflow terminated: {ex}")
     except WorkflowExecutionTimedOutException as ex:
