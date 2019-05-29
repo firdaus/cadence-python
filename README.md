@@ -2,7 +2,38 @@
 
 [Cadence](https://github.com/uber/cadence) is a workflow engine developed at Uber Engineering. With this framework, workflows and activities managed by Cadence can be implemented in Python code.
 
-Status: Experimental - target production release in September 2019
+## Status / TODO
+
+cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
+version is targeted to be released in September of 2019.
+
+- [x] Tchannel implementation
+- [x] Python-friendly wrapper around Cadence's Thrift API
+- [x] Author activities in Python
+- [x] Start workflows (synchronously)
+- [x] Create workflows
+- [x] Workflow execution in coroutines
+- [x] Invoke activities from workflows
+- [ ] Activity heartbeating and doNotCompleteOnReturn
+- [ ] Activity retry
+- [ ] Sticky workflows
+- [ ] Signals
+- [ ] Queries
+- [ ] Async workflow execution
+- [ ] await
+- [ ] currentTimeMillis
+- [ ] Timers
+- [ ] Sleep
+- [ ] Loggers
+- [ ] newRandom
+- [ ] UUID
+- [ ] Workflow Versioning
+
+Post 1.0:
+- [ ] sideEffect/mutableSideEffect
+- [ ] Parallel activity execution
+- [ ] Cancellation Scopes
+- [ ] Child Workflows
 
 ## Installation
 
