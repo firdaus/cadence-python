@@ -12,7 +12,7 @@ init_test_logging()
 
 
 class GreetingWorkflow:
-    @workflow_method(task_list="python-test-tasklist")
+    @workflow_method(task_list="python-test-tasklist", impl=True)
     async def get_greeting(self, name):
         return f"Hello {name}"
 

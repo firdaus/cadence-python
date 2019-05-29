@@ -1,11 +1,22 @@
+from _asyncio import get_event_loop
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 
 from cadence.activity_method import activity_method, ExecuteActivityParameters
 from cadence.decision_loop import DecisionContext
+from cadence.tests.test_decision_context import run_once
 
 
 class ActivityMethodTest(TestCase):
+
+    def setUp(self) -> None:
+        self.decision_context: DecisionContext = Mock()
+        self.decision_context.schedule_activity_task = MagicMock(return_value=get_event_loop().create_future())
+        self.task = None
+
+    def tearDown(self) -> None:
+        if self.task:
+            self.task.cancel()
 
     def test_no_paren(self):
         with self.assertRaisesRegex(Exception, "activity_method must be called with arguments"):
@@ -54,6 +65,7 @@ class ActivityMethodTest(TestCase):
                              task_list="test-tasklist")
             def hello(self):
                 pass
+
         HelloActivities.hello._execute_parameters: ExecuteActivityParameters
         self.assertEqual(1, HelloActivities.hello._execute_parameters.schedule_to_close_timeout_seconds)
         self.assertEqual(2, HelloActivities.hello._execute_parameters.schedule_to_start_timeout_seconds)
@@ -65,12 +77,19 @@ class ActivityMethodTest(TestCase):
             @activity_method(task_list="test-tasklist")
             def hello(self):
                 pass
-        decision_context: DecisionContext = Mock()
+
         stub = HelloActivities()
-        stub._decision_context= decision_context
-        stub.hello()
-        decision_context.schedule_activity_task.assert_called_once()
-        args, kwargs = decision_context.schedule_activity_task.call_args_list[0]
+        stub._decision_context = self.decision_context
+
+        async def fn():
+            await stub.hello()
+
+        loop = get_event_loop()
+        self.task = loop.create_task(fn())
+        run_once(loop)
+
+        self.decision_context.schedule_activity_task.assert_called_once()
+        args, kwargs = self.decision_context.schedule_activity_task.call_args_list[0]
         self.assertEqual(b"null", kwargs["parameters"].input)
 
     def test_invoke_stub_with_args(self):
@@ -78,10 +97,17 @@ class ActivityMethodTest(TestCase):
             @activity_method(task_list="test-tasklist")
             def hello(self, arg1, arg2):
                 pass
-        decision_context: DecisionContext = Mock()
+
         stub = HelloActivities()
-        stub._decision_context= decision_context
-        stub.hello(1, "one")
-        decision_context.schedule_activity_task.assert_called_once()
-        args, kwargs = decision_context.schedule_activity_task.call_args_list[0]
+        stub._decision_context = self.decision_context
+
+        async def fn():
+            await stub.hello(1, "one")
+
+        loop = get_event_loop()
+        self.task = loop.create_task(fn())
+        run_once(loop)
+
+        self.decision_context.schedule_activity_task.assert_called_once()
+        args, kwargs = self.decision_context.schedule_activity_task.call_args_list[0]
         self.assertEqual(b'[1, "one"]', kwargs["parameters"].input)

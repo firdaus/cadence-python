@@ -119,7 +119,7 @@ class TestDecisionTaskLoop(TestCase):
 
     def test_create_workflow_object(self):
         class DummyWorkflow:
-            @workflow_method
+            @workflow_method(impl=True)
             async def dummy(self):
                 nonlocal dummy_workflow_self
                 dummy_workflow_self = self
@@ -131,7 +131,7 @@ class TestDecisionTaskLoop(TestCase):
 
     def test_return_none(self):
         class DummyWorkflow:
-            @workflow_method
+            @workflow_method(impl=True)
             async def dummy(self):
                 return None
 
@@ -142,7 +142,7 @@ class TestDecisionTaskLoop(TestCase):
 
     def test_args(self):
         class DummyWorkflow:
-            @workflow_method
+            @workflow_method(impl=True)
             async def dummy(self, arg1, arg2):
                 nonlocal arg1_value, arg2_value
                 arg1_value = arg1
@@ -159,7 +159,7 @@ class TestDecisionTaskLoop(TestCase):
 
     def test_no_args(self):
         class DummyWorkflow:
-            @workflow_method
+            @workflow_method(impl=True)
             async def dummy(self):
                 nonlocal executed
                 executed = True
@@ -172,7 +172,7 @@ class TestDecisionTaskLoop(TestCase):
 
     def test_return_value(self):
         class DummyWorkflow:
-            @workflow_method
+            @workflow_method(impl=True)
             async def dummy(self):
                 return "value"
 
