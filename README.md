@@ -4,6 +4,12 @@
 
 Status: Experimental - target production release in September 2019
 
+## Installation
+
+```
+pip install cadence-client
+```
+
 ## Hello World Sample
 
 ```
