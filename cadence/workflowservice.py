@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple
-from uuid import uuid4
+from typing import Tuple, Optional
 
 import os
 import socket
@@ -10,7 +9,8 @@ from cadence.thrift import cadence_thrift
 from cadence.connection import TChannelConnection, ThriftFunctionCall
 from cadence.errors import find_error
 from cadence.conversions import copy_thrift_to_py, copy_py_to_thrift
-from cadence.cadence_types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, StartWorkflowExecutionResponse, \
+from cadence.cadence_types import PollForActivityTaskResponse, StartWorkflowExecutionRequest, \
+    StartWorkflowExecutionResponse, \
     RegisterDomainRequest, PollForActivityTaskRequest, RespondActivityTaskCompletedRequest, DescribeTaskListResponse, \
     DescribeWorkflowExecutionRequest, DescribeWorkflowExecutionResponse, QueryWorkflowRequest, QueryWorkflowResponse, \
     ResetStickyTaskListResponse, ResetStickyTaskListRequest, RespondQueryTaskCompletedRequest, \
@@ -31,8 +31,8 @@ TCHANNEL_SERVICE = "cadence-frontend"
 class WorkflowService:
 
     @classmethod
-    def create(cls, host: str, port: int):
-        connection = TChannelConnection.open(host, port)
+    def create(cls, host: str, port: int, socket_timeout: Optional[int] = None):
+        connection = TChannelConnection.open(host, port, socket_timeout)
         return cls(connection)
 
     @classmethod
@@ -115,7 +115,8 @@ class WorkflowService:
     def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompleted", request)
 
-    def respond_activity_task_completed_by_id(self, request: RespondActivityTaskCompletedByIDRequest) -> Tuple[None, object]:
+    def respond_activity_task_completed_by_id(self, request: RespondActivityTaskCompletedByIDRequest) -> Tuple[
+        None, object]:
         return self.call_void("RespondActivityTaskCompletedByID", request)
 
     def respond_activity_task_failed(self, request: RespondActivityTaskFailedRequest) -> Tuple[None, object]:
@@ -128,7 +129,7 @@ class WorkflowService:
         return self.call_void("RespondActivityTaskCanceled", request)
 
     def respond_activity_task_canceled_by_id(self, request: RespondActivityTaskCanceledByIDRequest) -> \
-        Tuple[None, object]:
+            Tuple[None, object]:
         return self.call_void("RespondActivityTaskCanceledByID", request)
 
     def request_cancel_workflow_execution(self, request: RequestCancelWorkflowExecutionRequest) -> \
@@ -162,7 +163,8 @@ class WorkflowService:
     def query_workflow(self, request: QueryWorkflowRequest) -> Tuple[QueryWorkflowResponse, object]:
         return self.call_return("QueryWorkflow", request, QueryWorkflowResponse)
 
-    def describe_workflow_execution(self, request: DescribeWorkflowExecutionRequest) -> Tuple[DescribeWorkflowExecutionResponse, object]:
+    def describe_workflow_execution(self, request: DescribeWorkflowExecutionRequest) -> Tuple[
+        DescribeWorkflowExecutionResponse, object]:
         return self.call_return("DescribeWorkflowExecution", request, DescribeWorkflowExecutionResponse)
 
     def describe_task_list(self, request) -> Tuple[DescribeTaskListResponse, object]:

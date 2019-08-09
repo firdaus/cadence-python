@@ -299,8 +299,9 @@ class TChannelConnection:
     s: socket.socket
 
     @classmethod
-    def open(cls, host: object, port: object) -> TChannelConnection:
+    def open(cls, host: object, port: object, socket_timeout: Optional[int] = None) -> TChannelConnection:
         s: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(socket_timeout)
         s.connect((host, port))
         return cls(s)
 
