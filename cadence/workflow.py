@@ -2,11 +2,12 @@ from __future__ import annotations
 import inspect
 import json
 from dataclasses import dataclass, field
-from typing import Callable, List, Type, Dict
+from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
-    GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent
+    GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
+    StartWorkflowExecutionResponse
 from cadence.workflowservice import WorkflowService
 
 
@@ -34,45 +35,57 @@ class WorkflowClient:
         service = WorkflowService.create(host, port)
         return cls(service=service, domain=domain, options=options)
 
+    @classmethod
+    def start(cls, stub_fn: Callable, *args) -> WorkflowExecution:
+        stub = stub_fn.__self__
+        assert stub._workflow_client is not None
+        return exec_workflow(stub._workflow_client, stub_fn, args, workflow_options=stub._workflow_options)
+
     def new_workflow_stub(self, cls: Type, workflow_options: WorkflowOptions = None):
         stub = cls()
         stub._workflow_client = self
         stub._workflow_options = workflow_options
         return stub
 
+    def wait_for_close(self, execution: WorkflowExecution) -> object:
+        while True:
+            history_request = create_close_history_event_request(self, execution.workflow_id, execution.run_id)
+            history_response, err = self.service.get_workflow_execution_history(history_request)
+            if err:
+                raise Exception(err)
+            if not history_response.history.events:
+                continue
+            history_event = history_response.history.events[0]
+            if history_event.event_type == EventType.WorkflowExecutionCompleted:
+                attributes = history_event.workflow_execution_completed_event_attributes
+                return json.loads(attributes.result)
+            elif history_event.event_type == EventType.WorkflowExecutionFailed:
+                attributes = history_event.workflow_execution_failed_event_attributes
+                details: Dict = json.loads(attributes.details)
+                detail_message = details.get("detailMessage", "")
+                raise WorkflowExecutionFailedException(attributes.reason, details=details, detail_message=detail_message)
+            elif history_event.event_type == EventType.WorkflowExecutionTimedOut:
+                raise WorkflowExecutionTimedOutException()
+            elif history_event.event_type == EventType.WorkflowExecutionTerminated:
+                attributes = history_event.workflow_execution_terminated_event_attributes
+                raise WorkflowExecutionTerminatedException(reason=attributes.reason, details=attributes.details,
+                                                           identity=attributes.identity)
+            else:
+                raise Exception("Unexpected history close event: " + str(history_event))
 
-def exec_workflow_sync(workflow_client: WorkflowClient, stub_fn: Callable, args: List,
-                       workflow_options: WorkflowOptions = None):
+
+def exec_workflow(workflow_client, stub_fn, args, workflow_options: WorkflowOptions = None) -> WorkflowExecution:
     start_request = create_start_workflow_request(workflow_client, stub_fn, args)
     start_response, err = workflow_client.service.start_workflow(start_request)
     if err:
         raise Exception(err)
-    while True:
-        workflow_id = start_request.workflow_id
-        run_id = start_response.run_id
-        history_request = create_close_history_event_request(workflow_client, workflow_id, run_id)
-        history_response, err = workflow_client.service.get_workflow_execution_history(history_request)
-        if err:
-            raise Exception(err)
-        if not history_response.history.events:
-            continue
-        history_event = history_response.history.events[0]
-        if history_event.event_type == EventType.WorkflowExecutionCompleted:
-            attributes = history_event.workflow_execution_completed_event_attributes
-            return json.loads(attributes.result)
-        elif history_event.event_type == EventType.WorkflowExecutionFailed:
-            attributes = history_event.workflow_execution_failed_event_attributes
-            details: Dict = json.loads(attributes.details)
-            detail_message = details.get("detailMessage", "")
-            raise WorkflowExecutionFailedException(attributes.reason, details=details, detail_message=detail_message)
-        elif history_event.event_type == EventType.WorkflowExecutionTimedOut:
-            raise WorkflowExecutionTimedOutException()
-        elif history_event.event_type == EventType.WorkflowExecutionTerminated:
-            attributes = history_event.workflow_execution_terminated_event_attributes
-            raise WorkflowExecutionTerminatedException(reason=attributes.reason, details=attributes.details,
-                                                       identity=attributes.identity)
-        else:
-            raise Exception("Unexpected history close event: " + str(history_event))
+    return WorkflowExecution(workflow_id=start_request.workflow_id, run_id=start_response.run_id)
+
+
+def exec_workflow_sync(workflow_client: WorkflowClient, stub_fn: Callable, args: List,
+                       workflow_options: WorkflowOptions = None):
+    execution = exec_workflow(workflow_client, stub_fn, args, workflow_options=workflow_options)
+    return workflow_client.wait_for_close(execution)
 
 
 def create_start_workflow_request(workflow_client: WorkflowClient, stub_fn: object,
