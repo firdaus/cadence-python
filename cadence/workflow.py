@@ -103,6 +103,7 @@ def create_start_workflow_request(workflow_client: WorkflowClient, stub_fn: obje
     start_request.identity = workflow_client.service.get_identity()
     start_request.workflow_id_reuse_policy = stub_fn._workflow_id_reuse_policy
     start_request.request_id = str(uuid4())
+    start_request.cron_schedule = stub_fn._cron_schedule if stub_fn._cron_schedule else None
     return start_request
 
 
@@ -148,12 +149,23 @@ def workflow_method(func=None,
         stub_fn._execution_start_to_close_timeout_seconds = execution_start_to_close_timeout_seconds
         stub_fn._task_start_to_close_timeout_seconds = task_start_to_close_timeout_seconds
         stub_fn._task_list = task_list
+        if hasattr(fn, "_cron_schedule"):
+            stub_fn._cron_schedule = fn._cron_schedule
+        else:
+            stub_fn._cron_schedule = None
         return stub_fn
 
     if func and inspect.isfunction(func):
         return wrapper(func)
     else:
         return wrapper
+
+
+def cron_schedule(value):
+    def wrapper(fn):
+        fn._cron_schedule = value
+        return fn
+    return wrapper
 
 
 @dataclass
