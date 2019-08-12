@@ -21,7 +21,8 @@ from cadence.activity_method import ExecuteActivityParameters
 from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForDecisionTaskResponse, \
     RespondDecisionTaskCompletedRequest, \
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
-    HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes
+    HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
+    CancelWorkflowExecutionDecisionAttributes
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException
@@ -270,6 +271,7 @@ class ReplayDecider:
     worker: Worker
     workflow_task: WorkflowTask = None
     event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
+    completed: bool = False
 
     next_decision_event_id: int = 0
     id_counter: int = 0
@@ -293,6 +295,8 @@ class ReplayDecider:
         self.handle_decision_task_started(decision_events)
         for event in decision_events.events:
             self.process_event(event)
+        if self.completed:
+            return
         self.event_loop.run_event_loop_once()
         if decision_events.replay:
             self.notify_decision_sent()
@@ -316,6 +320,9 @@ class ReplayDecider:
         self.workflow_task = WorkflowTask(task_id=self.execution_id, workflow_input=workflow_input,
                                           worker=self.worker, workflow_type=self.workflow_type, decider=self)
 
+    def handle_workflow_execution_cancel_requested(self, event: HistoryEvent):
+        self.cancel_workflow_execution()
+
     def notify_decision_sent(self):
         for state_machine in self.decisions.values():
             if state_machine.get_decision():
@@ -334,6 +341,18 @@ class ReplayDecider:
         decision.decision_type = DecisionType.CompleteWorkflowExecution
         decision_id = DecisionId(DecisionTarget.SELF, 0)
         self.add_decision(decision_id, CompleteWorkflowStateMachine(decision_id, decision))
+        self.completed = True
+
+    def cancel_workflow_execution(self):
+        logger.info("Canceling workflow: %s", self.execution_id)
+        decision = Decision()
+        attr = CancelWorkflowExecutionDecisionAttributes()
+        attr.details = None
+        decision.cancel_workflow_execution_decision_attributes = attr
+        decision.decision_type = DecisionType.CancelWorkflowExecution
+        decision_id = DecisionId(DecisionTarget.SELF, 0)
+        self.add_decision(decision_id, CompleteWorkflowStateMachine(decision_id, decision))
+        self.completed = True
 
     def schedule_activity_task(self, schedule: ScheduleActivityTaskDecisionAttributes) -> int:
         # PORT: addAllMissingVersionMarker(false, Optional.empty());
@@ -417,6 +436,7 @@ def noop(*args):
 
 event_handlers = {
     EventType.WorkflowExecutionStarted: ReplayDecider.handle_workflow_execution_started,
+    EventType.WorkflowExecutionCancelRequested: ReplayDecider.handle_workflow_execution_cancel_requested,
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
     EventType.DecisionTaskTimedOut: noop,  # TODO: check
