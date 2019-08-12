@@ -28,6 +28,16 @@ from cadence.cadence_types import PollForActivityTaskResponse, StartWorkflowExec
 TCHANNEL_SERVICE = "cadence-frontend"
 
 
+def go_to_python_errors(msg_format,ex_type=RuntimeError):
+    def go_too_python_errors_factory(func):
+        def wrapper(*args,**kwargs):
+            ret,err = func(*args,**kwargs)
+            if err:
+                raise ex_type(msg_format.format(err))
+            return ret
+        return wrapper
+    return go_too_python_errors_factory
+
 class WorkflowService:
     @classmethod
     def create(cls, host: str, port: int):
@@ -117,13 +127,11 @@ class WorkflowService:
                                      ) -> Tuple[None, object]:
         return self.call_void("RespondDecisionTaskFailed", request)
 
+    @go_to_python_errors("Error invoking PollForActivityTask: {}")
     def poll_for_activity_task(self, request: PollForActivityTaskRequest
-                               ) -> PollForActivityTaskResponse:
-        response, err = self.call_return("PollForActivityTask", request,
+                               ) -> Tuple[PollForActivityTaskResponse,object]:
+        return self.call_return("PollForActivityTask", request,
                                          PollForActivityTaskResponse)
-        if err:
-            raise RuntimeError(err)
-        return response
 
     def record_activity_task_heartbeat(self, request: RecordActivityTaskHeartbeatRequest) -> \
             Tuple[RecordActivityTaskHeartbeatResponse, object]:
@@ -134,26 +142,22 @@ class WorkflowService:
             Tuple[RecordActivityTaskHeartbeatResponse, object]:
         return self.call_return("RecordActivityTaskHeartbeatByID", request,
                                 RecordActivityTaskHeartbeatResponse)
-
+            
+    @go_to_python_errors("Error invoking RespondActivityTaskCompleted: {}")
     def respond_activity_task_completed(
             self, request: RespondActivityTaskCompletedRequest) -> None:
-        _, err = self.call_void("RespondActivityTaskCompleted", request)
-        if err:
-            raise RuntimeError(
-                "Error invoking RespondActivityTaskCompleted: %s", err)
+       return self.call_void("RespondActivityTaskCompleted", request)
 
     def respond_activity_task_completed_by_id(
             self, request: RespondActivityTaskCompletedByIDRequest
     ) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompletedByID", request)
 
+    @go_to_python_errors("Error Responding to activity task. Error: {}")
     def respond_activity_task_failed(self,
                                      request: RespondActivityTaskFailedRequest
                                      ) -> None:
-        _, err = self.call_void("RespondActivityTaskFailed", request)
-        if err:
-            raise RuntimeError(
-                f"Error Responding to activity task. Error: {err}")
+       return self.call_void("RespondActivityTaskFailed", request)
 
     def respond_activity_task_failed_by_id(
             self, request: RespondActivityTaskFailedByIDRequest
