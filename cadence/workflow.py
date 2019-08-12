@@ -114,7 +114,6 @@ def create_close_history_event_request(workflow_client: WorkflowClient, workflow
     history_request.execution = WorkflowExecution()
     history_request.execution.workflow_id = workflow_id
     history_request.execution.run_id = run_id
-    history_request.maximum_page_size = 1
     history_request.wait_for_new_event = True
     history_request.history_event_filter_type = HistoryEventFilterType.CLOSE_EVENT
     return history_request
