@@ -13,6 +13,15 @@ def activity_task_loop(worker):
     service = WorkflowService.create(worker.host, worker.port)
     logger.info(
         f"Activity task worker started: {WorkflowService.get_identity()}")
+
+    polling_request = PollForActivityTaskRequest(
+        domain=worker.domain,
+        task_list=TaskList(name=worker.task_list),
+        identity=WorkflowService.get_identity(),
+        task_list_metadata=TaskListMetadata(max_tasks_per_second=200000))
+
+    task: PollForActivityTaskResponse
+
     try:
         while True:
             if worker.is_stop_requested():
@@ -20,14 +29,8 @@ def activity_task_loop(worker):
 
             try:
                 polling_start = datetime.datetime.now()
-                polling_request = PollForActivityTaskRequest(
-                    domain=worker.domain,
-                    task_list=TaskList(name=worker.task_list),
-                    identity=WorkflowService.get_identity(),
-                    task_list_metadata=TaskListMetadata(
-                        max_tasks_per_second=200000))
-                task: PollForActivityTaskResponse
                 task, err = service.poll_for_activity_task(polling_request)
+                polling_end = datetime.datetime.now()
                 if err:
                     logger.error("PollForActivityTask failed: %s", err)
                     continue
@@ -37,7 +40,6 @@ def activity_task_loop(worker):
                         task)
                     continue
                 else:
-                    polling_end = datetime.datetime.now()
                     polling_time = (polling_end - polling_start)
                     logger.debug("PollForActivityTask: %dms",
                                  polling_time.total_seconds() * 1000)
