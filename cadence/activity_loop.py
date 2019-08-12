@@ -1,6 +1,7 @@
 import datetime
 import logging
 import json
+from typing import NoReturn, Type, Sequence, Dict
 
 from cadence.cadence_types import PollForActivityTaskRequest, TaskListMetadata, TaskList, PollForActivityTaskResponse, \
     RespondActivityTaskCompletedRequest, RespondActivityTaskFailedRequest
@@ -27,69 +28,85 @@ def activity_task_loop(worker):
             if worker.is_stop_requested():
                 return
 
-            # fetch activity task 
-            # TODO: Add back polling time
+            polling_start = datetime.datetime.now()
             try:
-                task, err = service.poll_for_activity_task(polling_request)
-                if err:
-                    logger.error("PollForActivityTask failed: %s", err)
-                    continue
-                # TODO: move this one to handle_task() or check 
-                elif not task.task_token:
-                    logger.debug("PollForActivityTask has no task_token (expected): %s", task)
-                    continue
-                logger.debug("PollForActivityTask: done")
+                task = service.poll_for_activity_task(polling_request)
+            except RuntimeError as ex:
+                logger.error("PollForActivityTask RuntimeError: %s", ex)
+                continue
             except Exception as ex:
                 logger.error("PollForActivityTask error: %s", ex)
                 continue
-            
+            polling_end = datetime.datetime.now()
+            polling_total = polling_end - polling_start
+            logger.debug(
+                f"PollForActivityTask: done. Start: {polling_start.total_seconds()}, End: {polling_end.total_seconds()}, Total: {polling_total.total_seconds()}"
+            )
+
             # Process activity task
-            # TODO: Add processing polling time
-            try:  
-                ret = handle_task(task, worker.activities)
-                respond = RespondActivityTaskCompletedRequest(
+            try:
+                ret = handle_task(task,worker.activities)
+                response = RespondActivityTaskCompletedRequest(
                     task_token=task.task_token,
-                    result = json.dumps(ret),
-                    identity = WorkflowService.get_identity(),
+                    result=json.dumps(ret),
+                    identity=WorkflowService.get_identity(),
                 )
-                _, err = service.respond_activity_task_completed(respond)
-                if err:
-                    logger.error("Error invoking RespondActivityTaskCompleted: %s", error)
+                service.respond_activity_task_completed(response)
             except Exception as ex:
-                logger.error(f"Activity {task.activity_type.name} failed: {type(ex).__name__}({ex})",exc_info=1)
-                respond: RespondActivityTaskFailedRequest 
-                respond = RespondActivityTaskFailedRequest(
+                logger.error(
+                    f"Activity {task.activity_type.name} failed: {type(ex).__name__}({ex})",
+                    exc_info=1)
+                response: RespondActivityTaskFailedRequest
+                response = RespondActivityTaskFailedRequest(
                     task_token=task.task_token,
                     reason="SOMTHING WENT WRONG",
                     identity=WorkflowService.get_identity(),
                     details=json.dumps({
-                        "detailMessage": f"Python error: {type(ex).__name__}({ex})"
-                    })
-                )
-                _, error = service.respond_activity_task_failed(respond)
-                if error:
-                    logger.error("Error invoking RespondActivityTaskFailed: %s", error)
-                    
+                        "detailMessage":
+                        f"Python error: {type(ex).__name__}({ex})"
+                    }))
+                try:
+                    service.respond_activity_task_failed(response)
+                except Exception as ex:
+                    logger.error("Error invoking RespondActivityTaskFailed: %s", ex)
+                    continue
+
             logger.info("Process ActivityTask: done")
-            
+    except Exception as ex:
+        logger.fatal(f"activity_task_loop: Uncought exception in main loop.",exec_info=True)
     finally:
         worker.notify_thread_stopped()
 
 
-def handle_task(task, activities):
+
+
+
+def handle_task(task, activities) -> Dict:
+    def handle_error(msg: str, exception: Type[Exception]) -> NoReturn:
+        logger.error(msg)
+        raise exception(msg)
+
     # TODO: finish this one
-    args = json.loads(task.input)
-    if not args:
-        # TODO: through acception
-    # fn = worker.activities.get(task.activity_type.name)
-    # if not fn:
-    #     logger.error("Activity type not found: " + task.activity_type.name)
-        
-    # return fn(*args)
-    return
+    if not task.task_token:
+        handle_error("task.task_token was not provided, but is expected.",
+                     RuntimeError)
+    if task.activity_type.name not in activities:
+        handle_error(
+            f"handle_task: Activity type {task.activity_type.name} not found",
+            RuntimeError)
+    fn = activities[task.activity_type.name]
+    try:
+        args = json.loads(task.input)
+    except json.JSONDecodeError as ex:
+        handle_error(f"handle_task: Json decoding failed: {ex}", RuntimeError)
 
-
-def handle_task_err(task):
-    return
+    if not isinstance(args,Sequence):
+        handle_error(f"handle_task: Args should be a Sequence but where {type(args)}. args=\n{args}",RuntimeError)
     
-    
+    logger.debug(f"handle_task: Calling activity fn with args:\n%s",args)
+    try:
+        ret_val= fn(*args)
+    except Exception as ex:
+        handle_error(f"handle_task: Exception when running activity. Exception:\n{ex}",RuntimeError)
+    logger.debug(f"handle_task: Activity fn successfully returned. Result:\n%s",ret_val)
+    return ret_val

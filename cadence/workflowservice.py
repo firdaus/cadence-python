@@ -29,7 +29,6 @@ TCHANNEL_SERVICE = "cadence-frontend"
 
 
 class WorkflowService:
-
     @classmethod
     def create(cls, host: str, port: int):
         connection = TChannelConnection.open(host, port)
@@ -50,12 +49,16 @@ class WorkflowService:
         assert fn
         request = fn.request(thrift_request_argument)
         request_payload = cadence_thrift.dumps(request)
-        call = ThriftFunctionCall.create(TCHANNEL_SERVICE, "WorkflowService::" + method_name, request_payload)
+        call = ThriftFunctionCall.create(TCHANNEL_SERVICE,
+                                         "WorkflowService::" + method_name,
+                                         request_payload)
         response = self.connection.call_function(call)
-        start_response = cadence_thrift.loads(fn.response, response.thrift_payload)
+        start_response = cadence_thrift.loads(fn.response,
+                                              response.thrift_payload)
         return start_response
 
-    def call_return(self, method_name: str, request: object, expected_return_type: type) -> Tuple[object, object]:
+    def call_return(self, method_name: str, request: object,
+                    expected_return_type: type) -> Tuple[object, object]:
         response = self.thrift_call(method_name, request)
         if not response.success:
             return None, find_error(response)
@@ -68,63 +71,98 @@ class WorkflowService:
         error = find_error(response)
         return None, error
 
-    def start_workflow(self, request: StartWorkflowExecutionRequest) -> Tuple[StartWorkflowExecutionResponse, object]:
-        return self.call_return("StartWorkflowExecution", request, StartWorkflowExecutionResponse)
+    def start_workflow(self, request: StartWorkflowExecutionRequest
+                       ) -> Tuple[StartWorkflowExecutionResponse, object]:
+        return self.call_return("StartWorkflowExecution", request,
+                                StartWorkflowExecutionResponse)
 
-    def register_domain(self, request: RegisterDomainRequest) -> Tuple[None, object]:
+    def register_domain(self,
+                        request: RegisterDomainRequest) -> Tuple[None, object]:
         return self.call_void("RegisterDomain", request)
 
-    def describe_domain(self, request: DescribeDomainRequest) -> Tuple[DescribeDomainResponse, object]:
-        return self.call_return("DescribeDomain", request, DescribeDomainResponse)
+    def describe_domain(self, request: DescribeDomainRequest
+                        ) -> Tuple[DescribeDomainResponse, object]:
+        return self.call_return("DescribeDomain", request,
+                                DescribeDomainResponse)
 
-    def list_domains(self, request: ListDomainsRequest) -> Tuple[ListDomainsResponse, object]:
+    def list_domains(self, request: ListDomainsRequest
+                     ) -> Tuple[ListDomainsResponse, object]:
         return self.call_return("ListDomains", request, ListDomainsResponse)
 
-    def update_domain(self, request: UpdateDomainRequest) -> Tuple[UpdateDomainResponse, object]:
+    def update_domain(self, request: UpdateDomainRequest
+                      ) -> Tuple[UpdateDomainResponse, object]:
         return self.call_return("UpdateDomain", request, UpdateDomainResponse)
 
-    def deprecate_domain(self, request: DeprecateDomainRequest) -> Tuple[None, object]:
+    def deprecate_domain(self, request: DeprecateDomainRequest
+                         ) -> Tuple[None, object]:
         return self.call_void("DeprecateDomain", request)
 
     def get_workflow_execution_history(self, request: GetWorkflowExecutionHistoryRequest) -> \
             Tuple[GetWorkflowExecutionHistoryResponse, object]:
-        return self.call_return("GetWorkflowExecutionHistory", request, GetWorkflowExecutionHistoryResponse)
+        return self.call_return("GetWorkflowExecutionHistory", request,
+                                GetWorkflowExecutionHistoryResponse)
 
     def poll_for_decision_task(self, request: PollForDecisionTaskRequest) -> \
             Tuple[PollForDecisionTaskResponse, object]:
-        return self.call_return("PollForDecisionTask", request, PollForDecisionTaskResponse)
+        return self.call_return("PollForDecisionTask", request,
+                                PollForDecisionTaskResponse)
 
     def respond_decision_task_completed(self, request: RespondDecisionTaskCompletedRequest) -> \
             Tuple[RespondDecisionTaskCompletedResponse, object]:
-        return self.call_return("RespondDecisionTaskCompleted", request, RespondDecisionTaskCompletedResponse)
+        return self.call_return("RespondDecisionTaskCompleted", request,
+                                RespondDecisionTaskCompletedResponse)
 
-    def respond_decision_task_failed(self, request: RespondDecisionTaskFailedRequest) -> Tuple[None, object]:
+    def respond_decision_task_failed(self,
+                                     request: RespondDecisionTaskFailedRequest
+                                     ) -> Tuple[None, object]:
         return self.call_void("RespondDecisionTaskFailed", request)
 
-    def poll_for_activity_task(self, request: PollForActivityTaskRequest) -> Tuple[PollForActivityTaskResponse, object]:
-        return self.call_return("PollForActivityTask", request, PollForActivityTaskResponse)
+    def poll_for_activity_task(self, request: PollForActivityTaskRequest
+                               ) -> PollForActivityTaskResponse:
+        response, err = self.call_return("PollForActivityTask", request,
+                                         PollForActivityTaskResponse)
+        if err:
+            raise RuntimeError(err)
+        return response
 
     def record_activity_task_heartbeat(self, request: RecordActivityTaskHeartbeatRequest) -> \
             Tuple[RecordActivityTaskHeartbeatResponse, object]:
-        return self.call_return("RecordActivityTaskHeartbeat", request, RecordActivityTaskHeartbeatResponse)
+        return self.call_return("RecordActivityTaskHeartbeat", request,
+                                RecordActivityTaskHeartbeatResponse)
 
     def record_activity_task_heartbeat_by_id(self, request: RecordActivityTaskHeartbeatByIDRequest) -> \
             Tuple[RecordActivityTaskHeartbeatResponse, object]:
-        return self.call_return("RecordActivityTaskHeartbeatByID", request, RecordActivityTaskHeartbeatResponse)
+        return self.call_return("RecordActivityTaskHeartbeatByID", request,
+                                RecordActivityTaskHeartbeatResponse)
 
-    def respond_activity_task_completed(self, request: RespondActivityTaskCompletedRequest) -> Tuple[None, object]:
-        return self.call_void("RespondActivityTaskCompleted", request)
+    def respond_activity_task_completed(
+            self, request: RespondActivityTaskCompletedRequest) -> None:
+        _, err = self.call_void("RespondActivityTaskCompleted", request)
+        if err:
+            raise RuntimeError(
+                "Error invoking RespondActivityTaskCompleted: %s", err)
 
-    def respond_activity_task_completed_by_id(self, request: RespondActivityTaskCompletedByIDRequest) -> Tuple[None, object]:
+    def respond_activity_task_completed_by_id(
+            self, request: RespondActivityTaskCompletedByIDRequest
+    ) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCompletedByID", request)
 
-    def respond_activity_task_failed(self, request: RespondActivityTaskFailedRequest) -> Tuple[None, object]:
-        return self.call_void("RespondActivityTaskFailed", request)
+    def respond_activity_task_failed(self,
+                                     request: RespondActivityTaskFailedRequest
+                                     ) -> None:
+        _, err = self.call_void("RespondActivityTaskFailed", request)
+        if err:
+            raise RuntimeError(
+                f"Error Responding to activity task. Error: {err}")
 
-    def respond_activity_task_failed_by_id(self, request: RespondActivityTaskFailedByIDRequest) -> Tuple[None, object]:
+    def respond_activity_task_failed_by_id(
+            self, request: RespondActivityTaskFailedByIDRequest
+    ) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskFailedByID", request)
 
-    def respond_activity_task_canceled(self, request: RespondActivityTaskCanceledRequest) -> Tuple[None, object]:
+    def respond_activity_task_canceled(
+            self, request: RespondActivityTaskCanceledRequest
+    ) -> Tuple[None, object]:
         return self.call_void("RespondActivityTaskCanceled", request)
 
     def respond_activity_task_canceled_by_id(self, request: RespondActivityTaskCanceledByIDRequest) -> \
@@ -135,38 +173,55 @@ class WorkflowService:
             Tuple[None, object]:
         return self.call_void("RequestCancelWorkflowExecution", request)
 
-    def signal_workflow_execution(self, request: SignalWorkflowExecutionRequest) -> Tuple[None, object]:
+    def signal_workflow_execution(self, request: SignalWorkflowExecutionRequest
+                                  ) -> Tuple[None, object]:
         return self.call_void("SignalWorkflowExecution", request)
 
     def signal_with_start_workflow_execution(self, request: SignalWithStartWorkflowExecutionRequest) -> \
             Tuple[StartWorkflowExecutionResponse, object]:
-        return self.call_return("SignalWithStartWorkflowExecution", request, StartWorkflowExecutionResponse)
+        return self.call_return("SignalWithStartWorkflowExecution", request,
+                                StartWorkflowExecutionResponse)
 
-    def terminate_workflow_execution(self, request: TerminateWorkflowExecutionRequest) -> Tuple[None, object]:
+    def terminate_workflow_execution(self,
+                                     request: TerminateWorkflowExecutionRequest
+                                     ) -> Tuple[None, object]:
         return self.call_void("TerminateWorkflowExecution", request)
 
     def list_open_workflow_executions(self, request: ListOpenWorkflowExecutionsRequest) -> \
             Tuple[ListOpenWorkflowExecutionsResponse, object]:
-        return self.call_return("ListOpenWorkflowExecutions", request, ListOpenWorkflowExecutionsResponse)
+        return self.call_return("ListOpenWorkflowExecutions", request,
+                                ListOpenWorkflowExecutionsResponse)
 
     def list_closed_workflow_executions(self, request: ListClosedWorkflowExecutionsRequest) -> \
             Tuple[ListClosedWorkflowExecutionsResponse, object]:
-        return self.call_return("ListClosedWorkflowExecutions", request, ListClosedWorkflowExecutionsResponse)
+        return self.call_return("ListClosedWorkflowExecutions", request,
+                                ListClosedWorkflowExecutionsResponse)
 
-    def respond_query_task_completed(self, request: RespondQueryTaskCompletedRequest) -> Tuple[None, object]:
+    def respond_query_task_completed(self,
+                                     request: RespondQueryTaskCompletedRequest
+                                     ) -> Tuple[None, object]:
         return self.call_void("RespondQueryTaskCompleted", request)
 
-    def reset_sticky_task_list(self, request: ResetStickyTaskListRequest) -> Tuple[ResetStickyTaskListResponse, object]:
-        return self.call_return("ResetStickyTaskList", request, ResetStickyTaskListResponse)
+    def reset_sticky_task_list(self, request: ResetStickyTaskListRequest
+                               ) -> Tuple[ResetStickyTaskListResponse, object]:
+        return self.call_return("ResetStickyTaskList", request,
+                                ResetStickyTaskListResponse)
 
-    def query_workflow(self, request: QueryWorkflowRequest) -> Tuple[QueryWorkflowResponse, object]:
-        return self.call_return("QueryWorkflow", request, QueryWorkflowResponse)
+    def query_workflow(self, request: QueryWorkflowRequest
+                       ) -> Tuple[QueryWorkflowResponse, object]:
+        return self.call_return("QueryWorkflow", request,
+                                QueryWorkflowResponse)
 
-    def describe_workflow_execution(self, request: DescribeWorkflowExecutionRequest) -> Tuple[DescribeWorkflowExecutionResponse, object]:
-        return self.call_return("DescribeWorkflowExecution", request, DescribeWorkflowExecutionResponse)
+    def describe_workflow_execution(
+            self, request: DescribeWorkflowExecutionRequest
+    ) -> Tuple[DescribeWorkflowExecutionResponse, object]:
+        return self.call_return("DescribeWorkflowExecution", request,
+                                DescribeWorkflowExecutionResponse)
 
-    def describe_task_list(self, request) -> Tuple[DescribeTaskListResponse, object]:
-        return self.call_return("DescribeTaskList", request, DescribeTaskListResponse)
+    def describe_task_list(self,
+                           request) -> Tuple[DescribeTaskListResponse, object]:
+        return self.call_return("DescribeTaskList", request,
+                                DescribeTaskListResponse)
 
     def close(self):
         self.connection.close()
