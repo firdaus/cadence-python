@@ -70,6 +70,8 @@ class WorkflowClient:
                 attributes = history_event.workflow_execution_terminated_event_attributes
                 raise WorkflowExecutionTerminatedException(reason=attributes.reason, details=attributes.details,
                                                            identity=attributes.identity)
+            elif history_event.event_type == EventType.WorkflowExecutionCanceled:
+                raise WorkflowExecutionCanceledException()
             else:
                 raise Exception("Unexpected history close event: " + str(history_event))
 
@@ -193,6 +195,11 @@ class WorkflowExecutionFailedException(Exception):
 
 @dataclass
 class WorkflowExecutionTimedOutException(Exception):
+    pass
+
+
+@dataclass
+class WorkflowExecutionCanceledException(Exception):
     pass
 
 
