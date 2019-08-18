@@ -20,20 +20,20 @@ def cron_last():
 class CronScheduleTest(TestCase):
 
     def test_cron_first(self):
-        self.assertEqual("*/2 * * * *", cron_first._cron_schedule)
+        self.assertEqual("*/2 * * * *", cron_first._workflow_method._cron_schedule)
 
     def test_cron_last(self):
-        self.assertEqual("*/2 * * * *", cron_last._cron_schedule)
+        self.assertEqual("*/2 * * * *", cron_last._workflow_method._cron_schedule)
 
 
 class CreateStartWorkflowRequestTest(TestCase):
 
     def test_cron_first(self):
         workflow_client = MagicMock()
-        request: StartWorkflowExecutionRequest = create_start_workflow_request(workflow_client, cron_first, [])
+        request: StartWorkflowExecutionRequest = create_start_workflow_request(workflow_client, cron_first._workflow_method, [])
         self.assertEqual("*/2 * * * *", request.cron_schedule)
 
     def test_cron_last(self):
         workflow_client = MagicMock()
-        request: StartWorkflowExecutionRequest = create_start_workflow_request(workflow_client, cron_last, [])
+        request: StartWorkflowExecutionRequest = create_start_workflow_request(workflow_client, cron_last._workflow_method, [])
         self.assertEqual("*/2 * * * *", request.cron_schedule)
