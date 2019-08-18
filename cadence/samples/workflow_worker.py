@@ -19,7 +19,7 @@ class GreetingWorkflowImpl:
     def __init__(self):
         self.greeting_activities = Workflow.new_activity_stub(GreetingActivities)
 
-    @workflow_method(name='GreetingWorkflow::getGreeting', impl=True)
+    @workflow_method(name='GreetingWorkflow::getGreeting')
     async def get_greeting(self, name):
         greeting = await self.greeting_activities.composeGreeting("Hello", name)
         return f"Got from Java {greeting}"

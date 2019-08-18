@@ -16,17 +16,16 @@ class PeriodicallyExecutedWorkflow:
     @workflow_method(workflow_id="periodically_executed_workflow_method",
                      execution_start_to_close_timeout_seconds=10, task_list=TASK_LIST)
     @cron_schedule("*/5 * * * *")
-    def periodically_executed_workflow_method(self, value):
+    async def periodically_executed_workflow_method(self, value):
         raise NotImplementedError
 
 
 # Workflow Implementation
-class PeriodicallyExecutedWorkflowImpl:
+class PeriodicallyExecutedWorkflowImpl(PeriodicallyExecutedWorkflow):
 
     def __init__(self):
         pass
 
-    @workflow_method(impl=True)
     async def periodically_executed_workflow_method(self, value):
         print("periodically_executed_workflow_method executed with args:" + value)
         return None
@@ -35,7 +34,7 @@ class PeriodicallyExecutedWorkflowImpl:
 if __name__ == '__main__':
     factory = WorkerFactory("localhost", 7933, DOMAIN)
     worker = factory.new_worker(TASK_LIST)
-    worker.register_workflow_implementation_type(PeriodicallyExecutedWorkflowImpl, "PeriodicallyExecutedWorkflow")
+    worker.register_workflow_implementation_type(PeriodicallyExecutedWorkflowImpl)
     factory.start()
 
     client = WorkflowClient.new_client(domain=DOMAIN)
