@@ -72,17 +72,16 @@ class GreetingActivitiesImpl:
 # Workflow Interface
 class GreetingWorkflow:
     @workflow_method(execution_start_to_close_timeout_seconds=10, task_list=TASK_LIST)
-    def get_greeting(self, name: str) -> str:
+    async def get_greeting(self, name: str) -> str:
         raise NotImplementedError
 
 
 # Workflow Implementation
-class GreetingWorkflowImpl:
+class GreetingWorkflowImpl(GreetingWorkflow):
 
     def __init__(self):
         self.greeting_activities: GreetingActivities = Workflow.new_activity_stub(GreetingActivities)
 
-    @workflow_method(impl=True)
     async def get_greeting(self, name):
         return await self.greeting_activities.compose_greeting("Hello", name)
 
@@ -91,7 +90,7 @@ if __name__ == '__main__':
     factory = WorkerFactory("localhost", 7933, DOMAIN)
     worker = factory.new_worker(TASK_LIST)
     worker.register_activities_implementation(GreetingActivitiesImpl(), "GreetingActivities")
-    worker.register_workflow_implementation_type(GreetingWorkflowImpl, "GreetingWorkflow")
+    worker.register_workflow_implementation_type(GreetingWorkflowImpl)
     factory.start()
 
     client = WorkflowClient.new_client(domain=DOMAIN)
