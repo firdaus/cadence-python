@@ -23,6 +23,10 @@ class Workflow:
         return cls
 
 
+class WorkflowStub:
+    pass
+
+
 @dataclass
 class WorkflowClient:
     service: WorkflowService
@@ -39,13 +43,18 @@ class WorkflowClient:
     def start(cls, stub_fn: Callable, *args) -> WorkflowExecution:
         stub = stub_fn.__self__
         assert stub._workflow_client is not None
-        return exec_workflow(stub._workflow_client, stub_fn, args, workflow_options=stub._workflow_options)
+        assert stub_fn._workflow_method is not None
+        return exec_workflow(stub._workflow_client, stub_fn._workflow_method, args, workflow_options=stub._workflow_options)
 
     def new_workflow_stub(self, cls: Type, workflow_options: WorkflowOptions = None):
-        stub = cls()
-        stub._workflow_client = self
-        stub._workflow_options = workflow_options
-        return stub
+        attrs = {}
+        attrs["_workflow_client"] = self
+        attrs["_workflow_options"] = workflow_options
+        for name, fn in inspect.getmembers(cls, inspect.isfunction):
+            if hasattr(fn, "_workflow_method"):
+                attrs[name] = get_workflow_stub_fn(fn._workflow_method)
+        stub_cls = type(cls.__name__, (WorkflowStub,), attrs)
+        return stub_cls()
 
     def wait_for_close(self, execution: WorkflowExecution) -> object:
         while True:
@@ -76,36 +85,36 @@ class WorkflowClient:
                 raise Exception("Unexpected history close event: " + str(history_event))
 
 
-def exec_workflow(workflow_client, stub_fn, args, workflow_options: WorkflowOptions = None) -> WorkflowExecution:
-    start_request = create_start_workflow_request(workflow_client, stub_fn, args)
+def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None) -> WorkflowExecution:
+    start_request = create_start_workflow_request(workflow_client, wm, args)
     start_response, err = workflow_client.service.start_workflow(start_request)
     if err:
         raise Exception(err)
     return WorkflowExecution(workflow_id=start_request.workflow_id, run_id=start_response.run_id)
 
 
-def exec_workflow_sync(workflow_client: WorkflowClient, stub_fn: Callable, args: List,
+def exec_workflow_sync(workflow_client: WorkflowClient, wm: WorkflowMethod, args: List,
                        workflow_options: WorkflowOptions = None):
-    execution = exec_workflow(workflow_client, stub_fn, args, workflow_options=workflow_options)
+    execution = exec_workflow(workflow_client, wm, args, workflow_options=workflow_options)
     return workflow_client.wait_for_close(execution)
 
 
-def create_start_workflow_request(workflow_client: WorkflowClient, stub_fn: object,
+def create_start_workflow_request(workflow_client: WorkflowClient, wm: WorkflowMethod,
                                   args: List) -> StartWorkflowExecutionRequest:
     start_request = StartWorkflowExecutionRequest()
     start_request.domain = workflow_client.domain
-    start_request.workflow_id = stub_fn._workflow_id if stub_fn._workflow_id else str(uuid4())
+    start_request.workflow_id = wm._workflow_id if wm._workflow_id else str(uuid4())
     start_request.workflow_type = WorkflowType()
-    start_request.workflow_type.name = stub_fn._name
+    start_request.workflow_type.name = wm._name
     start_request.task_list = TaskList()
-    start_request.task_list.name = stub_fn._task_list
+    start_request.task_list.name = wm._task_list
     start_request.input = json.dumps(args)
-    start_request.execution_start_to_close_timeout_seconds = stub_fn._execution_start_to_close_timeout_seconds
-    start_request.task_start_to_close_timeout_seconds = stub_fn._task_start_to_close_timeout_seconds
+    start_request.execution_start_to_close_timeout_seconds = wm._execution_start_to_close_timeout_seconds
+    start_request.task_start_to_close_timeout_seconds = wm._task_start_to_close_timeout_seconds
     start_request.identity = workflow_client.service.get_identity()
-    start_request.workflow_id_reuse_policy = stub_fn._workflow_id_reuse_policy
+    start_request.workflow_id_reuse_policy = wm._workflow_id_reuse_policy
     start_request.request_id = str(uuid4())
-    start_request.cron_schedule = stub_fn._cron_schedule if stub_fn._cron_schedule else None
+    start_request.cron_schedule = wm._cron_schedule if wm._cron_schedule else None
     return start_request
 
 
@@ -123,6 +132,15 @@ def create_close_history_event_request(workflow_client: WorkflowClient, workflow
 
 def get_workflow_method_name(method):
     return "::".join(method.__qualname__.split(".")[-2:])
+
+
+def get_workflow_stub_fn(wm: WorkflowMethod):
+    def workflow_stub_fn(self, *args):
+        assert self._workflow_client is not None
+        return exec_workflow_sync(self._workflow_client, wm, args,
+                                  workflow_options=self._workflow_options)
+    workflow_stub_fn._workflow_method = wm
+    return workflow_stub_fn
 
 
 @dataclass
