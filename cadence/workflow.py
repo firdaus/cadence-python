@@ -125,37 +125,34 @@ def get_workflow_method_name(method):
     return "::".join(method.__qualname__.split(".")[-2:])
 
 
+@dataclass
+class WorkflowMethod(object):
+    _name: str = None
+    _workflow_id: str = None
+    _workflow_id_reuse_policy: WorkflowIdReusePolicy = None
+    _execution_start_to_close_timeout_seconds: int = None
+    _task_start_to_close_timeout_seconds: int = None
+    _task_list: str = None
+    _cron_schedule: str = None
+
+
 def workflow_method(func=None,
                     name=None,
                     workflow_id=None,
                     workflow_id_reuse_policy=WorkflowIdReusePolicy.AllowDuplicateFailedOnly,
                     execution_start_to_close_timeout_seconds=7200,  # (2 hours)
                     task_start_to_close_timeout_seconds=10,  # same timeout as Java library
-                    task_list=None,
-                    impl=False):
+                    task_list=None):
     def wrapper(fn):
-        if impl:
-            async def stub_fn(self, *args):
-                return await fn(self, *args)
-        else:
-            def stub_fn(self, *args):
-                assert self._workflow_client is not None
-                return exec_workflow_sync(self._workflow_client, stub_fn, args,
-                                          workflow_options=self._workflow_options)
-
-        stub_fn._workflow_method = True
-        stub_fn._name = name if name else get_workflow_method_name(fn)
-        stub_fn._workflow_id = workflow_id
-        stub_fn._workflow_id_reuse_policy = workflow_id_reuse_policy
-        stub_fn._execution_start_to_close_timeout_seconds = execution_start_to_close_timeout_seconds
-        stub_fn._task_start_to_close_timeout_seconds = task_start_to_close_timeout_seconds
-        stub_fn._task_list = task_list
-        if hasattr(fn, "_cron_schedule"):
-            stub_fn._cron_schedule = fn._cron_schedule
-        else:
-            stub_fn._cron_schedule = None
-        return stub_fn
-
+        if not hasattr(fn, "_workflow_method"):
+            fn._workflow_method = WorkflowMethod()
+        fn._workflow_method._name = name if name else get_workflow_method_name(fn)
+        fn._workflow_method._workflow_id = workflow_id
+        fn._workflow_method._workflow_id_reuse_policy = workflow_id_reuse_policy
+        fn._workflow_method._execution_start_to_close_timeout_seconds = execution_start_to_close_timeout_seconds
+        fn._workflow_method._task_start_to_close_timeout_seconds = task_start_to_close_timeout_seconds
+        fn._workflow_method._task_list = task_list
+        return fn
     if func and inspect.isfunction(func):
         return wrapper(func)
     else:
@@ -164,7 +161,9 @@ def workflow_method(func=None,
 
 def cron_schedule(value):
     def wrapper(fn):
-        fn._cron_schedule = value
+        if not hasattr(fn, "_workflow_method"):
+            fn._workflow_method = WorkflowMethod()
+        fn._workflow_method._cron_schedule = value
         return fn
     return wrapper
 
