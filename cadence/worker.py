@@ -62,15 +62,17 @@ class Worker:
             self.activities[f'{cls_name}::{camel_to_snake(method_name)}'] = fn
             self.activities[f'{cls_name}::{snake_to_camel(method_name)}'] = fn
 
-    def register_workflow_implementation_type(self, cls: type, workflow_cls_name: str = None):
-        cls_name = workflow_cls_name if workflow_cls_name else cls.__name__
-        for method_name, fn in inspect.getmembers(cls, predicate=inspect.isfunction):
-            if hasattr(fn, "_workflow_method") and fn._workflow_method:
-                self.workflow_methods[fn._name] = (cls, fn)
-                if "::" in fn._name:
-                    _, method_name = fn._name.split("::")
-                    self.workflow_methods[f'{cls_name}::{camel_to_snake(method_name)}'] = (cls, fn)
-                    self.workflow_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = (cls, fn)
+    def register_workflow_implementation_type(self, impl_cls: type, workflow_cls_name: str = None):
+        cls_name = workflow_cls_name if workflow_cls_name else _find_interface_class(impl_cls).__name__
+        for method_name, fn in inspect.getmembers(impl_cls, predicate=inspect.isfunction):
+            wm: WorkflowMethod = _get_wm(impl_cls, method_name)
+            if wm:
+                impl_fn = getattr(impl_cls, method_name)
+                self.workflow_methods[wm._name] = (impl_cls, impl_fn)
+                if "::" in wm._name:
+                    _, method_name = wm._name.split("::")
+                    self.workflow_methods[f'{cls_name}::{camel_to_snake(method_name)}'] = (impl_cls, impl_fn)
+                    self.workflow_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = (impl_cls, impl_fn)
 
     def start(self):
         from cadence.activity_loop import activity_task_loop
