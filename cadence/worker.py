@@ -6,6 +6,7 @@ import logging
 import time
 
 from cadence.conversions import camel_to_snake, snake_to_camel
+from cadence.workflow import WorkflowMethod
 from cadence.workflowservice import WorkflowService
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,29 @@ logger = logging.getLogger(__name__)
 @dataclass
 class WorkerOptions:
     pass
+
+
+def _find_interface_class(impl_cls) -> type:
+    hierarchy = list(inspect.getmro(impl_cls))
+    hierarchy.reverse()
+    hierarchy.pop(0)  # remove object
+    for cls in hierarchy:
+        for method_name, fn in inspect.getmembers(cls, predicate=inspect.isfunction):
+            # first class with a "_workflow_method" is considered the interface
+            if hasattr(fn, "_workflow_method"):
+                return cls
+    return impl_cls
+
+
+def _get_wm(cls: type, method_name: str) -> WorkflowMethod:
+    for c in inspect.getmro(cls):
+        if not hasattr(c, method_name):
+            continue
+        m = getattr(c, method_name)
+        if not hasattr(m, "_workflow_method"):
+            continue
+        return m._workflow_method
+    return None
 
 
 @dataclass
