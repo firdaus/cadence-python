@@ -22,6 +22,15 @@ class Workflow:
         cls._decision_context = task.decider.decision_context
         return cls
 
+    @staticmethod
+    async def await_till(c: Callable):
+        from cadence.decision_loop import WorkflowTask
+        task = WorkflowTask.current()
+        assert task
+        decision_context = task.decider.decision_context
+        while not c():
+            await decision_context.await_till()
+
 
 class WorkflowStub:
     pass

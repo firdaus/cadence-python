@@ -160,3 +160,37 @@ class TestHandleActivityTaskEvents(TestCase):
         self.assertEqual(attr.timeout_type, exception.timeout_type)
         self.assertEqual(attr.details, exception.details)
         self.assertEqual(0, len(self.context.scheduled_activities))
+
+
+class TestAwaitTill(TestCase):
+
+    def setUp(self) -> None:
+        self.event_loop: AbstractEventLoop = asyncio.get_event_loop()
+        self.decider: ReplayDecider = Mock()
+        self.decider.get_and_increment_next_id = MagicMock(return_value="0")
+        self.decider.event_loop = Mock()
+        self.future = self.event_loop.create_future()
+        self.decider.event_loop.create_future = MagicMock(return_value=self.future)
+        self.context = DecisionContext(decider=self.decider)
+
+    def tearDown(self) -> None:
+        self.task.cancel()
+
+    def test_await_till(self):
+        self.task = self.event_loop.create_task(self.context.await_till())
+        run_once(self.event_loop)
+        assert self.context.awaited
+
+    def test_await_till_no_progress(self):
+        self.task = self.event_loop.create_task(self.context.await_till())
+        run_once(self.event_loop)
+        assert self.context.awaited
+        run_once(self.event_loop)
+        assert self.context.awaited
+
+    def test_unblock(self):
+        self.task = self.event_loop.create_task(self.context.await_till())
+        run_once(self.event_loop)
+        self.context.unblock()
+        run_once(self.event_loop)
+        assert not self.context.awaited

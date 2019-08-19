@@ -13,7 +13,7 @@ from asyncio.futures import Future
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Callable
 
 from more_itertools import peekable
 
@@ -196,6 +196,7 @@ class EventLoopWrapper:
 class DecisionContext:
     decider: ReplayDecider
     scheduled_activities: Dict[int, Future[bytes]] = field(default_factory=dict)
+    awaited: Future = None
 
     async def schedule_activity_task(self, parameters: ExecuteActivityParameters):
         attr = ScheduleActivityTaskDecisionAttributes()
@@ -263,6 +264,16 @@ class DecisionContext:
                 raise NonDeterministicWorkflowException(
                     f"Trying to complete activity event {attr.scheduled_event_id} that is not in scheduled_activities")
 
+    async def await_till(self):
+        self.awaited = self.decider.event_loop.create_future()
+        await self.awaited
+        assert self.awaited.done()
+        self.awaited = None
+
+    def unblock(self):
+        if self.awaited:
+            self.awaited.set_result(None)
+
 
 @dataclass
 class ReplayDecider:
@@ -297,6 +308,7 @@ class ReplayDecider:
             self.process_event(event)
         if self.completed:
             return
+        self.decision_context.unblock()
         self.event_loop.run_event_loop_once()
         if decision_events.replay:
             self.notify_decision_sent()
