@@ -25,7 +25,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CancelWorkflowExecutionDecisionAttributes
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
-    ActivityTaskTimeoutException
+    ActivityTaskTimeoutException, SignalNotFound
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
@@ -164,6 +164,60 @@ class WorkflowTask:
         except Exception as ex:
             logger.error(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
+            self.exception_thrown = ex
+        finally:
+            self.status = Status.DONE
+
+    def is_done(self):
+        return self.status == Status.DONE
+
+    def destroy(self):
+        if self.status == Status.RUNNING:
+            self.status = Status.DONE
+            self.task.cancel()
+
+
+@dataclass
+class SignalTask:
+    task_id: str
+    workflow_instance: object
+    signal_name: str
+    signal_input: List
+    workflow_task: WorkflowTask
+    decider: ReplayDecider
+    status: Status = Status.CREATED
+    exception_thrown: BaseException = None
+    task: Task = None
+    ret_value: object = None
+
+    def start(self):
+        logger.debug(f"[signal-task-{self.task_id}-{self.signal_name}] Created")
+        self.task = asyncio.get_event_loop().create_task(self.signal_main())
+
+    async def signal_main(self):
+        logger.debug(f"[signal-task-{self.task_id}-{self.signal_name}] Running")
+        current_workflow_task.set(self.workflow_task)
+
+        if not self.signal_name in self.workflow_instance._signal_methods:
+            self.status = Status.DONE
+            self.exception_thrown = SignalNotFound(self.signal_name)
+            logger.error(f"Signal not found: {self.signal_name}")
+            return
+
+        signal_proc = self.workflow_instance._signal_methods[self.signal_name]
+        self.status = Status.RUNNING
+
+        try:
+            logger.info(f"Invoking signal {self.signal_name}({str(self.signal_input)[1:-1]})")
+            self.ret_value = await signal_proc(self.workflow_instance, *self.signal_input)
+            logger.info(
+                f"Signal {self.signal_name}({str(self.signal_input)[1:-1]}) returned {self.ret_value}")
+            self.decider.complete_signal_execution(self)
+        except CancelledError:
+            logger.debug("Coroutine cancelled (expected)")
+        except Exception as ex:
+            logger.error(
+                f"Signal {self.signal_name}({str(self.signal_input)[1:-1]}) failed", exc_info=1)
             self.exception_thrown = ex
         finally:
             self.status = Status.DONE
@@ -373,6 +427,9 @@ class ReplayDecider:
         self.activity_id_to_scheduled_event_id[schedule.activity_id] = next_decision_event_id
         self.add_decision(decision_id, ActivityDecisionStateMachine(decision_id, schedule_attributes=schedule))
         return next_decision_event_id
+
+    def complete_signal_execution(self, task: SignalTask):
+        pass
 
     def handle_activity_task_closed(self, scheduled_event_id: int) -> bool:
         decision: DecisionStateMachine = self.get_decision(DecisionId(DecisionTarget.ACTIVITY, scheduled_event_id))

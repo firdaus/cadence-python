@@ -32,3 +32,7 @@ class ActivityTaskTimeoutException(Exception):
         self.details = details
         self.timeout_type = timeout_type
         self.event_id = event_id
+
+
+class SignalNotFound(Exception):
+    pass
