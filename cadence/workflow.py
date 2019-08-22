@@ -186,6 +186,22 @@ def workflow_method(func=None,
         return wrapper
 
 
+@dataclass
+class SignalMethod:
+    name: str = None
+
+
+def signal_method(func=None, name: str = None):
+    def wrapper(fn):
+        fn._signal_method = SignalMethod()
+        fn._signal_method.name = name if name else get_workflow_method_name(fn)
+        return fn
+    if func and inspect.isfunction(func):
+        return wrapper(func)
+    else:
+        return wrapper
+
+
 def cron_schedule(value):
     def wrapper(fn):
         if not hasattr(fn, "_workflow_method"):
