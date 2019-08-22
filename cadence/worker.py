@@ -6,7 +6,7 @@ import logging
 import time
 
 from cadence.conversions import camel_to_snake, snake_to_camel
-from cadence.workflow import WorkflowMethod
+from cadence.workflow import WorkflowMethod, SignalMethod
 from cadence.workflowservice import WorkflowService
 
 logger = logging.getLogger(__name__)
@@ -29,15 +29,25 @@ def _find_interface_class(impl_cls) -> type:
     return impl_cls
 
 
-def _get_wm(cls: type, method_name: str) -> WorkflowMethod:
+def _find_metadata_field(cls, metadata_field, method_name):
     for c in inspect.getmro(cls):
         if not hasattr(c, method_name):
             continue
         m = getattr(c, method_name)
-        if not hasattr(m, "_workflow_method"):
+        if not hasattr(m, metadata_field):
             continue
-        return m._workflow_method
+        return getattr(m, metadata_field)
     return None
+
+
+def _get_wm(cls: type, method_name: str) -> WorkflowMethod:
+    metadata_field = "_workflow_method"
+    return _find_metadata_field(cls, metadata_field, method_name)
+
+
+def _get_sm(cls: type, method_name: str) -> SignalMethod:
+    metadata_field = "_signal_method"
+    return _find_metadata_field(cls, metadata_field, method_name)
 
 
 @dataclass
