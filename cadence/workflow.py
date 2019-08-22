@@ -118,6 +118,7 @@ def exec_signal(workflow_client: WorkflowClient, sm: SignalMethod, args, stub_in
     request.workflow_execution = stub_instance._execution
     request.signal_name = sm.name
     request.input = json.dumps(args)
+    request.domain = workflow_client.domain
     response, err = workflow_client.service.signal_workflow_execution(request)
     if err:
         raise Exception(err)
