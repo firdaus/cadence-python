@@ -62,6 +62,8 @@ class WorkflowClient:
         for name, fn in inspect.getmembers(cls, inspect.isfunction):
             if hasattr(fn, "_workflow_method"):
                 attrs[name] = get_workflow_stub_fn(fn._workflow_method)
+            elif hasattr(fn, "_signal_method"):
+                attrs[name] = get_signal_stub_fn(fn._signal_method)
         stub_cls = type(cls.__name__, (WorkflowStub,), attrs)
         return stub_cls()
 
@@ -153,6 +155,13 @@ def get_workflow_stub_fn(wm: WorkflowMethod):
     workflow_stub_fn._workflow_method = wm
     return workflow_stub_fn
 
+
+def get_signal_stub_fn(sm: SignalMethod):
+    def signal_stub_fn(self, *args):
+        assert self._workflow_client is not None
+        return exec_signal(self._workflow_client, sm, args, stub_instance=self)
+    signal_stub_fn._signal_method = sm
+    return signal_stub_fn
 
 @dataclass
 class WorkflowMethod(object):
