@@ -74,6 +74,8 @@ class Worker:
 
     def register_workflow_implementation_type(self, impl_cls: type, workflow_cls_name: str = None):
         cls_name = workflow_cls_name if workflow_cls_name else _find_interface_class(impl_cls).__name__
+        if not hasattr(impl_cls, "_signal_methods"):
+            impl_cls._signal_methods = {}
         for method_name, fn in inspect.getmembers(impl_cls, predicate=inspect.isfunction):
             wm: WorkflowMethod = _get_wm(impl_cls, method_name)
             if wm:
@@ -83,6 +85,17 @@ class Worker:
                     _, method_name = wm._name.split("::")
                     self.workflow_methods[f'{cls_name}::{camel_to_snake(method_name)}'] = (impl_cls, impl_fn)
                     self.workflow_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = (impl_cls, impl_fn)
+                continue
+            sm: SignalMethod = _get_sm(impl_cls, method_name)
+            if sm:
+                impl_fn = getattr(impl_cls, method_name)
+                impl_cls._signal_methods[sm.name] = impl_fn
+                if "::" in sm.name:
+                    _, method_name = sm.name.split("::")
+                    impl_cls._signal_methods[f'{cls_name}::{camel_to_snake(method_name)}'] = impl_fn
+                    impl_cls._signal_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = impl_fn
+                continue
+
 
     def start(self):
         from cadence.activity_loop import activity_task_loop
