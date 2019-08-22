@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
-    StartWorkflowExecutionResponse
+    StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest
 from cadence.workflowservice import WorkflowService
 
 
@@ -110,6 +110,17 @@ def exec_workflow_sync(workflow_client: WorkflowClient, wm: WorkflowMethod, args
                        workflow_options: WorkflowOptions = None, stub_instance: object = None):
     execution: WorkflowExecution = exec_workflow(workflow_client, wm, args, workflow_options=workflow_options, stub_instance=stub_instance)
     return workflow_client.wait_for_close(execution)
+
+
+def exec_signal(workflow_client: WorkflowClient, sm: SignalMethod, args, stub_instance: object = None):
+    assert stub_instance._execution
+    request = SignalWorkflowExecutionRequest()
+    request.workflow_execution = stub_instance._execution
+    request.signal_name = sm.name
+    request.input = json.dumps(args)
+    response, err = workflow_client.service.signal_workflow_execution(request)
+    if err:
+        raise Exception(err)
 
 
 def create_start_workflow_request(workflow_client: WorkflowClient, wm: WorkflowMethod,
