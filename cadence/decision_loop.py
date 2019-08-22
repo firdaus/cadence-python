@@ -182,6 +182,8 @@ class WorkflowTask(AbstractTask):
         finally:
             self.status = Status.DONE
 
+    def get_workflow_instance(self):
+        return self.workflow_instance
 
 
 @dataclass
