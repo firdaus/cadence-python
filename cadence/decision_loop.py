@@ -6,14 +6,14 @@ import datetime
 import json
 import logging
 import threading
-from asyncio import Task
 from asyncio.base_futures import CancelledError
 from asyncio.events import AbstractEventLoop
 from asyncio.futures import Future
+from asyncio.tasks import Task
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional, Any, Callable
+from typing import List, Dict, Optional, Any
 
 from more_itertools import peekable
 
@@ -119,18 +119,32 @@ class Status(Enum):
 current_workflow_task = contextvars.ContextVar("current_workflow_task")
 
 
+class AbstractTask:
+    task: Task = None
+    status: Status = Status.CREATED
+
+    def is_done(self):
+        return self.status == Status.DONE
+
+    def destroy(self):
+        if self.status == Status.RUNNING:
+            self.status = Status.DONE
+            self.task.cancel()
+
+    def start(self):
+        pass
+
+
 @dataclass
-class WorkflowTask:
+class WorkflowTask(AbstractTask):
     task_id: str
     workflow_input: List
     worker: Worker
     workflow_type: WorkflowType
     decider: ReplayDecider
-    status: Status = Status.CREATED
     workflow_instance: object = None
     ret_value: object = None
     exception_thrown: BaseException = None
-    task: Task = None
 
     @staticmethod
     def current() -> WorkflowTask:
@@ -168,26 +182,17 @@ class WorkflowTask:
         finally:
             self.status = Status.DONE
 
-    def is_done(self):
-        return self.status == Status.DONE
-
-    def destroy(self):
-        if self.status == Status.RUNNING:
-            self.status = Status.DONE
-            self.task.cancel()
 
 
 @dataclass
-class SignalTask:
+class SignalTask(AbstractTask):
     task_id: str
     workflow_instance: object
     signal_name: str
     signal_input: List
     workflow_task: WorkflowTask
     decider: ReplayDecider
-    status: Status = Status.CREATED
     exception_thrown: BaseException = None
-    task: Task = None
     ret_value: object = None
 
     def start(self):
@@ -221,14 +226,6 @@ class SignalTask:
             self.exception_thrown = ex
         finally:
             self.status = Status.DONE
-
-    def is_done(self):
-        return self.status == Status.DONE
-
-    def destroy(self):
-        if self.status == Status.RUNNING:
-            self.status = Status.DONE
-            self.task.cancel()
 
 
 @dataclass
