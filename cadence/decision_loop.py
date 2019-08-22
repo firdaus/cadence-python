@@ -334,6 +334,7 @@ class ReplayDecider:
     workflow_type: WorkflowType
     worker: Worker
     workflow_task: WorkflowTask = None
+    signal_tasks: List[SignalTask] = field(default_factory=list)
     event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
     completed: bool = False
 
@@ -454,6 +455,25 @@ class ReplayDecider:
     def handle_activity_task_timed_out(self, event: HistoryEvent):
         self.decision_context.handle_activity_task_timed_out(event)
 
+    def handle_workflow_execution_signaled(self, event: HistoryEvent):
+        signaled_event_attributes = event.workflow_execution_signaled_event_attributes
+        signal_input = signaled_event_attributes.input
+        if not signal_input:
+            signal_input = []
+        else:
+            signal_input = json.loads(signaled_event_attributes.input)
+            if not isinstance(signal_input, list):
+                signal_input = [signal_input]
+
+        task = SignalTask(task_id=self.execution_id,
+                          workflow_instance=self.workflow_task.workflow_instance,
+                          signal_name=signaled_event_attributes.signal_name,
+                          signal_input=signal_input,
+                          workflow_task=self.workflow_task,
+                          decider=self)
+        self.signal_tasks.append(task)
+        task.start()
+
     def add_decision(self, decision_id: DecisionId, decision: DecisionStateMachine):
         self.decisions[decision_id] = decision
         self.next_decision_event_id += 1
@@ -512,7 +532,8 @@ event_handlers = {
     EventType.ActivityTaskStarted: ReplayDecider.handle_activity_task_started,
     EventType.ActivityTaskCompleted: ReplayDecider.handle_activity_task_completed,
     EventType.ActivityTaskFailed: ReplayDecider.handle_activity_task_failed,
-    EventType.ActivityTaskTimedOut: ReplayDecider.handle_activity_task_timed_out
+    EventType.ActivityTaskTimedOut: ReplayDecider.handle_activity_task_timed_out,
+    EventType.WorkflowExecutionSignaled: ReplayDecider.handle_workflow_execution_signaled
 }
 
 
