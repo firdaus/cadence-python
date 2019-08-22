@@ -53,7 +53,7 @@ class WorkflowClient:
         stub = stub_fn.__self__
         assert stub._workflow_client is not None
         assert stub_fn._workflow_method is not None
-        return exec_workflow(stub._workflow_client, stub_fn._workflow_method, args, workflow_options=stub._workflow_options)
+        return exec_workflow(stub._workflow_client, stub_fn._workflow_method, args, workflow_options=stub._workflow_options, stub_instance=stub)
 
     def new_workflow_stub(self, cls: Type, workflow_options: WorkflowOptions = None):
         attrs = {}
@@ -94,17 +94,19 @@ class WorkflowClient:
                 raise Exception("Unexpected history close event: " + str(history_event))
 
 
-def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None) -> WorkflowExecution:
+def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None, stub_instance: object = None) -> WorkflowExecution:
     start_request = create_start_workflow_request(workflow_client, wm, args)
     start_response, err = workflow_client.service.start_workflow(start_request)
     if err:
         raise Exception(err)
-    return WorkflowExecution(workflow_id=start_request.workflow_id, run_id=start_response.run_id)
+    execution = WorkflowExecution(workflow_id=start_request.workflow_id, run_id=start_response.run_id)
+    stub_instance._execution = execution
+    return execution
 
 
 def exec_workflow_sync(workflow_client: WorkflowClient, wm: WorkflowMethod, args: List,
-                       workflow_options: WorkflowOptions = None):
-    execution = exec_workflow(workflow_client, wm, args, workflow_options=workflow_options)
+                       workflow_options: WorkflowOptions = None, stub_instance: object = None):
+    execution: WorkflowExecution = exec_workflow(workflow_client, wm, args, workflow_options=workflow_options, stub_instance=stub_instance)
     return workflow_client.wait_for_close(execution)
 
 
@@ -147,7 +149,7 @@ def get_workflow_stub_fn(wm: WorkflowMethod):
     def workflow_stub_fn(self, *args):
         assert self._workflow_client is not None
         return exec_workflow_sync(self._workflow_client, wm, args,
-                                  workflow_options=self._workflow_options)
+                                  workflow_options=self._workflow_options, stub_instance=self)
     workflow_stub_fn._workflow_method = wm
     return workflow_stub_fn
 
