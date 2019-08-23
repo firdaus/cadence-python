@@ -32,7 +32,7 @@ class TestSignalWorkflowImpl(TestSignalWorkflow):
         received_messages = []
         while True:
             await Workflow.await_till(lambda: self.message_queue or self.exit)
-            if not self.message_queue or self.exit:
+            if not self.message_queue and self.exit:
                 return received_messages
             message = self.message_queue.pop()
             received_messages.append(message)
@@ -55,8 +55,6 @@ def test_signal_workflow():
     execution = WorkflowClient.start(workflow.get_greetings)
 
     workflow.wait_for_name("Bob")
-    # Sleep for a while so that it processes the signal first
-    sleep(5)
     workflow.exit()
 
     result = client.wait_for_close(execution)
