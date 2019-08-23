@@ -429,7 +429,8 @@ class ReplayDecider:
         return next_decision_event_id
 
     def complete_signal_execution(self, task: SignalTask):
-        pass
+        task.destroy()
+        self.signal_tasks.remove(task)
 
     def handle_activity_task_closed(self, scheduled_event_id: int) -> bool:
         decision: DecisionStateMachine = self.get_decision(DecisionId(DecisionTarget.ACTIVITY, scheduled_event_id))
