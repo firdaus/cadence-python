@@ -15,8 +15,8 @@ class Workflow:
 
     @staticmethod
     def new_activity_stub(activities_cls):
-        from cadence.decision_loop import WorkflowTask
-        task = WorkflowTask.current()
+        from cadence.decision_loop import WorkflowMethodTask
+        task = WorkflowMethodTask.current()
         assert task
         cls = activities_cls()
         cls._decision_context = task.decider.decision_context
@@ -24,8 +24,8 @@ class Workflow:
 
     @staticmethod
     async def await_till(c: Callable):
-        from cadence.decision_loop import WorkflowTask
-        task = WorkflowTask.current()
+        from cadence.decision_loop import WorkflowMethodTask
+        task = WorkflowMethodTask.current()
         assert task
         decision_context = task.decider.decision_context
         while not c():

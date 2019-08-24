@@ -138,7 +138,7 @@ class AbstractTask:
 
 
 @dataclass
-class WorkflowTask(AbstractTask):
+class WorkflowMethodTask(AbstractTask):
     task_id: str = None
     workflow_input: List = None
     worker: Worker = None
@@ -148,7 +148,7 @@ class WorkflowTask(AbstractTask):
     exception_thrown: BaseException = None
 
     @staticmethod
-    def current() -> WorkflowTask:
+    def current() -> WorkflowMethodTask:
         return current_workflow_task.get()
 
     def __post_init__(self):
@@ -193,7 +193,7 @@ class SignalTask(AbstractTask):
     workflow_instance: object = None
     signal_name: str = None
     signal_input: List = None
-    workflow_task: WorkflowTask = None
+    workflow_task: WorkflowMethodTask = None
     exception_thrown: BaseException = None
     ret_value: object = None
 
@@ -333,7 +333,7 @@ class ReplayDecider:
     execution_id: str
     workflow_type: WorkflowType
     worker: Worker
-    workflow_task: WorkflowTask = None
+    workflow_task: WorkflowMethodTask = None
     signal_tasks: List[SignalTask] = field(default_factory=list)
     event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
     completed: bool = False
@@ -383,8 +383,8 @@ class ReplayDecider:
             workflow_input = json.loads(start_event_attributes.input)
             if not isinstance(workflow_input, list):
                 workflow_input = [workflow_input]
-        self.workflow_task = WorkflowTask(task_id=self.execution_id, workflow_input=workflow_input,
-                                          worker=self.worker, workflow_type=self.workflow_type, decider=self)
+        self.workflow_task = WorkflowMethodTask(task_id=self.execution_id, workflow_input=workflow_input,
+                                                worker=self.worker, workflow_type=self.workflow_type, decider=self)
 
     def handle_workflow_execution_cancel_requested(self, event: HistoryEvent):
         self.cancel_workflow_execution()

@@ -1,14 +1,14 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from cadence.decision_loop import WorkflowTask, Status
+from cadence.decision_loop import WorkflowMethodTask, Status
 
 
 class WorkflowTaskDestroyTest(TestCase):
 
     def setUp(self) -> None:
-        self.workflow_task = WorkflowTask(task_id="", workflow_input=[], worker=Mock(), workflow_type=Mock(),
-                                          decider=Mock())
+        self.workflow_task = WorkflowMethodTask(task_id="", workflow_input=[], worker=Mock(), workflow_type=Mock(),
+                                                decider=Mock())
         self.task = Mock()
         self.workflow_task.task = self.task
         self.workflow_task.status = Status.RUNNING

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock
 import pytest
 
 from cadence.cadence_types import HistoryEvent, WorkflowExecutionSignaledEventAttributes
-from cadence.decision_loop import ReplayDecider, WorkflowTask, Status
+from cadence.decision_loop import ReplayDecider, WorkflowMethodTask, Status
 from cadence.worker import Worker
 from cadence.workflow import signal_method
 
@@ -16,8 +16,8 @@ def workflow_instance():
 
 @pytest.fixture
 def workflow_task(decider, workflow_instance):
-    workflow_task = WorkflowTask(task_id=decider.execution_id, workflow_input=None,
-                                 worker=decider.worker, workflow_type=Mock(), decider=decider)
+    workflow_task = WorkflowMethodTask(task_id=decider.execution_id, workflow_input=None,
+                                       worker=decider.worker, workflow_type=Mock(), decider=decider)
     decider.workflow_task = workflow_task
     workflow_task.workflow_instance = workflow_instance
     return workflow_task
