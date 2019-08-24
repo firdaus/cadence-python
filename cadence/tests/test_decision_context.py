@@ -9,7 +9,7 @@ from cadence.activity_method import ExecuteActivityParameters
 from cadence.cadence_types import ActivityType, ScheduleActivityTaskDecisionAttributes, HistoryEvent, EventType, \
     ActivityTaskCompletedEventAttributes, ActivityTaskFailedEventAttributes, ActivityTaskTimedOutEventAttributes, \
     TimeoutType
-from cadence.decision_loop import DecisionContext, ReplayDecider
+from cadence.decision_loop import DecisionContext, ReplayDecider, ITask
 from cadence.exceptions import NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException
 
@@ -171,26 +171,26 @@ class TestAwaitTill(TestCase):
         self.decider.event_loop = Mock()
         self.future = self.event_loop.create_future()
         self.decider.event_loop.create_future = MagicMock(return_value=self.future)
-        self.context = DecisionContext(decider=self.decider)
+        self.itask = ITask(decider=self.decider)
 
     def tearDown(self) -> None:
         self.task.cancel()
 
     def test_await_till(self):
-        self.task = self.event_loop.create_task(self.context.await_till())
+        self.task = self.event_loop.create_task(self.itask.await_till())
         run_once(self.event_loop)
-        assert self.context.awaited
+        assert self.itask.awaited
 
     def test_await_till_no_progress(self):
-        self.task = self.event_loop.create_task(self.context.await_till())
+        self.task = self.event_loop.create_task(self.itask.await_till())
         run_once(self.event_loop)
-        assert self.context.awaited
+        assert self.itask.awaited
         run_once(self.event_loop)
-        assert self.context.awaited
+        assert self.itask.awaited
 
     def test_unblock(self):
-        self.task = self.event_loop.create_task(self.context.await_till())
+        self.task = self.event_loop.create_task(self.itask.await_till())
         run_once(self.event_loop)
-        self.context.unblock_all()
+        self.itask.unblock()
         run_once(self.event_loop)
-        assert not self.context.awaited
+        assert not self.itask.awaited
