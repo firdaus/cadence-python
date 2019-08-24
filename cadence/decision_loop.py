@@ -120,7 +120,7 @@ current_workflow_task = contextvars.ContextVar("current_workflow_task")
 
 
 @dataclass
-class AbstractTask:
+class ITask:
     decider: ReplayDecider = None
     task: Task = None
     status: Status = Status.CREATED
@@ -138,7 +138,7 @@ class AbstractTask:
 
 
 @dataclass
-class WorkflowMethodTask(AbstractTask):
+class WorkflowMethodTask(ITask):
     task_id: str = None
     workflow_input: List = None
     worker: Worker = None
@@ -188,7 +188,7 @@ class WorkflowMethodTask(AbstractTask):
 
 
 @dataclass
-class SignalMethodTask(AbstractTask):
+class SignalMethodTask(ITask):
     task_id: str = None
     workflow_instance: object = None
     signal_name: str = None
