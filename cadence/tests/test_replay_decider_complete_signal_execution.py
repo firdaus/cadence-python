@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from cadence.decision_loop import ReplayDecider, SignalTask
+from cadence.decision_loop import ReplayDecider, SignalMethodTask
 from cadence.worker import Worker
 
 

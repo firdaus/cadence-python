@@ -188,7 +188,7 @@ class WorkflowMethodTask(AbstractTask):
 
 
 @dataclass
-class SignalTask(AbstractTask):
+class SignalMethodTask(AbstractTask):
     task_id: str = None
     workflow_instance: object = None
     signal_name: str = None
@@ -334,7 +334,7 @@ class ReplayDecider:
     workflow_type: WorkflowType
     worker: Worker
     workflow_task: WorkflowMethodTask = None
-    signal_tasks: List[SignalTask] = field(default_factory=list)
+    signal_tasks: List[SignalMethodTask] = field(default_factory=list)
     event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
     completed: bool = False
 
@@ -428,7 +428,7 @@ class ReplayDecider:
         self.add_decision(decision_id, ActivityDecisionStateMachine(decision_id, schedule_attributes=schedule))
         return next_decision_event_id
 
-    def complete_signal_execution(self, task: SignalTask):
+    def complete_signal_execution(self, task: SignalMethodTask):
         task.destroy()
         self.signal_tasks.remove(task)
 
@@ -466,12 +466,12 @@ class ReplayDecider:
             if not isinstance(signal_input, list):
                 signal_input = [signal_input]
 
-        task = SignalTask(task_id=self.execution_id,
-                          workflow_instance=self.workflow_task.workflow_instance,
-                          signal_name=signaled_event_attributes.signal_name,
-                          signal_input=signal_input,
-                          workflow_task=self.workflow_task,
-                          decider=self)
+        task = SignalMethodTask(task_id=self.execution_id,
+                                workflow_instance=self.workflow_task.workflow_instance,
+                                signal_name=signaled_event_attributes.signal_name,
+                                signal_input=signal_input,
+                                workflow_task=self.workflow_task,
+                                decider=self)
         self.signal_tasks.append(task)
         task.start()
 
