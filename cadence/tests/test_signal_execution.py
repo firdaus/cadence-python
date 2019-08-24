@@ -38,7 +38,7 @@ def decider():
 
 @pytest.fixture()
 def signal_task(workflow_instance, workflow_task, decider):
-    task = SignalTask("task_id", workflow_instance, "signal", [1, 2, 3], workflow_task, decider)
+    task = SignalTask(task_id="task_id", workflow_instance=workflow_instance, signal_name="signal", signal_input=[1, 2, 3], workflow_task=workflow_task, decider=decider)
     return task
 
 

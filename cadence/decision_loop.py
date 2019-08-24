@@ -119,7 +119,9 @@ class Status(Enum):
 current_workflow_task = contextvars.ContextVar("current_workflow_task")
 
 
+@dataclass
 class AbstractTask:
+    decider: ReplayDecider = None
     task: Task = None
     status: Status = Status.CREATED
 
@@ -137,11 +139,10 @@ class AbstractTask:
 
 @dataclass
 class WorkflowTask(AbstractTask):
-    task_id: str
-    workflow_input: List
-    worker: Worker
-    workflow_type: WorkflowType
-    decider: ReplayDecider
+    task_id: str = None
+    workflow_input: List = None
+    worker: Worker = None
+    workflow_type: WorkflowType = None
     workflow_instance: object = None
     ret_value: object = None
     exception_thrown: BaseException = None
@@ -188,12 +189,11 @@ class WorkflowTask(AbstractTask):
 
 @dataclass
 class SignalTask(AbstractTask):
-    task_id: str
-    workflow_instance: object
-    signal_name: str
-    signal_input: List
-    workflow_task: WorkflowTask
-    decider: ReplayDecider
+    task_id: str = None
+    workflow_instance: object = None
+    signal_name: str = None
+    signal_input: List = None
+    workflow_task: WorkflowTask = None
     exception_thrown: BaseException = None
     ret_value: object = None
 
