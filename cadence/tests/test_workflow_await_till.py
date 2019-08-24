@@ -10,7 +10,7 @@ def test_await_till(monkeypatch, event_loop, decision_context):
     from unittest.mock import Mock
     workflow_task = Mock()
     workflow_task.decider = decision_context.decider
-    monkeypatch.setattr("cadence.decision_loop.WorkflowMethodTask.current", lambda: workflow_task)
+    monkeypatch.setattr("cadence.decision_loop.ITask.current", lambda: workflow_task)
     x = 0
     try:
         task = event_loop.create_task(Workflow.await_till(lambda: x == 2))

@@ -136,6 +136,10 @@ class ITask:
     def start(self):
         pass
 
+    @staticmethod
+    def current() -> ITask:
+        return current_workflow_task.get()
+
 
 @dataclass
 class WorkflowMethodTask(ITask):
@@ -146,10 +150,6 @@ class WorkflowMethodTask(ITask):
     workflow_instance: object = None
     ret_value: object = None
     exception_thrown: BaseException = None
-
-    @staticmethod
-    def current() -> WorkflowMethodTask:
-        return current_workflow_task.get()
 
     def __post_init__(self):
         logger.debug(f"[task-{self.task_id}] Created")
