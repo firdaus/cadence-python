@@ -124,6 +124,7 @@ class ITask:
     decider: ReplayDecider = None
     task: Task = None
     status: Status = Status.CREATED
+    awaited: Future = None
 
     def is_done(self):
         return self.status == Status.DONE
@@ -135,6 +136,16 @@ class ITask:
 
     def start(self):
         pass
+
+    async def await_till(self):
+        self.awaited = self.decider.event_loop.create_future()
+        await self.awaited
+        assert self.awaited.done()
+        self.awaited = None
+
+    def unblock(self):
+        if self.awaited:
+            self.awaited.set_result(None)
 
     @staticmethod
     def current() -> ITask:
@@ -248,7 +259,6 @@ class EventLoopWrapper:
 class DecisionContext:
     decider: ReplayDecider
     scheduled_activities: Dict[int, Future[bytes]] = field(default_factory=dict)
-    awaited: Future = None
 
     async def schedule_activity_task(self, parameters: ExecuteActivityParameters):
         attr = ScheduleActivityTaskDecisionAttributes()
@@ -316,15 +326,8 @@ class DecisionContext:
                 raise NonDeterministicWorkflowException(
                     f"Trying to complete activity event {attr.scheduled_event_id} that is not in scheduled_activities")
 
-    async def await_till(self):
-        self.awaited = self.decider.event_loop.create_future()
-        await self.awaited
-        assert self.awaited.done()
-        self.awaited = None
 
-    def unblock(self):
-        if self.awaited:
-            self.awaited.set_result(None)
+
 
 
 @dataclass
@@ -333,7 +336,7 @@ class ReplayDecider:
     workflow_type: WorkflowType
     worker: Worker
     workflow_task: WorkflowMethodTask = None
-    signal_tasks: List[SignalMethodTask] = field(default_factory=list)
+    tasks: List[ITask] = field(default_factory=list)
     event_loop: EventLoopWrapper = field(default_factory=EventLoopWrapper)
     completed: bool = False
 
@@ -361,12 +364,16 @@ class ReplayDecider:
             self.process_event(event)
         if self.completed:
             return
-        self.decision_context.unblock()
+        self.unblock_all()
         self.event_loop.run_event_loop_once()
         if decision_events.replay:
             self.notify_decision_sent()
         for event in decision_events.decision_events:
             self.process_event(event)
+
+    def unblock_all(self):
+        for t in self.tasks:
+            t.unblock()
 
     def process_event(self, event: HistoryEvent):
         event_handler = event_handlers.get(event.event_type)
@@ -384,6 +391,7 @@ class ReplayDecider:
                 workflow_input = [workflow_input]
         self.workflow_task = WorkflowMethodTask(task_id=self.execution_id, workflow_input=workflow_input,
                                                 worker=self.worker, workflow_type=self.workflow_type, decider=self)
+        self.tasks.append(self.workflow_task)
 
     def handle_workflow_execution_cancel_requested(self, event: HistoryEvent):
         self.cancel_workflow_execution()
@@ -429,7 +437,7 @@ class ReplayDecider:
 
     def complete_signal_execution(self, task: SignalMethodTask):
         task.destroy()
-        self.signal_tasks.remove(task)
+        self.tasks.remove(task)
 
     def handle_activity_task_closed(self, scheduled_event_id: int) -> bool:
         decision: DecisionStateMachine = self.get_decision(DecisionId(DecisionTarget.ACTIVITY, scheduled_event_id))
@@ -470,7 +478,7 @@ class ReplayDecider:
                                 signal_name=signaled_event_attributes.signal_name,
                                 signal_input=signal_input,
                                 decider=self)
-        self.signal_tasks.append(task)
+        self.tasks.append(task)
         task.start()
 
     def add_decision(self, decision_id: DecisionId, decision: DecisionStateMachine):

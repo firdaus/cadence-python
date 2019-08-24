@@ -191,6 +191,6 @@ class TestAwaitTill(TestCase):
     def test_unblock(self):
         self.task = self.event_loop.create_task(self.context.await_till())
         run_once(self.event_loop)
-        self.context.unblock()
+        self.context.unblock_all()
         run_once(self.event_loop)
         assert not self.context.awaited

@@ -48,8 +48,8 @@ def test_handle_workflow_execution_signaled(decider, workflow_task):
     event.workflow_execution_signaled_event_attributes.signal_name = "DummyWorkflow::the_signal_method"
     event.workflow_execution_signaled_event_attributes.input = json.dumps(["bob", 28]);
     decider.handle_workflow_execution_signaled(event)
-    assert decider.signal_tasks
-    task = decider.signal_tasks[0]
+    assert decider.tasks
+    task = decider.tasks[0]
     assert task.signal_name == "DummyWorkflow::the_signal_method"
     assert task.signal_input == ["bob", 28]
     assert task.workflow_task == workflow_task

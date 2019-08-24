@@ -27,9 +27,8 @@ class Workflow:
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         assert task
-        decision_context = task.decider.decision_context
         while not c():
-            await decision_context.await_till()
+            await task.await_till()
 
 
 class WorkflowStub:

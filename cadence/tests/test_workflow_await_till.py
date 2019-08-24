@@ -17,12 +17,12 @@ def test_await_till(monkeypatch, event_loop, decision_context):
         run_once(event_loop)
         assert decision_context.awaited
 
-        decision_context.unblock()
+        decision_context.unblock_all()
         run_once(event_loop)
         assert decision_context.awaited
 
         x = 2
-        decision_context.unblock()
+        decision_context.unblock_all()
         run_once(event_loop)
         assert not decision_context.awaited
     finally:
