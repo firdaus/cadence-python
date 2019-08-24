@@ -193,7 +193,6 @@ class SignalMethodTask(ITask):
     workflow_instance: object = None
     signal_name: str = None
     signal_input: List = None
-    workflow_task: WorkflowMethodTask = None
     exception_thrown: BaseException = None
     ret_value: object = None
 
@@ -203,7 +202,7 @@ class SignalMethodTask(ITask):
 
     async def signal_main(self):
         logger.debug(f"[signal-task-{self.task_id}-{self.signal_name}] Running")
-        current_task.set(self.workflow_task)
+        current_task.set(self)
 
         if not self.signal_name in self.workflow_instance._signal_methods:
             self.status = Status.DONE
@@ -470,7 +469,6 @@ class ReplayDecider:
                                 workflow_instance=self.workflow_task.workflow_instance,
                                 signal_name=signaled_event_attributes.signal_name,
                                 signal_input=signal_input,
-                                workflow_task=self.workflow_task,
                                 decider=self)
         self.signal_tasks.append(task)
         task.start()
