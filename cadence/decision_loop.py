@@ -116,7 +116,7 @@ class Status(Enum):
     DONE = 3
 
 
-current_workflow_task = contextvars.ContextVar("current_workflow_task")
+current_task = contextvars.ContextVar("current_task")
 
 
 @dataclass
@@ -138,7 +138,7 @@ class ITask:
 
     @staticmethod
     def current() -> ITask:
-        return current_workflow_task.get()
+        return current_task.get()
 
 
 @dataclass
@@ -157,7 +157,7 @@ class WorkflowMethodTask(ITask):
 
     async def workflow_main(self):
         logger.debug(f"[task-{self.task_id}] Running")
-        current_workflow_task.set(self)
+        current_task.set(self)
 
         if self.workflow_type.name not in self.worker.workflow_methods:
             self.status = Status.DONE
@@ -203,7 +203,7 @@ class SignalMethodTask(ITask):
 
     async def signal_main(self):
         logger.debug(f"[signal-task-{self.task_id}-{self.signal_name}] Running")
-        current_workflow_task.set(self.workflow_task)
+        current_task.set(self.workflow_task)
 
         if not self.signal_name in self.workflow_instance._signal_methods:
             self.status = Status.DONE

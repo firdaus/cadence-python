@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cadence.decision_loop import SignalMethodTask, Status, current_workflow_task
+from cadence.decision_loop import SignalMethodTask, Status, current_task
 from cadence.exceptions import SignalNotFound
 
 
@@ -63,7 +63,7 @@ async def test_signal_created(signal_task):
 @pytest.mark.asyncio
 async def test_signal_set_current_workflow(signal_task, workflow_task):
     await signal_task.signal_main()
-    assert current_workflow_task.get() == workflow_task
+    assert current_task.get() == workflow_task
 
 
 @pytest.mark.asyncio

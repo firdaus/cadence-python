@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from cadence.cadence_types import WorkflowIdReusePolicy
-from cadence.decision_loop import WorkflowMethodTask, current_workflow_task
+from cadence.decision_loop import WorkflowMethodTask, current_task
 from cadence.worker import Worker
 from cadence.workerfactory import WorkerFactory
 from cadence.workflow import workflow_method, Workflow
@@ -125,6 +125,6 @@ class TestNewActivityStub(TestCase):
         workflow_task: WorkflowMethodTask = Mock()
         workflow_task.decider = Mock()
         workflow_task.decider.decision_context = Mock()
-        current_workflow_task.set(workflow_task)
+        current_task.set(workflow_task)
         stub = Workflow.new_activity_stub(Activities)
         self.assertEqual(workflow_task.decider.decision_context, stub._decision_context)
