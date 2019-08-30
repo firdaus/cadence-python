@@ -17,10 +17,10 @@ version is targeted to be released in September of 2019.
 - [ ] Activity heartbeating and doNotCompleteOnReturn
 - [ ] Activity retry
 - [ ] Sticky workflows
-- [ ] Signals
+- [x] Signals
 - [ ] Queries
 - [ ] Async workflow execution
-- [ ] await
+- [x] await
 - [ ] currentTimeMillis
 - [ ] Timers
 - [ ] Sleep
