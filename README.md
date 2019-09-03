@@ -16,10 +16,9 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [x] Invoke activities from workflows
 - [ ] Activity heartbeating and doNotCompleteOnReturn
 - [ ] Activity retry
-- [ ] Sticky workflows
 - [x] Signals
 - [ ] Queries
-- [ ] Async workflow execution
+- [x] Async workflow execution
 - [x] await
 - [ ] currentTimeMillis
 - [ ] Timers
@@ -29,7 +28,10 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [ ] UUID
 - [ ] Workflow Versioning
 
-Post 1.0:
+2.0
+- [ ] Sticky workflows
+
+Post 2.0:
 - [ ] sideEffect/mutableSideEffect
 - [ ] Parallel activity execution
 - [ ] Cancellation Scopes
