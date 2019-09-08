@@ -5,7 +5,7 @@
 ## Status / TODO
 
 cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
-version is targeted to be released in September of 2019.
+version is targeted to be released in ~~September of 2019~~ January 2020.
 
 - [x] Tchannel implementation
 - [x] Python-friendly wrapper around Cadence's Thrift API
@@ -16,11 +16,10 @@ version is targeted to be released in September of 2019.
 - [x] Invoke activities from workflows
 - [ ] Activity heartbeating and doNotCompleteOnReturn
 - [ ] Activity retry
-- [ ] Sticky workflows
-- [ ] Signals
+- [x] Signals
 - [ ] Queries
-- [ ] Async workflow execution
-- [ ] await
+- [x] Async workflow execution
+- [x] await
 - [ ] currentTimeMillis
 - [ ] Timers
 - [ ] Sleep
@@ -29,7 +28,10 @@ version is targeted to be released in September of 2019.
 - [ ] UUID
 - [ ] Workflow Versioning
 
-Post 1.0:
+2.0
+- [ ] Sticky workflows
+
+Post 2.0:
 - [ ] sideEffect/mutableSideEffect
 - [ ] Parallel activity execution
 - [ ] Cancellation Scopes
