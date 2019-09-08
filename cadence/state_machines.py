@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
 from cadence.cadence_types import Decision, HistoryEvent, ScheduleActivityTaskDecisionAttributes, \
-    RequestCancelActivityTaskDecisionAttributes, DecisionType
+    RequestCancelActivityTaskDecisionAttributes, DecisionType, StartTimerDecisionAttributes, \
+    CancelTimerDecisionAttributes
 from cadence.decisions import DecisionState, DecisionId
 from cadence.exceptions import IllegalStateException, IllegalArgumentException
 
@@ -233,3 +234,60 @@ class CompleteWorkflowStateMachine(DecisionStateMachine):
 
     def handle_decision_task_started_event(self):
         pass
+
+
+# noinspection PyAbstractClass
+@dataclass
+class TimerDecisionStateMachine(DecisionStateMachineBase):
+    start_timer_attributes: StartTimerDecisionAttributes = None
+    canceled: bool = False
+
+    def __post_init__(self):
+        if not self.start_timer_attributes:
+            raise IllegalArgumentException("start_timer_decision_attributes is mandatory")
+
+    def get_decision(self) -> Optional[Decision]:
+        if self.state == DecisionState.CREATED:
+            return self.create_start_timer_decision()
+        elif self.state == DecisionState.CANCELED_AFTER_INITIATED:
+            return self.create_cancel_timer_decision()
+        else:
+            return None
+
+    def handle_decision_task_started_event(self):
+        if self.state == DecisionState.CANCELED_AFTER_INITIATED:
+            self.state_history.append("handle_decision_task_started_event")
+            self.state = DecisionState.CANCELLATION_DECISION_SENT
+            self.state_history.append(str(self.state))
+        else:
+            super().handle_decision_task_started_event()
+
+    def handle_cancellation_failure_event(self, event: HistoryEvent):
+        if self.state == DecisionState.CANCELLATION_DECISION_SENT:
+            self.state_history.append("handle_cancellation_failure_event")
+            self.state = DecisionState.INITIATED
+            self.state_history.append(str(self.state))
+        else:
+            super().handle_cancellation_failure_event(event)
+
+    def cancel(self, immediate_cancellation_callback: Optional[Callable]) -> bool:
+        self.canceled = True
+        immediate_cancellation_callback()
+        return super().cancel(None)
+
+    def is_done(self) -> bool:
+        return self.state == DecisionState.COMPLETED or self.canceled
+
+    def create_cancel_timer_decision(self):
+        try_cancel = CancelTimerDecisionAttributes()
+        try_cancel.timer_id = self.start_timer_attributes.timer_id
+        decision: Decision = Decision()
+        decision.cancel_timer_decision_attributes = try_cancel
+        decision.decision_type = DecisionType.CancelTimer
+        return decision
+
+    def create_start_timer_decision(self):
+        decision: Decision = Decision()
+        decision.start_timer_decision_attributes = self.start_timer_attributes
+        decision.decision_type = DecisionType.StartTimer
+        return decision
