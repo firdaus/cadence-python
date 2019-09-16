@@ -52,7 +52,6 @@ def test_handle_workflow_execution_signaled(decider, workflow_task):
     task = decider.tasks[0]
     assert task.signal_name == "DummyWorkflow::the_signal_method"
     assert task.signal_input == ["bob", 28]
-    assert task.workflow_task == workflow_task
     assert task.decider == decider
     assert task.task_id == "run-id"
     assert task.status == Status.CREATED

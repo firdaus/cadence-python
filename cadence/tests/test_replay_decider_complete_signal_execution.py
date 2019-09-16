@@ -19,7 +19,7 @@ def decider(worker):
 
 def test_complete_signal_execution(decider):
     task = Mock()
-    decider.signal_tasks.append(task)
+    decider.tasks.append(task)
     decider.complete_signal_execution(task)
-    assert len(decider.signal_tasks) == 0
+    assert len(decider.tasks) == 0
     task.destroy.assert_called_once()
