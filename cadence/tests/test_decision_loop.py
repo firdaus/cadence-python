@@ -7,7 +7,8 @@ from unittest.mock import Mock, MagicMock
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision, \
     ActivityTaskStartedEventAttributes
-from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents
+from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents, \
+    nano_to_milli
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import NonDeterministicWorkflowException
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine
@@ -318,3 +319,8 @@ class TestReplayDecider(TestCase):
 
     def tearDown(self) -> None:
         self.decider.destroy()
+
+
+def test_nano_to_milli():
+    assert 1 == nano_to_milli(1000000)
+    assert 1000 == nano_to_milli(1e9)

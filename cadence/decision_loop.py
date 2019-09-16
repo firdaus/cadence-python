@@ -52,6 +52,10 @@ def is_decision_event(event: HistoryEvent) -> bool:
     return event.event_type in decision_event_types
 
 
+def nano_to_milli(nano):
+    return nano/(1000 * 1000)
+
+
 class HistoryHelper:
 
     def __init__(self, events: List[HistoryEvent]):
