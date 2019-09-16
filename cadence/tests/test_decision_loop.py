@@ -25,7 +25,7 @@ init_test_logging()
 def make_history(event_types: List[EventType]) -> List[HistoryEvent]:
     history = []
     for offset, event_type in enumerate(event_types):
-        history.append(HistoryEvent(event_id=offset + 1, event_type=event_type))
+        history.append(HistoryEvent(event_id=offset + 1, event_type=event_type, timestamp=0))
     return history
 
 
@@ -283,7 +283,9 @@ class TestReplayDecider(TestCase):
                          workflow_execution_started_event_attributes=WorkflowExecutionStartedEventAttributes()),
             HistoryEvent(event_type=EventType.DecisionTaskScheduled)
         ]
-        decision_events = DecisionEvents(events, [], replay=True, next_decision_event_id=5)
+        decision_events = DecisionEvents(events, [], replay=True,
+                                         replay_current_time_milliseconds=0,
+                                         next_decision_event_id=5)
         self.decider.notify_decision_sent = MagicMock()
         self.decider.process_decision_events(decision_events)
         self.decider.notify_decision_sent.assert_called_once()

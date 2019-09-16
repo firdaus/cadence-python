@@ -81,6 +81,7 @@ class HistoryHelper:
         for event in events:
             event_type = event.event_type
             if event_type == EventType.DecisionTaskStarted or not self.has_next():
+                replay_current_time_milliseconds = nano_to_milli(event.timestamp)
                 if not self.has_next():
                     replay = False
                     next_decision_event_id = event.event_id + 2
@@ -101,7 +102,8 @@ class HistoryHelper:
             if not is_decision_event(events.peek()):
                 break
             decision_events.append(next(events))
-        result = DecisionEvents(new_events, decision_events, replay, next_decision_event_id)
+        result = DecisionEvents(new_events, decision_events, replay,
+                                replay_current_time_milliseconds, next_decision_event_id)
         logger.debug("HistoryHelper next=%s", result)
         return result
 
@@ -111,6 +113,7 @@ class DecisionEvents:
     events: List[HistoryEvent]
     decision_events: List[HistoryEvent]
     replay: bool
+    replay_current_time_milliseconds: int
     next_decision_event_id: int
 
 
