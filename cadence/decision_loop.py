@@ -13,7 +13,7 @@ from asyncio.tasks import Task
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Callable
 
 from more_itertools import peekable
 
@@ -22,11 +22,12 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     RespondDecisionTaskCompletedRequest, \
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
-    CancelWorkflowExecutionDecisionAttributes
+    CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, SignalNotFound
-from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine
+from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
+    TimerDecisionStateMachine
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
 from cadence.workflowservice import WorkflowService
@@ -529,6 +530,20 @@ class ReplayDecider:
     def destroy(self):
         if self.workflow_task:
             self.workflow_task.destroy()
+
+    def start_timer(self, request: StartTimerDecisionAttributes):
+        start_event_id = self.next_decision_event_id
+        decision_id = DecisionId(DecisionTarget.TIMER, start_event_id)
+        self.add_decision(decision_id, TimerDecisionStateMachine(decision_id, start_timer_attributes=request))
+        return start_event_id
+
+    def cancel_timer(self, start_event_id: int, immediate_cancellation_callback: Callable):
+        decision: DecisionStateMachine = self.get_decision(DecisionId(DecisionTarget.TIMER, start_event_id))
+        if decision.is_done():
+            return True
+        if decision.cancel(immediate_cancellation_callback):
+            self.next_decision_event_id += 1
+        return decision.is_done()
 
 
 # noinspection PyUnusedLocal

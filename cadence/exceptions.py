@@ -36,3 +36,13 @@ class ActivityTaskTimeoutException(Exception):
 
 class SignalNotFound(Exception):
     pass
+
+
+class CancellationException(Exception):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cause = None
+
+    def init_cause(self, cause):
+        self.cause = cause
