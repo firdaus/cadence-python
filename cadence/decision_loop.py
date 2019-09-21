@@ -267,6 +267,11 @@ class EventLoopWrapper:
 class DecisionContext:
     decider: ReplayDecider
     scheduled_activities: Dict[int, Future[bytes]] = field(default_factory=dict)
+    workflow_clock: ClockDecisionContext = None
+
+    def __post_init__(self):
+        if not self.workflow_clock:
+            self.workflow_clock = ClockDecisionContext(self.decider)
 
     async def schedule_activity_task(self, parameters: ExecuteActivityParameters):
         attr = ScheduleActivityTaskDecisionAttributes()
@@ -334,8 +339,22 @@ class DecisionContext:
                 raise NonDeterministicWorkflowException(
                     f"Trying to complete activity event {attr.scheduled_event_id} that is not in scheduled_activities")
 
+    def create_timer(self, delay_seconds: int, callback: Callable):
+        return self.workflow_clock.create_timer(delay_seconds, callback)
 
+    def set_replay_current_time_milliseconds(self, replay_current_time_milliseconds: int):
+        if replay_current_time_milliseconds < self.workflow_clock.current_time_millis():
+            raise Exception("workflow clock moved back")
+        self.workflow_clock.set_replay_current_time_milliseconds(replay_current_time_milliseconds)
 
+    def current_time_millis(self):
+        return self.workflow_clock.current_time_millis()
+
+    def set_replaying(self, replaying: bool):
+        self.workflow_clock.set_replaying(replaying)
+
+    def is_replaying(self):
+        return self.workflow_clock.is_replaying()
 
 
 @dataclass
@@ -645,3 +664,6 @@ class DecisionTaskLoop:
             logger.error("Error invoking RespondDecisionTaskCompleted: %s", err)
         else:
             logger.debug("RespondDecisionTaskCompleted: %s", response)
+
+
+from cadence.clock_decision_context import ClockDecisionContext
