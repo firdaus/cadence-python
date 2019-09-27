@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from cadence.cadence_types import StartTimerDecisionAttributes
+from cadence.cadence_types import StartTimerDecisionAttributes, TimerFiredEventAttributes, HistoryEvent, \
+    TimerCanceledEventAttributes
 from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler
 from cadence.exceptions import CancellationException
 from cadence.util import OpenRequestInfo
@@ -18,6 +19,8 @@ def decider():
     mock = MagicMock()
     mock.get_and_increment_next_id = Mock(return_value=TIMER_ID)
     mock.start_timer = Mock(return_value=START_TIMER_ID)
+    mock.handle_timer_closed = Mock(return_value=True)
+    mock.handle_timer_canceled = Mock(return_value=True)
     return mock
 
 
@@ -115,3 +118,31 @@ def test_cancelled(clock_decision_context, request_info):
     assert args[0] is None
     assert isinstance(args[1], CancellationException)
     assert args[1].cause is exception
+
+
+def test_handle_timer_fired(clock_decision_context: ClockDecisionContext, request_info, decider):
+    attributes = TimerFiredEventAttributes()
+    attributes.started_event_id = START_TIMER_ID
+    clock_decision_context.handle_timer_fired(attributes)
+    decider.handle_timer_closed.assert_called_once()
+    args, kwargs = decider.handle_timer_closed.call_args_list[0]
+    assert args[0] is attributes
+    assert len(clock_decision_context.scheduled_timers) == 0
+    request_info.completion_handle.assert_called_once()
+    args, kwargs = request_info.completion_handle.call_args_list[0]
+    assert args[0] is None
+    assert args[1] is None
+
+
+def test_handle_timer_canceled(clock_decision_context, decider, request_info):
+    event = HistoryEvent()
+    event.timer_canceled_event_attributes = TimerCanceledEventAttributes()
+    event.timer_canceled_event_attributes.started_event_id = START_TIMER_ID
+    clock_decision_context.handle_timer_canceled(event)
+    assert len(clock_decision_context.scheduled_timers) == 0
+    decider.handle_timer_canceled.assert_called_once()
+    request_info.completion_handle.assert_called_once()
+    args, kwargs = request_info.completion_handle.call_args_list[0]
+    assert args[0] is None
+    assert isinstance(args[1], Exception)
+

@@ -2,7 +2,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Any, Union
 
-from cadence.cadence_types import StartTimerDecisionAttributes
+from cadence.cadence_types import StartTimerDecisionAttributes, TimerFiredEventAttributes, HistoryEvent, \
+    TimerCanceledEventAttributes
 from cadence.decision_loop import ReplayDecider
 from cadence.exceptions import CancellationException
 from cadence.util import OpenRequestInfo
@@ -57,6 +58,20 @@ class ClockDecisionContext:
         exception = CancellationException("Cancelled by request")
         exception.init_cause(reason)
         callback(None, exception)
+
+    def handle_timer_fired(self, attributes: TimerFiredEventAttributes):
+        started_event_id: int = attributes.started_event_id
+        if self.decider.handle_timer_closed(attributes):
+            scheduled = self.scheduled_timers.pop(started_event_id, None)
+            if scheduled:
+                callback = scheduled.completion_handle
+                callback(None, None)
+
+    def handle_timer_canceled(self, event: HistoryEvent):
+        attributes: TimerCanceledEventAttributes = event.timer_canceled_event_attributes
+        started_event_id: int = attributes.started_event_id
+        if self.decider.handle_timer_canceled(event):
+            self.timer_cancelled(started_event_id, None)
 
 
 @dataclass
