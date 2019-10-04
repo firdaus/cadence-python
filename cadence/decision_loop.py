@@ -22,7 +22,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     RespondDecisionTaskCompletedRequest, \
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
-    CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes
+    CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, SignalNotFound
@@ -563,6 +563,27 @@ class ReplayDecider:
         if decision.cancel(immediate_cancellation_callback):
             self.next_decision_event_id += 1
         return decision.is_done()
+
+    def handle_timer_closed(self, attributes: TimerFiredEventAttributes) -> bool:
+        decision = self.get_decision(DecisionId(DecisionTarget.TIMER, attributes.started_event_id))
+        decision.handle_completion_event()
+        return decision.is_done()
+
+    def handle_timer_canceled(self, event: HistoryEvent) -> bool:
+        attributes = event.timer_canceled_event_attributes
+        decision = self.get_decision(DecisionId(DecisionTarget.TIMER, attributes.started_event_id))
+        decision.handle_cancellation_event()
+        return decision.is_done()
+
+    def handle_cancel_timer_failed(self, event: HistoryEvent) -> bool:
+        started_event_id = event.event_id
+        decision = self.get_decision(DecisionId(DecisionTarget.TIMER, started_event_id))
+        decision.handle_cancellation_failure_event(event)
+        return decision.is_done()
+
+    def handle_timer_started(self, event: HistoryEvent):
+        decision = self.get_decision(DecisionId(DecisionTarget.TIMER, event.event_id))
+        decision.handle_initiated_event(event)
 
 
 # noinspection PyUnusedLocal
