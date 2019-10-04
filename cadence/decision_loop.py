@@ -601,6 +601,10 @@ def noop(*args):
     pass
 
 
+def on_timer_canceled(self: ReplayDecider, event: HistoryEvent):
+    self.decision_context.handle_timer_canceled(event)
+
+
 event_handlers = {
     EventType.WorkflowExecutionStarted: ReplayDecider.handle_workflow_execution_started,
     EventType.WorkflowExecutionCancelRequested: ReplayDecider.handle_workflow_execution_cancel_requested,
@@ -613,7 +617,10 @@ event_handlers = {
     EventType.ActivityTaskFailed: ReplayDecider.handle_activity_task_failed,
     EventType.ActivityTaskTimedOut: ReplayDecider.handle_activity_task_timed_out,
     EventType.WorkflowExecutionSignaled: ReplayDecider.handle_workflow_execution_signaled,
-    EventType.TimerFired: ReplayDecider.handle_timer_fired
+    EventType.TimerFired: ReplayDecider.handle_timer_fired,
+    EventType.TimerStarted: ReplayDecider.handle_timer_started,
+    EventType.TimerCanceled: on_timer_canceled,
+    EventType.CancelTimerFailed: ReplayDecider.handle_cancel_timer_failed
 }
 
 
