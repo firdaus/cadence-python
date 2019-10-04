@@ -591,6 +591,10 @@ class ReplayDecider:
         decision = self.get_decision(DecisionId(DecisionTarget.TIMER, event.event_id))
         decision.handle_initiated_event(event)
 
+    def handle_timer_fired(self, event: HistoryEvent):
+        attributes = event.timer_fired_event_attributes
+        self.decision_context.handle_timer_fired(attributes)
+
 
 # noinspection PyUnusedLocal
 def noop(*args):
@@ -608,7 +612,8 @@ event_handlers = {
     EventType.ActivityTaskCompleted: ReplayDecider.handle_activity_task_completed,
     EventType.ActivityTaskFailed: ReplayDecider.handle_activity_task_failed,
     EventType.ActivityTaskTimedOut: ReplayDecider.handle_activity_task_timed_out,
-    EventType.WorkflowExecutionSignaled: ReplayDecider.handle_workflow_execution_signaled
+    EventType.WorkflowExecutionSignaled: ReplayDecider.handle_workflow_execution_signaled,
+    EventType.TimerFired: ReplayDecider.handle_timer_fired
 }
 
 

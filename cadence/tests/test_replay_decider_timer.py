@@ -4,7 +4,7 @@ import pytest
 
 from cadence.cadence_types import WorkflowType, StartTimerDecisionAttributes, TimerFiredEventAttributes, HistoryEvent, \
     TimerCanceledEventAttributes
-from cadence.decision_loop import ReplayDecider
+from cadence.decision_loop import ReplayDecider, DecisionContext
 from cadence.decisions import DecisionId, DecisionTarget, DecisionState
 from cadence.state_machines import TimerDecisionStateMachine, DecisionStateMachine
 
@@ -33,6 +33,13 @@ def mock_decision(decider):
     decider.add_decision(decision_id, decision)
     decision.is_done = Mock(return_value=True)
     return decision
+
+
+@pytest.fixture
+def mock_decision_context(decider: ReplayDecider):
+    decision_context = MagicMock()
+    decider.decision_context = decision_context
+    return decision_context
 
 
 def test_start_timer(decider):
@@ -97,3 +104,14 @@ def test_handle_timer_started(decider, mock_decision: DecisionStateMachine):
     mock_decision.handle_initiated_event.assert_called_once()
     args, kwargs = mock_decision.handle_initiated_event.call_args_list[0]
     assert args[0] is event
+
+
+def test_handle_timer_fired(decider, mock_decision_context: DecisionContext):
+    event = HistoryEvent()
+    event.timer_fired_event_attributes = TimerFiredEventAttributes()
+    decider.handle_timer_fired(event)
+    mock_decision_context.handle_timer_fired.assert_called_once()
+    args, kwargs = mock_decision_context.handle_timer_fired.call_args_list[0]
+    assert args[0] is event.timer_fired_event_attributes
+
+
