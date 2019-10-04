@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
+from cadence.cadence_types import TimerFiredEventAttributes, HistoryEvent
 from cadence.clock_decision_context import ClockDecisionContext
 from cadence.decision_loop import DecisionContext
 
@@ -64,3 +65,18 @@ def test_is_replaying(decision_context, workflow_clock):
     assert decision_context.is_replaying() is False
     workflow_clock.is_replaying.assert_called_once()
 
+
+def test_handle_timer_fired(decision_context, workflow_clock):
+    attributes = TimerFiredEventAttributes()
+    decision_context.handle_timer_fired(attributes)
+    workflow_clock.handle_timer_fired.assert_called_once()
+    args, kwargs = workflow_clock.handle_timer_fired.call_args_list[0]
+    assert args[0] is attributes
+
+
+def test_handle_timer_canceled(decision_context, workflow_clock):
+    event = HistoryEvent()
+    decision_context.handle_timer_canceled(event)
+    workflow_clock.handle_timer_canceled.assert_called_once()
+    args, kwargs = workflow_clock.handle_timer_canceled.call_args_list[0]
+    assert args[0] is event

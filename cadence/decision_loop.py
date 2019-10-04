@@ -356,6 +356,12 @@ class DecisionContext:
     def is_replaying(self):
         return self.workflow_clock.is_replaying()
 
+    def handle_timer_fired(self, attributes: TimerFiredEventAttributes):
+        self.workflow_clock.handle_timer_fired(attributes)
+
+    def handle_timer_canceled(self, event: HistoryEvent):
+        self.workflow_clock.handle_timer_canceled(event)
+
 
 @dataclass
 class ReplayDecider:
