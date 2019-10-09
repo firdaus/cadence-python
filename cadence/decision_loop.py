@@ -174,8 +174,22 @@ class WorkflowMethodTask(ITask):
         logger.debug(f"[task-{self.task_id}] Created")
         self.task = asyncio.get_event_loop().create_task(self.workflow_main())
 
+    def init_workflow_instance(self):
+        cls, _ = self.worker.workflow_methods[self.workflow_type.name]
+        try:
+            self.workflow_instance = cls()
+        except Exception as ex:
+            logger.error(
+                f"Initialization of Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
+            self.exception_thrown = ex
+            self.status = Status.DONE
+
     async def workflow_main(self):
         logger.debug(f"[task-{self.task_id}] Running")
+
+        if self.is_done():
+            return
+
         current_task.set(self)
 
         if self.workflow_type.name not in self.worker.workflow_methods:
@@ -188,7 +202,6 @@ class WorkflowMethodTask(ITask):
         self.status = Status.RUNNING
         try:
             logger.info(f"Invoking workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]})")
-            self.workflow_instance = cls()
             self.ret_value = await workflow_proc(self.workflow_instance, *self.workflow_input)
             logger.info(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) returned {self.ret_value}")
@@ -424,6 +437,7 @@ class ReplayDecider:
                 workflow_input = [workflow_input]
         self.workflow_task = WorkflowMethodTask(task_id=self.execution_id, workflow_input=workflow_input,
                                                 worker=self.worker, workflow_type=self.workflow_type, decider=self)
+        self.workflow_task.init_workflow_instance()
         self.tasks.append(self.workflow_task)
 
     def handle_workflow_execution_cancel_requested(self, event: HistoryEvent):

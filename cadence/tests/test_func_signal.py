@@ -1,5 +1,7 @@
+from random import randint
 from time import sleep
-from unittest import TestSuite
+
+import pytest
 
 from cadence.workerfactory import WorkerFactory
 from cadence.workflow import workflow_method, signal_method, Workflow, WorkflowClient
@@ -44,6 +46,9 @@ class TestSignalWorkflowImpl(TestSignalWorkflow):
         self.exit = True
 
 
+# This test was initially flaky until the workflow instance initialization
+# bug was fixed. Running it multiple times just to detect if it regresses.
+@pytest.mark.repeat(5)
 def test_signal_workflow():
     factory = WorkerFactory("localhost", 7933, DOMAIN)
     worker = factory.new_worker(TASK_LIST)
@@ -53,9 +58,11 @@ def test_signal_workflow():
     client = WorkflowClient.new_client(domain=DOMAIN)
     workflow: TestSignalWorkflow = client.new_workflow_stub(TestSignalWorkflow)
     execution = WorkflowClient.start(workflow.get_greetings)
-
+    sleep(randint(0, 20))
     workflow.wait_for_name("Bob")
+    sleep(randint(0, 20))
     workflow.exit()
+    sleep(randint(0, 20))
 
     result = client.wait_for_close(execution)
     worker.stop()
