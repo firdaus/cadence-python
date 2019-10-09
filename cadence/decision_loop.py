@@ -405,6 +405,9 @@ class ReplayDecider:
         return self.get_decisions()
 
     def process_decision_events(self, decision_events: DecisionEvents):
+        self.decision_context.set_replaying(decision_events.replay)
+        self.decision_context.set_replay_current_time_milliseconds(decision_events.replay_current_time_milliseconds)
+
         self.handle_decision_task_started(decision_events)
         for event in decision_events.events:
             self.process_event(event)
