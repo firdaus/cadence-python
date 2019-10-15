@@ -317,6 +317,24 @@ class DecisionContext:
         raw_bytes = future.result()
         return json.loads(str(raw_bytes, "utf-8"))
 
+    async def schedule_timer(self, seconds: int):
+        future = self.decider.event_loop.create_future()
+
+        def callback(ex: Exception):
+            nonlocal future
+            if ex:
+                future.set_exception(ex)
+            else:
+                future.set_result("time-fired")
+
+        self.decider.decision_context.create_timer(delay_seconds=seconds, callback=callback)
+        await future
+        assert future.done()
+        exception = future.exception()
+        if exception:
+            raise exception
+        return
+
     def handle_activity_task_completed(self, event: HistoryEvent):
         attr = event.activity_task_completed_event_attributes
         if self.decider.handle_activity_task_closed(attr.scheduled_event_id):

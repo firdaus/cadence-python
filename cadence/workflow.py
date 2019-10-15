@@ -30,6 +30,12 @@ class Workflow:
         while not c():
             await task.await_till()
 
+    @staticmethod
+    async def sleep(seconds: int):
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        await task.decider.decision_context.schedule_timer(seconds)
+
 
 class WorkflowStub:
     pass
