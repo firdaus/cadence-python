@@ -23,12 +23,11 @@ class Workflow:
         return cls
 
     @staticmethod
-    async def await_till(c: Callable):
+    async def await_till(c: Callable, timeout_seconds: int = 0) -> bool:
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         assert task
-        while not c():
-            await task.await_till()
+        return await task.await_till(c, timeout_seconds)
 
     @staticmethod
     async def sleep(seconds: int):

@@ -145,11 +145,32 @@ class ITask:
     def start(self):
         pass
 
-    async def await_till(self):
-        self.awaited = self.decider.event_loop.create_future()
-        await self.awaited
-        assert self.awaited.done()
+    async def await_till(self, c: Callable, timeout_seconds: int = 0) -> bool:
+        timer_cancellation_handler: TimerCancellationHandler = None
+        timer_fired = False
+
+        def timer_callback(ex: Exception):
+            nonlocal timer_fired
+            if not ex:
+                timer_fired = True
+
+        if timeout_seconds:
+            timer_cancellation_handler = self.decider.decision_context.create_timer(delay_seconds=timeout_seconds, callback=timer_callback)
+
+        while not c() and not timer_fired:
+            self.awaited = self.decider.event_loop.create_future()
+            await self.awaited
+            assert self.awaited.done()
+
         self.awaited = None
+
+        if timer_fired:
+            return False
+
+        if timer_cancellation_handler:
+            timer_cancellation_handler.accept(None)
+
+        return True
 
     def unblock(self):
         if self.awaited:
@@ -740,4 +761,4 @@ class DecisionTaskLoop:
             logger.debug("RespondDecisionTaskCompleted: %s", response)
 
 
-from cadence.clock_decision_context import ClockDecisionContext
+from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler
