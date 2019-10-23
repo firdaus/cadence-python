@@ -1,4 +1,5 @@
 from __future__ import annotations
+import datetime
 import inspect
 import json
 from dataclasses import dataclass, field
@@ -34,6 +35,19 @@ class Workflow:
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         await task.decider.decision_context.schedule_timer(seconds)
+
+    @staticmethod
+    def current_time_millis() -> int:
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.decision_context.current_time_millis()
+
+    @staticmethod
+    def now() -> datetime.datetime:
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        now_in_ms = task.decider.decision_context.current_time_millis()
+        return datetime.datetime.fromtimestamp(now_in_ms / 1000)
 
 
 class WorkflowStub:
