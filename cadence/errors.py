@@ -87,6 +87,17 @@ class AccessDeniedError:
 @dataclass
 class RetryTaskError:
     message: str
+    domain_id: str
+    workflow_id: str
+    run_id: str
+    next_event_id: int
+
+
+@dataclass
+class ClientVersionNotSupportedError:
+    feature_version: str
+    client_impl: str
+    supported_versions: str
 
 
 CADENCE_ERROR_FIELDS = {
@@ -100,7 +111,8 @@ CADENCE_ERROR_FIELDS = {
     "queryFailedError": QueryFailedError,
     "domainNotActiveError": DomainNotActiveError,
     "limitExceededError": LimitExceededError,
-    "workflowAlreadyStartedError": WorkflowExecutionAlreadyStartedError
+    "workflowAlreadyStartedError": WorkflowExecutionAlreadyStartedError,
+    "clientVersionNotSupportedError": ClientVersionNotSupportedError
 }
 
 IGNORE_FIELDS_IN_ERRORS = ("args", "type_spec", "from_primitive", "to_primitive", "with_traceback")
