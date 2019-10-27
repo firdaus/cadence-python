@@ -20,9 +20,9 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [ ] Queries
 - [x] Async workflow execution
 - [x] await
-- [ ] currentTimeMillis
+- [x] now (currentTimeMillis)
 - [ ] Timers
-- [ ] Sleep
+- [x] Sleep
 - [ ] Loggers
 - [ ] newRandom
 - [ ] UUID
