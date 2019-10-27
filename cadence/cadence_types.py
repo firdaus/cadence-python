@@ -79,6 +79,18 @@ class AccessDeniedError:
 @dataclass
 class RetryTaskError:
     message: str = None
+    domain_id: str = None
+    workflow_id: str = None
+    run_id: str = None
+    next_event_id: int = None
+    
+
+# noinspection PyPep8
+@dataclass
+class ClientVersionNotSupportedError:
+    feature_version: str = None
+    client_impl: str = None
+    supported_versions: str = None
     
 
 class WorkflowIdReusePolicy(IntEnum):
@@ -125,6 +137,7 @@ class DecisionType(IntEnum):
     ContinueAsNewWorkflowExecution = 9
     StartChildWorkflowExecution = 10
     SignalExternalWorkflowExecution = 11
+    UpsertWorkflowSearchAttributes = 12
     
     @classmethod
     def value_for(cls, n: int) -> DecisionType:
@@ -173,6 +186,7 @@ class EventType(IntEnum):
     SignalExternalWorkflowExecutionInitiated = 38
     SignalExternalWorkflowExecutionFailed = 39
     ExternalWorkflowExecutionSignaled = 40
+    UpsertWorkflowSearchAttributes = 41
     
     @classmethod
     def value_for(cls, n: int) -> EventType:
@@ -199,6 +213,10 @@ class DecisionTaskFailedCause(IntEnum):
     FORCE_CLOSE_DECISION = 16
     FAILOVER_CLOSE_DECISION = 17
     BAD_SIGNAL_INPUT_SIZE = 18
+    RESET_WORKFLOW = 19
+    BAD_BINARY = 20
+    SCHEDULE_ACTIVITY_DUPLICATE_ID = 21
+    BAD_SEARCH_ATTRIBUTES = 22
     
     @classmethod
     def value_for(cls, n: int) -> DecisionTaskFailedCause:
@@ -289,6 +307,45 @@ class TaskListKind(IntEnum):
         return next(filter(lambda i: i == n, cls), None)
 
     
+class ArchivalStatus(IntEnum):
+    DISABLED = 0
+    ENABLED = 1
+    
+    @classmethod
+    def value_for(cls, n: int) -> ArchivalStatus:
+        return next(filter(lambda i: i == n, cls), None)
+
+    
+class IndexedValueType(IntEnum):
+    STRING = 0
+    KEYWORD = 1
+    INT = 2
+    DOUBLE = 3
+    BOOL = 4
+    DATETIME = 5
+    
+    @classmethod
+    def value_for(cls, n: int) -> IndexedValueType:
+        return next(filter(lambda i: i == n, cls), None)
+
+    
+class EncodingType(IntEnum):
+    ThriftRW = 0
+    
+    @classmethod
+    def value_for(cls, n: int) -> EncodingType:
+        return next(filter(lambda i: i == n, cls), None)
+
+    
+class QueryRejectCondition(IntEnum):
+    NOT_OPEN = 0
+    NOT_COMPLETED_CLEANLY = 1
+    
+    @classmethod
+    def value_for(cls, n: int) -> QueryRejectCondition:
+        return next(filter(lambda i: i == n, cls), None)
+
+    
 class ContinueAsNewInitiator(IntEnum):
     Decider = 0
     RetryPolicy = 1
@@ -335,6 +392,20 @@ class TaskList:
 
 # noinspection PyPep8
 @dataclass
+class DataBlob:
+    encoding_type: EncodingType = None
+    data: bytes = None
+    
+
+# noinspection PyPep8
+@dataclass
+class ReplicationInfo:
+    version: int = None
+    last_event_id: int = None
+    
+
+# noinspection PyPep8
+@dataclass
 class TaskListMetadata:
     max_tasks_per_second: float = None
     
@@ -348,6 +419,18 @@ class WorkflowExecution:
 
 # noinspection PyPep8
 @dataclass
+class Memo:
+    fields: Dict[str, bytes] = field(default_factory=dict)
+    
+
+# noinspection PyPep8
+@dataclass
+class SearchAttributes:
+    indexed_fields: Dict[str, bytes] = field(default_factory=dict)
+    
+
+# noinspection PyPep8
+@dataclass
 class WorkflowExecutionInfo:
     execution: WorkflowExecution = None
     type: WorkflowType = None
@@ -355,6 +438,12 @@ class WorkflowExecutionInfo:
     close_time: int = None
     close_status: WorkflowExecutionCloseStatus = None
     history_length: int = None
+    parent_domain_id: str = None
+    parent_execution: WorkflowExecution = None
+    execution_time: int = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
+    auto_reset_points: ResetPoints = None
     
 
 # noinspection PyPep8
@@ -386,6 +475,7 @@ class ScheduleActivityTaskDecisionAttributes:
     start_to_close_timeout_seconds: int = None
     heartbeat_timeout_seconds: int = None
     retry_policy: RetryPolicy = None
+    header: Header = None
     
 
 # noinspection PyPep8
@@ -449,6 +539,12 @@ class SignalExternalWorkflowExecutionDecisionAttributes:
 
 # noinspection PyPep8
 @dataclass
+class UpsertWorkflowSearchAttributesDecisionAttributes:
+    search_attributes: SearchAttributes = None
+    
+
+# noinspection PyPep8
+@dataclass
 class RecordMarkerDecisionAttributes:
     marker_name: str = None
     details: bytes = None
@@ -470,6 +566,9 @@ class ContinueAsNewWorkflowExecutionDecisionAttributes:
     failure_details: bytes = None
     last_completion_result: bytes = None
     cron_schedule: str = None
+    header: Header = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
     
 
 # noinspection PyPep8
@@ -487,6 +586,9 @@ class StartChildWorkflowExecutionDecisionAttributes:
     workflow_id_reuse_policy: WorkflowIdReusePolicy = None
     retry_policy: RetryPolicy = None
     cron_schedule: str = None
+    header: Header = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
     
 
 # noinspection PyPep8
@@ -505,6 +607,7 @@ class Decision:
     continue_as_new_workflow_execution_decision_attributes: ContinueAsNewWorkflowExecutionDecisionAttributes = None
     start_child_workflow_execution_decision_attributes: StartChildWorkflowExecutionDecisionAttributes = None
     signal_external_workflow_execution_decision_attributes: SignalExternalWorkflowExecutionDecisionAttributes = None
+    upsert_workflow_search_attributes_decision_attributes: UpsertWorkflowSearchAttributesDecisionAttributes = None
     
 
 # noinspection PyPep8
@@ -524,12 +627,35 @@ class WorkflowExecutionStartedEventAttributes:
     continued_failure_reason: str = None
     continued_failure_details: bytes = None
     last_completion_result: bytes = None
+    original_execution_run_id: str = None
     identity: str = None
+    first_execution_run_id: str = None
     retry_policy: RetryPolicy = None
     attempt: int = None
     expiration_timestamp: int = None
     cron_schedule: str = None
     first_decision_task_backoff_seconds: int = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
+    prev_auto_reset_points: ResetPoints = None
+    header: Header = None
+    
+
+# noinspection PyPep8
+@dataclass
+class ResetPoints:
+    points: List[ResetPointInfo] = field(default_factory=list)
+    
+
+# noinspection PyPep8
+@dataclass
+class ResetPointInfo:
+    binary_checksum: str = None
+    run_id: str = None
+    first_decision_completed_id: int = None
+    created_time_nano: int = None
+    expiring_time_nano: int = None
+    resettable: bool = None
     
 
 # noinspection PyPep8
@@ -568,6 +694,9 @@ class WorkflowExecutionContinuedAsNewEventAttributes:
     failure_reason: str = None
     failure_details: bytes = None
     last_completion_result: bytes = None
+    header: Header = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
     
 
 # noinspection PyPep8
@@ -612,6 +741,10 @@ class DecisionTaskFailedEventAttributes:
     cause: DecisionTaskFailedCause = None
     details: bytes = None
     identity: str = None
+    reason: str = None
+    base_run_id: str = None
+    new_run_id: str = None
+    fork_event_version: int = None
     
 
 # noinspection PyPep8
@@ -628,6 +761,7 @@ class ActivityTaskScheduledEventAttributes:
     heartbeat_timeout_seconds: int = None
     decision_task_completed_event_id: int = None
     retry_policy: RetryPolicy = None
+    header: Header = None
     
 
 # noinspection PyPep8
@@ -829,6 +963,13 @@ class ExternalWorkflowExecutionSignaledEventAttributes:
 
 # noinspection PyPep8
 @dataclass
+class UpsertWorkflowSearchAttributesEventAttributes:
+    decision_task_completed_event_id: int = None
+    search_attributes: SearchAttributes = None
+    
+
+# noinspection PyPep8
+@dataclass
 class StartChildWorkflowExecutionInitiatedEventAttributes:
     domain: str = None
     workflow_id: str = None
@@ -843,6 +984,9 @@ class StartChildWorkflowExecutionInitiatedEventAttributes:
     workflow_id_reuse_policy: WorkflowIdReusePolicy = None
     retry_policy: RetryPolicy = None
     cron_schedule: str = None
+    header: Header = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
     
 
 # noinspection PyPep8
@@ -864,6 +1008,7 @@ class ChildWorkflowExecutionStartedEventAttributes:
     initiated_event_id: int = None
     workflow_execution: WorkflowExecution = None
     workflow_type: WorkflowType = None
+    header: Header = None
     
 
 # noinspection PyPep8
@@ -928,6 +1073,7 @@ class HistoryEvent:
     timestamp: int = None
     event_type: EventType = None
     version: int = None
+    task_id: int = None
     workflow_execution_started_event_attributes: WorkflowExecutionStartedEventAttributes = None
     workflow_execution_completed_event_attributes: WorkflowExecutionCompletedEventAttributes = None
     workflow_execution_failed_event_attributes: WorkflowExecutionFailedEventAttributes = None
@@ -969,6 +1115,7 @@ class HistoryEvent:
     signal_external_workflow_execution_initiated_event_attributes: SignalExternalWorkflowExecutionInitiatedEventAttributes = None
     signal_external_workflow_execution_failed_event_attributes: SignalExternalWorkflowExecutionFailedEventAttributes = None
     external_workflow_execution_signaled_event_attributes: ExternalWorkflowExecutionSignaledEventAttributes = None
+    upsert_workflow_search_attributes_event_attributes: UpsertWorkflowSearchAttributesEventAttributes = None
     
 
 # noinspection PyPep8
@@ -1004,6 +1151,7 @@ class DomainInfo:
     description: str = None
     owner_email: str = None
     data: Dict[str, str] = field(default_factory=dict)
+    uuid: str = None
     
 
 # noinspection PyPep8
@@ -1011,6 +1159,23 @@ class DomainInfo:
 class DomainConfiguration:
     workflow_execution_retention_period_in_days: int = None
     emit_metric: bool = None
+    archival_bucket_name: str = None
+    archival_status: ArchivalStatus = None
+    bad_binaries: BadBinaries = None
+    
+
+# noinspection PyPep8
+@dataclass
+class BadBinaries:
+    binaries: Dict[str, BadBinaryInfo] = field(default_factory=dict)
+    
+
+# noinspection PyPep8
+@dataclass
+class BadBinaryInfo:
+    reason: str = None
+    operator: str = None
+    created_time_nano: int = None
     
 
 # noinspection PyPep8
@@ -1046,6 +1211,9 @@ class RegisterDomainRequest:
     active_cluster_name: str = None
     data: Dict[str, str] = field(default_factory=dict)
     security_token: str = None
+    archival_status: ArchivalStatus = None
+    archival_bucket_name: str = None
+    is_global_domain: bool = None
     
 
 # noinspection PyPep8
@@ -1066,6 +1234,7 @@ class ListDomainsResponse:
 @dataclass
 class DescribeDomainRequest:
     name: str = None
+    uuid: str = None
     
 
 # noinspection PyPep8
@@ -1086,6 +1255,7 @@ class UpdateDomainRequest:
     configuration: DomainConfiguration = None
     replication_configuration: DomainReplicationConfiguration = None
     security_token: str = None
+    delete_bad_binary: str = None
     
 
 # noinspection PyPep8
@@ -1121,6 +1291,9 @@ class StartWorkflowExecutionRequest:
     child_policy: ChildPolicy = None
     retry_policy: RetryPolicy = None
     cron_schedule: str = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
+    header: Header = None
     
 
 # noinspection PyPep8
@@ -1135,6 +1308,7 @@ class PollForDecisionTaskRequest:
     domain: str = None
     task_list: TaskList = None
     identity: str = None
+    binary_checksum: str = None
     
 
 # noinspection PyPep8
@@ -1151,6 +1325,8 @@ class PollForDecisionTaskResponse:
     next_page_token: bytes = None
     query: WorkflowQuery = None
     workflow_execution_task_list: TaskList = None
+    scheduled_timestamp: int = None
+    started_timestamp: int = None
     
 
 # noinspection PyPep8
@@ -1215,6 +1391,7 @@ class PollForActivityTaskResponse:
     heartbeat_details: bytes = None
     workflow_type: WorkflowType = None
     workflow_domain: str = None
+    header: Header = None
     
 
 # noinspection PyPep8
@@ -1326,6 +1503,7 @@ class GetWorkflowExecutionHistoryRequest:
 class GetWorkflowExecutionHistoryResponse:
     history: History = None
     next_page_token: bytes = None
+    archived: bool = None
     
 
 # noinspection PyPep8
@@ -1358,6 +1536,9 @@ class SignalWithStartWorkflowExecutionRequest:
     control: bytes = None
     retry_policy: RetryPolicy = None
     cron_schedule: str = None
+    memo: Memo = None
+    search_attributes: SearchAttributes = None
+    header: Header = None
     
 
 # noinspection PyPep8
@@ -1368,6 +1549,22 @@ class TerminateWorkflowExecutionRequest:
     reason: str = None
     details: bytes = None
     identity: str = None
+    
+
+# noinspection PyPep8
+@dataclass
+class ResetWorkflowExecutionRequest:
+    domain: str = None
+    workflow_execution: WorkflowExecution = None
+    reason: str = None
+    decision_finish_event_id: int = None
+    request_id: str = None
+    
+
+# noinspection PyPep8
+@dataclass
+class ResetWorkflowExecutionResponse:
+    run_id: str = None
     
 
 # noinspection PyPep8
@@ -1409,16 +1606,59 @@ class ListClosedWorkflowExecutionsResponse:
 
 # noinspection PyPep8
 @dataclass
+class ListWorkflowExecutionsRequest:
+    domain: str = None
+    page_size: int = None
+    next_page_token: bytes = None
+    query: str = None
+    
+
+# noinspection PyPep8
+@dataclass
+class ListWorkflowExecutionsResponse:
+    executions: List[WorkflowExecutionInfo] = field(default_factory=list)
+    next_page_token: bytes = None
+    
+
+# noinspection PyPep8
+@dataclass
+class CountWorkflowExecutionsRequest:
+    domain: str = None
+    query: str = None
+    
+
+# noinspection PyPep8
+@dataclass
+class CountWorkflowExecutionsResponse:
+    count: int = None
+    
+
+# noinspection PyPep8
+@dataclass
+class GetSearchAttributesResponse:
+    keys: Dict[str, IndexedValueType] = field(default_factory=dict)
+    
+
+# noinspection PyPep8
+@dataclass
 class QueryWorkflowRequest:
     domain: str = None
     execution: WorkflowExecution = None
     query: WorkflowQuery = None
+    query_reject_condition: QueryRejectCondition = None
+    
+
+# noinspection PyPep8
+@dataclass
+class QueryRejected:
+    close_status: WorkflowExecutionCloseStatus = None
     
 
 # noinspection PyPep8
 @dataclass
 class QueryWorkflowResponse:
     query_result: bytes = None
+    query_rejected: QueryRejected = None
     
 
 # noinspection PyPep8
@@ -1467,6 +1707,20 @@ class PendingActivityInfo:
     last_heartbeat_timestamp: int = None
     last_started_timestamp: int = None
     attempt: int = None
+    maximum_attempts: int = None
+    scheduled_timestamp: int = None
+    expiration_timestamp: int = None
+    last_failure_reason: str = None
+    last_worker_identity: str = None
+    
+
+# noinspection PyPep8
+@dataclass
+class PendingChildExecutionInfo:
+    workflow_id: str = None
+    run_id: str = None
+    workflow_typ_name: str = None
+    initiated_id: int = None
     
 
 # noinspection PyPep8
@@ -1475,6 +1729,7 @@ class DescribeWorkflowExecutionResponse:
     execution_configuration: WorkflowExecutionConfiguration = None
     workflow_execution_info: WorkflowExecutionInfo = None
     pending_activities: List[PendingActivityInfo] = field(default_factory=list)
+    pending_children: List[PendingChildExecutionInfo] = field(default_factory=list)
     
 
 # noinspection PyPep8
@@ -1483,12 +1738,31 @@ class DescribeTaskListRequest:
     domain: str = None
     task_list: TaskList = None
     task_list_type: TaskListType = None
+    include_task_list_status: bool = None
     
 
 # noinspection PyPep8
 @dataclass
 class DescribeTaskListResponse:
     pollers: List[PollerInfo] = field(default_factory=list)
+    task_list_status: TaskListStatus = None
+    
+
+# noinspection PyPep8
+@dataclass
+class TaskListStatus:
+    backlog_count_hint: int = None
+    read_level: int = None
+    ack_level: int = None
+    rate_per_second: float = None
+    task_id_block: TaskIDBlock = None
+    
+
+# noinspection PyPep8
+@dataclass
+class TaskIDBlock:
+    start_id: int = None
+    end_id: int = None
     
 
 # noinspection PyPep8
@@ -1521,6 +1795,7 @@ class DomainCacheInfo:
 class PollerInfo:
     last_access_time: int = None
     identity: str = None
+    rate_per_second: float = None
     
 
 # noinspection PyPep8

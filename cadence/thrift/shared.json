@@ -129,6 +129,50 @@
         "name": "message",
         "id": 1,
         "option": "required"
+      },
+      {
+        "type": "string",
+        "name": "domainId",
+        "id": 2,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowId",
+        "id": 3,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 4,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "nextEventId",
+        "id": 5,
+        "option": "optional"
+      }
+    ],
+    "ClientVersionNotSupportedError": [
+      {
+        "type": "string",
+        "name": "featureVersion",
+        "id": 1,
+        "option": "required"
+      },
+      {
+        "type": "string",
+        "name": "clientImpl",
+        "id": 2,
+        "option": "required"
+      },
+      {
+        "type": "string",
+        "name": "supportedVersions",
+        "id": 3,
+        "option": "required"
       }
     ]
   },
@@ -212,6 +256,9 @@
         },
         {
           "name": "SignalExternalWorkflowExecution"
+        },
+        {
+          "name": "UpsertWorkflowSearchAttributes"
         }
       ]
     },
@@ -339,6 +386,9 @@
         },
         {
           "name": "ExternalWorkflowExecutionSignaled"
+        },
+        {
+          "name": "UpsertWorkflowSearchAttributes"
         }
       ]
     },
@@ -400,6 +450,18 @@
         },
         {
           "name": "BAD_SIGNAL_INPUT_SIZE"
+        },
+        {
+          "name": "RESET_WORKFLOW"
+        },
+        {
+          "name": "BAD_BINARY"
+        },
+        {
+          "name": "SCHEDULE_ACTIVITY_DUPLICATE_ID"
+        },
+        {
+          "name": "BAD_SEARCH_ATTRIBUTES"
         }
       ]
     },
@@ -502,6 +564,55 @@
         }
       ]
     },
+    "ArchivalStatus": {
+      "items": [
+        {
+          "name": "DISABLED"
+        },
+        {
+          "name": "ENABLED"
+        }
+      ]
+    },
+    "IndexedValueType": {
+      "items": [
+        {
+          "name": "STRING"
+        },
+        {
+          "name": "KEYWORD"
+        },
+        {
+          "name": "INT"
+        },
+        {
+          "name": "DOUBLE"
+        },
+        {
+          "name": "BOOL"
+        },
+        {
+          "name": "DATETIME"
+        }
+      ]
+    },
+    "EncodingType": {
+      "items": [
+        {
+          "name": "ThriftRW"
+        }
+      ]
+    },
+    "QueryRejectCondition": {
+      "items": [
+        {
+          "name": "NOT_OPEN"
+        },
+        {
+          "name": "NOT_COMPLETED_CLEANLY"
+        }
+      ]
+    },
     "ContinueAsNewInitiator": {
       "items": [
         {
@@ -569,6 +680,34 @@
         "option": "optional"
       }
     ],
+    "DataBlob": [
+      {
+        "type": "EncodingType",
+        "name": "EncodingType",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "Data",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "ReplicationInfo": [
+      {
+        "type": "i64",
+        "name": "version",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "lastEventId",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
     "TaskListMetadata": [
       {
         "type": "double",
@@ -588,6 +727,30 @@
         "type": "string",
         "name": "runId",
         "id": 20,
+        "option": "optional"
+      }
+    ],
+    "Memo": [
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "binary"
+        },
+        "name": "fields",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "SearchAttributes": [
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "binary"
+        },
+        "name": "indexedFields",
+        "id": 10,
         "option": "optional"
       }
     ],
@@ -626,6 +789,42 @@
         "type": "i64",
         "name": "historyLength",
         "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "parentDomainId",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "parentExecution",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "executionTime",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 101,
+        "option": "optional"
+      },
+      {
+        "type": "ResetPoints",
+        "name": "autoResetPoints",
+        "id": 110,
         "option": "optional"
       }
     ],
@@ -728,6 +927,12 @@
         "type": "RetryPolicy",
         "name": "retryPolicy",
         "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 80,
         "option": "optional"
       }
     ],
@@ -861,6 +1066,14 @@
         "option": "optional"
       }
     ],
+    "UpsertWorkflowSearchAttributesDecisionAttributes": [
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
     "RecordMarkerDecisionAttributes": [
       {
         "type": "string",
@@ -953,6 +1166,24 @@
         "name": "cronSchedule",
         "id": 120,
         "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 150,
+        "option": "optional"
       }
     ],
     "StartChildWorkflowExecutionDecisionAttributes": [
@@ -1026,6 +1257,24 @@
         "type": "string",
         "name": "cronSchedule",
         "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 150,
         "option": "optional"
       }
     ],
@@ -1106,6 +1355,12 @@
         "type": "SignalExternalWorkflowExecutionDecisionAttributes",
         "name": "signalExternalWorkflowExecutionDecisionAttributes",
         "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "UpsertWorkflowSearchAttributesDecisionAttributes",
+        "name": "upsertWorkflowSearchAttributesDecisionAttributes",
+        "id": 120,
         "option": "optional"
       }
     ],
@@ -1196,8 +1451,20 @@
       },
       {
         "type": "string",
+        "name": "originalExecutionRunId",
+        "id": 59,
+        "option": "optional"
+      },
+      {
+        "type": "string",
         "name": "identity",
         "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "firstExecutionRunId",
+        "id": 61,
         "option": "optional"
       },
       {
@@ -1228,6 +1495,79 @@
         "type": "i32",
         "name": "firstDecisionTaskBackoffSeconds",
         "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 121,
+        "option": "optional"
+      },
+      {
+        "type": "ResetPoints",
+        "name": "prevAutoResetPoints",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 140,
+        "option": "optional"
+      }
+    ],
+    "ResetPoints": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "ResetPointInfo"
+        },
+        "name": "points",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "ResetPointInfo": [
+      {
+        "type": "string",
+        "name": "binaryChecksum",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "firstDecisionCompletedId",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "createdTimeNano",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "expiringTimeNano",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "resettable",
+        "id": 60,
         "option": "optional"
       }
     ],
@@ -1344,6 +1684,24 @@
         "type": "binary",
         "name": "lastCompletionResult",
         "id": 120,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 130,
+        "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 150,
         "option": "optional"
       }
     ],
@@ -1469,6 +1827,30 @@
         "name": "identity",
         "id": 40,
         "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "baseRunId",
+        "id": 60,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "newRunId",
+        "id": 70,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "forkEventVersion",
+        "id": 80,
+        "option": "optional"
       }
     ],
     "ActivityTaskScheduledEventAttributes": [
@@ -1536,6 +1918,12 @@
         "type": "RetryPolicy",
         "name": "retryPolicy",
         "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 120,
         "option": "optional"
       }
     ],
@@ -2105,6 +2493,20 @@
         "option": "optional"
       }
     ],
+    "UpsertWorkflowSearchAttributesEventAttributes": [
+      {
+        "type": "i64",
+        "name": "decisionTaskCompletedEventId",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
     "StartChildWorkflowExecutionInitiatedEventAttributes": [
       {
         "type": "string",
@@ -2183,6 +2585,24 @@
         "name": "cronSchedule",
         "id": 130,
         "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 150,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 160,
+        "option": "optional"
       }
     ],
     "StartChildWorkflowExecutionFailedEventAttributes": [
@@ -2252,6 +2672,12 @@
         "type": "WorkflowType",
         "name": "workflowType",
         "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 50,
         "option": "optional"
       }
     ],
@@ -2468,6 +2894,12 @@
         "type": "i64",
         "name": "version",
         "id": 35,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "taskId",
+        "id": 36,
         "option": "optional"
       },
       {
@@ -2715,6 +3147,12 @@
         "name": "externalWorkflowExecutionSignaledEventAttributes",
         "id": 440,
         "option": "optional"
+      },
+      {
+        "type": "UpsertWorkflowSearchAttributesEventAttributes",
+        "name": "upsertWorkflowSearchAttributesEventAttributes",
+        "id": 450,
+        "option": "optional"
       }
     ],
     "History": [
@@ -2792,6 +3230,12 @@
         "name": "data",
         "id": 50,
         "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "uuid",
+        "id": 60,
+        "option": "optional"
       }
     ],
     "DomainConfiguration": [
@@ -2805,6 +3249,56 @@
         "type": "bool",
         "name": "emitMetric",
         "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "archivalBucketName",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "ArchivalStatus",
+        "name": "archivalStatus",
+        "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "BadBinaries",
+        "name": "badBinaries",
+        "id": 70,
+        "option": "optional"
+      }
+    ],
+    "BadBinaries": [
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "BadBinaryInfo"
+        },
+        "name": "binaries",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "BadBinaryInfo": [
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "operator",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "createdTimeNano",
+        "id": 30,
         "option": "optional"
       }
     ],
@@ -2918,6 +3412,24 @@
         "name": "securityToken",
         "id": 90,
         "option": "optional"
+      },
+      {
+        "type": "ArchivalStatus",
+        "name": "archivalStatus",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "archivalBucketName",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "isGlobalDomain",
+        "id": 120,
+        "option": "optional"
       }
     ],
     "ListDomainsRequest": [
@@ -2956,6 +3468,12 @@
         "type": "string",
         "name": "name",
         "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "uuid",
+        "id": 20,
         "option": "optional"
       }
     ],
@@ -3020,6 +3538,12 @@
         "type": "string",
         "name": "securityToken",
         "id": 50,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "deleteBadBinary",
+        "id": 60,
         "option": "optional"
       }
     ],
@@ -3147,6 +3671,24 @@
         "name": "cronSchedule",
         "id": 130,
         "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 140,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 141,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 150,
+        "option": "optional"
       }
     ],
     "StartWorkflowExecutionResponse": [
@@ -3174,6 +3716,12 @@
         "type": "string",
         "name": "identity",
         "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "binaryChecksum",
+        "id": 40,
         "option": "optional"
       }
     ],
@@ -3242,6 +3790,18 @@
         "type": "TaskList",
         "name": "WorkflowExecutionTaskList",
         "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledTimestamp",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "startedTimestamp",
+        "id": 110,
         "option": "optional"
       }
     ],
@@ -3461,6 +4021,12 @@
         "type": "string",
         "name": "workflowDomain",
         "id": 160,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 170,
         "option": "optional"
       }
     ],
@@ -3792,6 +4358,12 @@
         "name": "nextPageToken",
         "id": 20,
         "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "archived",
+        "id": 30,
+        "option": "optional"
       }
     ],
     "SignalWorkflowExecutionRequest": [
@@ -3928,6 +4500,24 @@
         "name": "cronSchedule",
         "id": 150,
         "option": "optional"
+      },
+      {
+        "type": "Memo",
+        "name": "memo",
+        "id": 160,
+        "option": "optional"
+      },
+      {
+        "type": "SearchAttributes",
+        "name": "searchAttributes",
+        "id": 161,
+        "option": "optional"
+      },
+      {
+        "type": "Header",
+        "name": "header",
+        "id": 170,
+        "option": "optional"
       }
     ],
     "TerminateWorkflowExecutionRequest": [
@@ -3959,6 +4549,46 @@
         "type": "string",
         "name": "identity",
         "id": 50,
+        "option": "optional"
+      }
+    ],
+    "ResetWorkflowExecutionRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "WorkflowExecution",
+        "name": "workflowExecution",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "reason",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "decisionFinishEventId",
+        "id": 40,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "requestId",
+        "id": 50,
+        "option": "optional"
+      }
+    ],
+    "ResetWorkflowExecutionResponse": [
+      {
+        "type": "string",
+        "name": "runId",
+        "id": 10,
         "option": "optional"
       }
     ],
@@ -4078,6 +4708,83 @@
         "option": "optional"
       }
     ],
+    "ListWorkflowExecutionsRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "pageSize",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "query",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "ListWorkflowExecutionsResponse": [
+      {
+        "type": {
+          "name": "list",
+          "valueType": "WorkflowExecutionInfo"
+        },
+        "name": "executions",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "binary",
+        "name": "nextPageToken",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "CountWorkflowExecutionsRequest": [
+      {
+        "type": "string",
+        "name": "domain",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "query",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "CountWorkflowExecutionsResponse": [
+      {
+        "type": "i64",
+        "name": "count",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
+    "GetSearchAttributesResponse": [
+      {
+        "type": {
+          "name": "map",
+          "keyType": "string",
+          "valueType": "IndexedValueType"
+        },
+        "name": "keys",
+        "id": 10,
+        "option": "optional"
+      }
+    ],
     "QueryWorkflowRequest": [
       {
         "type": "string",
@@ -4096,6 +4803,20 @@
         "name": "query",
         "id": 30,
         "option": "optional"
+      },
+      {
+        "type": "QueryRejectCondition",
+        "name": "queryRejectCondition",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "QueryRejected": [
+      {
+        "type": "WorkflowExecutionCloseStatus",
+        "name": "closeStatus",
+        "id": 10,
+        "option": "optional"
       }
     ],
     "QueryWorkflowResponse": [
@@ -4103,6 +4824,12 @@
         "type": "binary",
         "name": "queryResult",
         "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "QueryRejected",
+        "name": "queryRejected",
+        "id": 20,
         "option": "optional"
       }
     ],
@@ -4217,6 +4944,62 @@
         "name": "attempt",
         "id": 70,
         "option": "optional"
+      },
+      {
+        "type": "i32",
+        "name": "maximumAttempts",
+        "id": 80,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "scheduledTimestamp",
+        "id": 90,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "expirationTimestamp",
+        "id": 100,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "lastFailureReason",
+        "id": 110,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "lastWorkerIdentity",
+        "id": 120,
+        "option": "optional"
+      }
+    ],
+    "PendingChildExecutionInfo": [
+      {
+        "type": "string",
+        "name": "workflowID",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "runID",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "string",
+        "name": "workflowTypName",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "initiatedID",
+        "id": 40,
+        "option": "optional"
       }
     ],
     "DescribeWorkflowExecutionResponse": [
@@ -4240,6 +5023,15 @@
         "name": "pendingActivities",
         "id": 30,
         "option": "optional"
+      },
+      {
+        "type": {
+          "name": "list",
+          "valueType": "PendingChildExecutionInfo"
+        },
+        "name": "pendingChildren",
+        "id": 40,
+        "option": "optional"
       }
     ],
     "DescribeTaskListRequest": [
@@ -4260,6 +5052,12 @@
         "name": "taskListType",
         "id": 30,
         "option": "optional"
+      },
+      {
+        "type": "bool",
+        "name": "includeTaskListStatus",
+        "id": 40,
+        "option": "optional"
       }
     ],
     "DescribeTaskListResponse": [
@@ -4270,6 +5068,58 @@
         },
         "name": "pollers",
         "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "TaskListStatus",
+        "name": "taskListStatus",
+        "id": 20,
+        "option": "optional"
+      }
+    ],
+    "TaskListStatus": [
+      {
+        "type": "i64",
+        "name": "backlogCountHint",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "readLevel",
+        "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "ackLevel",
+        "id": 30,
+        "option": "optional"
+      },
+      {
+        "type": "double",
+        "name": "ratePerSecond",
+        "id": 35,
+        "option": "optional"
+      },
+      {
+        "type": "TaskIDBlock",
+        "name": "taskIDBlock",
+        "id": 40,
+        "option": "optional"
+      }
+    ],
+    "TaskIDBlock": [
+      {
+        "type": "i64",
+        "name": "startID",
+        "id": 10,
+        "option": "optional"
+      },
+      {
+        "type": "i64",
+        "name": "endID",
+        "id": 20,
         "option": "optional"
       }
     ],
@@ -4353,6 +5203,12 @@
         "type": "string",
         "name": "identity",
         "id": 20,
+        "option": "optional"
+      },
+      {
+        "type": "double",
+        "name": "ratePerSecond",
+        "id": 30,
         "option": "optional"
       }
     ],
