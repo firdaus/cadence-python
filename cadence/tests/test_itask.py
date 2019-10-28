@@ -22,20 +22,27 @@ class TestAwaitTill(TestCase):
         self.task.cancel()
 
     def test_await_till(self):
-        self.task = self.event_loop.create_task(self.itask.await_till())
+        self.task = self.event_loop.create_task(self.itask.await_till(lambda *args: None))
         run_once(self.event_loop)
         assert self.itask.awaited
 
     def test_await_till_no_progress(self):
-        self.task = self.event_loop.create_task(self.itask.await_till())
+        self.task = self.event_loop.create_task(self.itask.await_till(lambda *args: None))
         run_once(self.event_loop)
         assert self.itask.awaited
         run_once(self.event_loop)
         assert self.itask.awaited
 
     def test_unblock(self):
-        self.task = self.event_loop.create_task(self.itask.await_till())
+        blocked = True
+
+        def check_blocked():
+            nonlocal blocked
+            return not blocked
+
+        self.task = self.event_loop.create_task(self.itask.await_till(check_blocked))
         run_once(self.event_loop)
+        blocked = False
         self.itask.unblock()
         run_once(self.event_loop)
         assert not self.itask.awaited
