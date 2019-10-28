@@ -25,6 +25,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes
+from cadence.conversions import json_to_args
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, SignalNotFound
@@ -493,9 +494,7 @@ class ReplayDecider:
         if start_event_attributes.input is None:
             workflow_input = []
         else:
-            workflow_input = json.loads(start_event_attributes.input)
-            if not isinstance(workflow_input, list):
-                workflow_input = [workflow_input]
+            workflow_input = json_to_args(start_event_attributes.input)
         self.workflow_task = WorkflowMethodTask(task_id=self.execution_id, workflow_input=workflow_input,
                                                 worker=self.worker, workflow_type=self.workflow_type, decider=self)
         self.event_loop.run_event_loop_once()
@@ -578,9 +577,7 @@ class ReplayDecider:
         if not signal_input:
             signal_input = []
         else:
-            signal_input = json.loads(signaled_event_attributes.input)
-            if not isinstance(signal_input, list):
-                signal_input = [signal_input]
+            signal_input = json_to_args(signal_input)
 
         task = SignalMethodTask(task_id=self.execution_id,
                                 workflow_instance=self.workflow_task.workflow_instance,

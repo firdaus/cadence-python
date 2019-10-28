@@ -11,6 +11,7 @@ from uuid import uuid4
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest
+from cadence.conversions import args_to_json
 from cadence.workflowservice import WorkflowService
 
 
@@ -148,7 +149,7 @@ def exec_signal(workflow_client: WorkflowClient, sm: SignalMethod, args, stub_in
     request = SignalWorkflowExecutionRequest()
     request.workflow_execution = stub_instance._execution
     request.signal_name = sm.name
-    request.input = json.dumps(args)
+    request.input = args_to_json(args)
     request.domain = workflow_client.domain
     response, err = workflow_client.service.signal_workflow_execution(request)
     if err:
@@ -164,7 +165,7 @@ def create_start_workflow_request(workflow_client: WorkflowClient, wm: WorkflowM
     start_request.workflow_type.name = wm._name
     start_request.task_list = TaskList()
     start_request.task_list.name = wm._task_list
-    start_request.input = json.dumps(args)
+    start_request.input = args_to_json(args)
     start_request.execution_start_to_close_timeout_seconds = wm._execution_start_to_close_timeout_seconds
     start_request.task_start_to_close_timeout_seconds = wm._task_start_to_close_timeout_seconds
     start_request.identity = workflow_client.service.get_identity()

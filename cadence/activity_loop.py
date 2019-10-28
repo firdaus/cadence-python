@@ -4,6 +4,7 @@ import json
 
 from cadence.cadence_types import PollForActivityTaskRequest, TaskListMetadata, TaskList, PollForActivityTaskResponse, \
     RespondActivityTaskCompletedRequest, RespondActivityTaskFailedRequest
+from cadence.conversions import json_to_args
 from cadence.workflowservice import WorkflowService
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def activity_task_loop(worker):
                 logger.debug("PollForActivityTask has no task_token (expected): %s", task)
                 continue
 
-            args = json.loads(task.input)
+            args = json_to_args(task.input)
             logger.info(f"Request for activity: {task.activity_type.name}")
             fn = worker.activities.get(task.activity_type.name)
             if not fn:
