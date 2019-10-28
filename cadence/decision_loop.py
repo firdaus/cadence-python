@@ -196,7 +196,7 @@ class WorkflowMethodTask(ITask):
         self.task = asyncio.get_event_loop().create_task(self.workflow_main())
 
     def init_workflow_instance(self):
-        cls, _ = self.worker.workflow_methods[self.workflow_type.name]
+        cls, _ = self.worker.get_workflow_method(self.workflow_type.name)
         try:
             self.workflow_instance = cls()
         except Exception as ex:

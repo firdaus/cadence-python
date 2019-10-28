@@ -123,3 +123,7 @@ class Worker:
     def notify_thread_stopped(self):
         self.threads_stopped += 1
 
+    def get_workflow_method(self, workflow_type_name: str) -> Tuple[type, Callable]:
+        return self.workflow_methods[workflow_type_name]
+
+

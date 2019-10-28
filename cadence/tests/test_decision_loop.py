@@ -205,6 +205,10 @@ class TestScheduleActivityTask(TestCase):
         self.assertEqual(0, self.decider.activity_id_to_scheduled_event_id[activity_id])
 
 
+class DummyWorkflow:
+    pass
+
+
 class TestDecideNextDecisionId(TestCase):
     def setUp(self) -> None:
         events = make_history([
@@ -214,7 +218,9 @@ class TestDecideNextDecisionId(TestCase):
         events[0].workflow_execution_started_event_attributes = WorkflowExecutionStartedEventAttributes()
         helper = HistoryHelper(events)
         self.decision_events = helper.next()
-        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=Mock())
+        worker: Worker = Mock()
+        worker.get_workflow_method = MagicMock(return_value=(DummyWorkflow, lambda *args: None))
+        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=worker)
         self.decider.event_loop = Mock()
 
     def test_first_decision_next_decision_id(self):
@@ -237,7 +243,9 @@ class ReplayDeciderDestroyTest(TestCase):
 class TestReplayDecider(TestCase):
 
     def setUp(self) -> None:
-        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=Mock())
+        worker: Worker = Mock()
+        worker.get_workflow_method = MagicMock(return_value=(DummyWorkflow, lambda *args: None))
+        self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=worker)
 
     def test_get_and_increment_next_id(self):
         self.assertEqual("0", self.decider.get_and_increment_next_id())
