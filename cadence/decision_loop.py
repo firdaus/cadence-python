@@ -302,6 +302,7 @@ class DecisionContext:
     decider: ReplayDecider
     scheduled_activities: Dict[int, Future[bytes]] = field(default_factory=dict)
     workflow_clock: ClockDecisionContext = None
+    current_run_id: str = None
 
     def __post_init__(self):
         if not self.workflow_clock:
@@ -414,6 +415,9 @@ class DecisionContext:
     def handle_timer_canceled(self, event: HistoryEvent):
         self.workflow_clock.handle_timer_canceled(event)
 
+    def set_current_run_id(self, run_id: str):
+        self.current_run_id = run_id
+
 
 @dataclass
 class ReplayDecider:
@@ -471,6 +475,7 @@ class ReplayDecider:
 
     def handle_workflow_execution_started(self, event: HistoryEvent):
         start_event_attributes = event.workflow_execution_started_event_attributes
+        self.decision_context.set_current_run_id(start_event_attributes.original_execution_run_id)
         if start_event_attributes.input is None:
             workflow_input = []
         else:
