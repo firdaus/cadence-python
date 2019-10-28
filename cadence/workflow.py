@@ -2,6 +2,8 @@ from __future__ import annotations
 import datetime
 import inspect
 import json
+import random
+import uuid
 from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
@@ -49,6 +51,17 @@ class Workflow:
         now_in_ms = task.decider.decision_context.current_time_millis()
         return datetime.datetime.fromtimestamp(now_in_ms / 1000)
 
+    @staticmethod
+    def random_uuid() -> uuid.UUID:
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.decision_context.random_uuid()
+
+    @staticmethod
+    def new_random() -> random.Random:
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.decision_context.new_random()
 
 class WorkflowStub:
     pass

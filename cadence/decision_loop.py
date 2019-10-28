@@ -4,6 +4,8 @@ import asyncio
 import contextvars
 import datetime
 import json
+import uuid
+import random
 import logging
 import threading
 from asyncio.base_futures import CancelledError
@@ -419,6 +421,16 @@ class DecisionContext:
 
     def set_current_run_id(self, run_id: str):
         self.current_run_id = run_id
+
+    def random_uuid(self) -> uuid.UUID:
+        return uuid.uuid3(uuid.UUID(self.current_run_id), str(self.decider.get_and_increment_next_id()))
+    
+    def new_random(self) -> random.Random:
+        random_uuid = self.random_uuid()
+        lsb = random_uuid.bytes[:8]
+        generator = random.Random()
+        generator.seed(lsb, version=2)
+        return generator
 
 
 @dataclass

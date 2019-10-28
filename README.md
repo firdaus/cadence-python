@@ -24,8 +24,8 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [ ] Timers
 - [x] Sleep
 - [ ] Loggers
-- [ ] newRandom
-- [ ] UUID
+- [x] newRandom
+- [x] UUID
 - [ ] Workflow Versioning
 
 2.0
