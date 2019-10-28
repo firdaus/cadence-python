@@ -186,7 +186,7 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.record_activity_task_heartbeat_by_id(request)
         self.assertIsNotNone(err)
         self.assertIsNone(response)
-        self.assertRegex(str(err), "No such activityID")
+        self.assertRegex(str(err), "Cannot locate Activity ScheduleID")
 
     def test_respond_query_task_completed_invalid(self):
         request = RespondQueryTaskCompletedRequest()
@@ -208,7 +208,7 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.respond_activity_task_completed_by_id(request)
         self.assertIsNotNone(err)
         self.assertIsNone(response)
-        self.assertRegex(str(err), "No such activityID")
+        self.assertRegex(str(err), "Cannot locate Activity ScheduleID")
 
     def test_respond_activity_task_failed(self):
         request = RespondActivityTaskFailedRequest()
@@ -229,7 +229,7 @@ class TestStartWorkflow(TestCase):
         request.activity_id = "dummy-activity-id"
         response, err = self.service.respond_activity_task_failed_by_id(request)
         self.assertIsNotNone(err)
-        self.assertRegex(str(err), "No such activityID")
+        self.assertRegex(str(err), "Cannot locate Activity ScheduleID")
         self.assertIsNone(response)
 
     def test_respond_activity_task_canceled_invalid(self):
@@ -251,7 +251,7 @@ class TestStartWorkflow(TestCase):
         response, err = self.service.respond_activity_task_canceled_by_id(request)
         self.assertIsNone(response)
         self.assertIsNotNone(err)
-        self.assertRegex(str(err), "No such activityID")
+        self.assertRegex(str(err), "Cannot locate Activity ScheduleID")
 
     def test_request_cancel_workflow_execution(self):
         start_response, _ = self.service.start_workflow(self.request)
