@@ -1,3 +1,4 @@
+import json
 import typing
 import inspect
 import re
@@ -110,3 +111,22 @@ def get_python_type(thrift_class: type) -> type:
     python_cls = getattr(cadence.cadence_types, thrift_class.__name__, None)
     assert python_cls, "Python class not found: " + thrift_class.__name__
     return python_cls
+
+
+def args_to_json(args: list) -> str:
+    if args is None or len(args) == 0:
+        return json.dumps(None)
+    elif len(args) == 1:
+        return json.dumps(args[0])
+    else:
+        return json.dumps(args)
+
+
+def json_to_args(jsonb: bytes) -> typing.Optional[list]:
+    parsed = json.loads(jsonb)
+    if parsed is None:
+        return []
+    elif isinstance(parsed, list):
+        return parsed
+    else:
+        return [parsed]

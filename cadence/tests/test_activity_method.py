@@ -92,6 +92,26 @@ class ActivityMethodTest(TestCase):
         args, kwargs = self.decision_context.schedule_activity_task.call_args_list[0]
         self.assertEqual(b"null", kwargs["parameters"].input)
 
+    def test_invoke_stub_with_one_arg(self):
+        class HelloActivities:
+            @activity_method(task_list="test-tasklist")
+            def hello(self, arg1):
+                pass
+
+        stub = HelloActivities()
+        stub._decision_context = self.decision_context
+
+        async def fn():
+            await stub.hello(1)
+
+        loop = get_event_loop()
+        self.task = loop.create_task(fn())
+        run_once(loop)
+
+        self.decision_context.schedule_activity_task.assert_called_once()
+        args, kwargs = self.decision_context.schedule_activity_task.call_args_list[0]
+        self.assertEqual(b'1', kwargs["parameters"].input)
+
     def test_invoke_stub_with_args(self):
         class HelloActivities:
             @activity_method(task_list="test-tasklist")

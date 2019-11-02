@@ -141,6 +141,20 @@ class TestDecisionTaskLoop(TestCase):
         complete_workflow = decisions[0].complete_workflow_execution_decision_attributes
         self.assertEqual("null", complete_workflow.result)
 
+    def test_one_arg(self):
+        class DummyWorkflow:
+            @workflow_method()
+            async def dummy(self, arg1):
+                nonlocal arg1_value
+                arg1_value = arg1
+
+        arg1_value = None
+        self.worker.register_workflow_implementation_type(DummyWorkflow)
+        self.poll_response.history.events[0].workflow_execution_started_event_attributes.input = json.dumps(
+            ["first"])
+        self.loop.process_task(self.poll_response)
+        self.assertEqual(arg1_value, "first")
+
     def test_args(self):
         class DummyWorkflow:
             @workflow_method()

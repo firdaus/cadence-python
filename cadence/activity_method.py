@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 from cadence.cadence_types import ActivityType
+from cadence.conversions import args_to_json
 
 
 def get_activity_method_name(method: Callable):
@@ -43,7 +44,7 @@ def activity_method(func: Callable = None, name: str = "", schedule_to_close_tim
             assert self._decision_context
             assert stub_activity_fn._execute_parameters
             parameters = copy.deepcopy(stub_activity_fn._execute_parameters)
-            parameters.input = json.dumps(args if args else None).encode("utf-8")
+            parameters.input = args_to_json(args).encode("utf-8")
             from cadence.decision_loop import DecisionContext
             decision_context: DecisionContext = self._decision_context
             return await decision_context.schedule_activity_task(parameters=parameters)
