@@ -194,7 +194,7 @@ class ThriftFunctionCall(ThriftArgScheme):
     @staticmethod
     def default_application_headers():
         return {
-            "user-name": os.getlogin(),
+            "user-name": os.environ.get("LOGNAME", os.getlogin()),
             "host-name": socket.gethostname(),
             # Copied from Java client
             "cadence-client-library-version": "2.2.0",
