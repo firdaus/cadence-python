@@ -14,6 +14,7 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [x] Create workflows
 - [x] Workflow execution in coroutines
 - [x] Invoke activities from workflows
+- [ ] CompletionClient
 - [ ] Activity heartbeating and doNotCompleteOnReturn
 - [ ] Activity retry
 - [x] Signals
