@@ -2,15 +2,17 @@ import datetime
 import logging
 import json
 
+from cadence.activity import ActivityContext
 from cadence.cadence_types import PollForActivityTaskRequest, TaskListMetadata, TaskList, PollForActivityTaskResponse, \
     RespondActivityTaskCompletedRequest, RespondActivityTaskFailedRequest
 from cadence.conversions import json_to_args
 from cadence.workflowservice import WorkflowService
+from cadence.worker import Worker
 
 logger = logging.getLogger(__name__)
 
 
-def activity_task_loop(worker):
+def activity_task_loop(worker: Worker):
     service = WorkflowService.create(worker.host, worker.port)
     logger.info(f"Activity task worker started: {WorkflowService.get_identity()}")
     try:
@@ -48,8 +50,14 @@ def activity_task_loop(worker):
                 continue
 
             process_start = datetime.datetime.now()
+            activity_context = ActivityContext()
+            activity_context.task_token = task.task_token
+            activity_context.workflow_execution = task.workflow_execution
+            activity_context.domain = worker.domain
             try:
+                ActivityContext.set(activity_context)
                 ret = fn(*args)
+                ActivityContext.set(None)
                 respond = RespondActivityTaskCompletedRequest()
                 respond.task_token = task.task_token
                 respond.result = json.dumps(ret)
