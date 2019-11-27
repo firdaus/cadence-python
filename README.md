@@ -15,8 +15,9 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [x] Workflow execution in coroutines
 - [x] Invoke activities from workflows
 - [ ] CompletionClient
-- [ ] Activity heartbeating and doNotCompleteOnReturn
+- [ ] Activity hearbeat, getHeartbeatDetails and doNotCompleteOnReturn
 - [ ] Activity retry
+- [x] Activity getDomain(), getTaskToken(), getWorkflowExecution()
 - [x] Signals
 - [ ] Queries
 - [x] Async workflow execution
