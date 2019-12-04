@@ -328,10 +328,8 @@ class DecisionContext:
         attr.task_list = TaskList()
         attr.task_list.name = parameters.task_list
 
-        # PORT: RetryParameters retryParameters = parameters.getRetryParameters();
-        # PORT: if (retryParameters != null) {
-        # PORT:    attributes.setRetryPolicy(retryParameters.toRetryPolicy());
-        # PORT: }
+        if parameters.retry_parameters:
+            attr.retry_policy = parameters.retry_parameters.to_retry_policy()
 
         scheduled_event_id = self.decider.schedule_activity_task(schedule=attr)
         future = self.decider.event_loop.create_future()

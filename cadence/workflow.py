@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
+from cadence.activity_method import RetryParameters
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest
@@ -18,12 +19,13 @@ from cadence.workflowservice import WorkflowService
 class Workflow:
 
     @staticmethod
-    def new_activity_stub(activities_cls):
+    def new_activity_stub(activities_cls, retry_parameters: RetryParameters = None):
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         assert task
         cls = activities_cls()
         cls._decision_context = task.decider.decision_context
+        cls._retry_parameters = retry_parameters
         return cls
 
     @staticmethod
