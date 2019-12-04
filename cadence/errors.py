@@ -5,22 +5,22 @@ from typing import Optional
 
 
 @dataclass
-class BadRequestError:
+class BadRequestError(Exception):
     message: str
 
 
 @dataclass
-class InternalServiceError:
+class InternalServiceError(Exception):
     message: str
 
 
 @dataclass
-class DomainAlreadyExistsError:
+class DomainAlreadyExistsError(Exception):
     message: str
 
 
 @dataclass
-class WorkflowExecutionAlreadyStartedError:
+class WorkflowExecutionAlreadyStartedError(Exception):
     message: Optional[str]
     startRequestId: Optional[str]
     runId: Optional[str]
@@ -35,27 +35,27 @@ class WorkflowExecutionAlreadyStartedError:
 
 
 @dataclass
-class EntityNotExistsError:
+class EntityNotExistsError(Exception):
     message: str
 
 
 @dataclass
-class ServiceBusyError:
+class ServiceBusyError(Exception):
     message: str
 
 
 @dataclass
-class CancellationAlreadyRequestedError:
+class CancellationAlreadyRequestedError(Exception):
     message: str
 
 
 @dataclass
-class QueryFailedError:
+class QueryFailedError(Exception):
     message: str
 
 
 @dataclass
-class DomainNotActiveError:
+class DomainNotActiveError(Exception):
     message: str
     domainName: str
     currentCluster: str
@@ -75,17 +75,17 @@ class DomainNotActiveError:
 
 
 @dataclass
-class LimitExceededError:
+class LimitExceededError(Exception):
     message: str
 
 
 @dataclass
-class AccessDeniedError:
+class AccessDeniedError(Exception):
     message: str
 
 
 @dataclass
-class RetryTaskError:
+class RetryTaskError(Exception):
     message: str
     domain_id: str
     workflow_id: str
@@ -94,7 +94,7 @@ class RetryTaskError:
 
 
 @dataclass
-class ClientVersionNotSupportedError:
+class ClientVersionNotSupportedError(Exception):
     feature_version: str
     client_impl: str
     supported_versions: str
