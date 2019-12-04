@@ -15,6 +15,7 @@ class ActivityContext:
     workflow_execution: WorkflowExecution = None
     domain: str = None
     service: WorkflowService = None
+    heartbeat_details: bytes = None
 
     @staticmethod
     def get() -> 'ActivityContext':
@@ -26,7 +27,7 @@ class ActivityContext:
 
     def heartbeat(self, details: object):
         request = RecordActivityTaskHeartbeatRequest()
-        request.details = json.dumps(details)
+        request.details = json.dumps(details).encode("utf-8")
         request.identity = WorkflowService.get_identity()
         request.task_token = self.task_token
         response, error = self.service.record_activity_task_heartbeat(request)
@@ -34,6 +35,13 @@ class ActivityContext:
             raise error
         if response.cancel_requested:
             raise ActivityCancelledException()
+
+    def get_heartbeat_details(self) -> object:
+        heartbeat_details = self.heartbeat_details
+        if not heartbeat_details:
+            return None
+        json_text = heartbeat_details.decode("utf-8")
+        return json.loads(json_text)
 
 
 class Activity:
@@ -49,6 +57,10 @@ class Activity:
     @staticmethod
     def get_domain() -> str:
         return ActivityContext.get().domain
+
+    @staticmethod
+    def get_heartbeat_details() -> object:
+        return ActivityContext.get().get_heartbeat_details()
 
     @staticmethod
     def heartbeat(details: object):

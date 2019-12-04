@@ -55,6 +55,7 @@ def activity_task_loop(worker: Worker):
             activity_context.workflow_execution = task.workflow_execution
             activity_context.domain = worker.domain
             activity_context.service = service
+            activity_context.heartbeat_details = task.heartbeat_details
             try:
                 ActivityContext.set(activity_context)
                 ret = fn(*args)

@@ -46,3 +46,15 @@ def test_heartbeat_cancel_requested(activity_context):
     with pytest.raises(ActivityCancelledException):
         activity_context.service.record_activity_task_heartbeat = Mock(return_value=(response, None))
         activity_context.heartbeat("payload")
+
+
+def test_get_heartbeat_details(activity_context):
+    activity_context.heartbeat_details = b'{"name": "Bob"}'
+    details = activity_context.get_heartbeat_details()
+    assert details == {"name": "Bob"}
+
+
+def test_get_heartbeat_details_none(activity_context):
+    activity_context.heartbeat_details = None
+    details = activity_context.get_heartbeat_details()
+    assert details is None
