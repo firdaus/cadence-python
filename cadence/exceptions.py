@@ -46,3 +46,7 @@ class CancellationException(Exception):
 
     def init_cause(self, cause):
         self.cause = cause
+
+
+class ActivityCancelledException(Exception):
+    pass

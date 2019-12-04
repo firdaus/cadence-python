@@ -54,6 +54,7 @@ def activity_task_loop(worker: Worker):
             activity_context.task_token = task.task_token
             activity_context.workflow_execution = task.workflow_execution
             activity_context.domain = worker.domain
+            activity_context.service = service
             try:
                 ActivityContext.set(activity_context)
                 ret = fn(*args)
