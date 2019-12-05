@@ -101,3 +101,7 @@ class Activity:
     @staticmethod
     def heartbeat(details: object):
         ActivityContext.get().heartbeat(details)
+
+    @staticmethod
+    def get_activity_task() -> ActivityTask:
+        return ActivityContext.get().activity_task
