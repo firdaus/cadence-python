@@ -2,7 +2,7 @@ import datetime
 import logging
 import json
 
-from cadence.activity import ActivityContext
+from cadence.activity import ActivityContext, ActivityTask
 from cadence.cadence_types import PollForActivityTaskRequest, TaskListMetadata, TaskList, PollForActivityTaskResponse, \
     RespondActivityTaskCompletedRequest, RespondActivityTaskFailedRequest
 from cadence.conversions import json_to_args
@@ -51,11 +51,9 @@ def activity_task_loop(worker: Worker):
 
             process_start = datetime.datetime.now()
             activity_context = ActivityContext()
-            activity_context.task_token = task.task_token
-            activity_context.workflow_execution = task.workflow_execution
-            activity_context.domain = worker.domain
             activity_context.service = service
-            activity_context.heartbeat_details = task.heartbeat_details
+            activity_context.activity_task = ActivityTask.from_poll_for_activity_task_response(task)
+            activity_context.domain = worker.domain
             try:
                 ActivityContext.set(activity_context)
                 ret = fn(*args)
