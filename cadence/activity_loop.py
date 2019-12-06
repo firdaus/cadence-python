@@ -38,7 +38,8 @@ def activity_task_loop(worker: Worker):
             if err:
                 logger.error("PollForActivityTask failed: %s", err)
                 continue
-            if not task.task_token:
+            task_token = task.task_token
+            if not task_token:
                 logger.debug("PollForActivityTask has no task_token (expected): %s", task)
                 continue
 
@@ -59,7 +60,7 @@ def activity_task_loop(worker: Worker):
                 ret = fn(*args)
                 ActivityContext.set(None)
                 respond = RespondActivityTaskCompletedRequest()
-                respond.task_token = task.task_token
+                respond.task_token = task_token
                 respond.result = json.dumps(ret)
                 respond.identity = WorkflowService.get_identity()
                 _, error = service.respond_activity_task_completed(respond)
@@ -69,7 +70,7 @@ def activity_task_loop(worker: Worker):
             except Exception as ex:
                 logger.error(f"Activity {task.activity_type.name} failed: {type(ex).__name__}({ex})", exc_info=1)
                 respond: RespondActivityTaskFailedRequest = RespondActivityTaskFailedRequest()
-                respond.task_token = task.task_token
+                respond.task_token = task_token
                 respond.identity = WorkflowService.get_identity()
                 respond.details = json.dumps({
                     "detailMessage": f"Python error: {type(ex).__name__}({ex})",
