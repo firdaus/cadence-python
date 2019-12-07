@@ -23,7 +23,6 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [x] Async workflow execution
 - [x] await
 - [x] now (currentTimeMillis)
-- [ ] Timers
 - [x] Sleep
 - [ ] Loggers
 - [x] newRandom
@@ -36,6 +35,7 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 Post 2.0:
 - [ ] sideEffect/mutableSideEffect
 - [ ] Parallel activity execution
+- [ ] Timers
 - [ ] Cancellation Scopes
 - [ ] Child Workflows
 
