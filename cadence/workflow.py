@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
+from cadence.activity import ActivityCompletionClient
 from cadence.activity_method import RetryParameters
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
@@ -128,6 +129,9 @@ class WorkflowClient:
                 raise WorkflowExecutionCanceledException()
             else:
                 raise Exception("Unexpected history close event: " + str(history_event))
+
+    def new_activity_completion_client(self):
+        return ActivityCompletionClient(self.service)
 
 
 def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None, stub_instance: object = None) -> WorkflowExecution:

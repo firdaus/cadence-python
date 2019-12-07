@@ -1,9 +1,10 @@
 import contextvars
 import json
 from dataclasses import dataclass
+from typing import Optional
 
 from cadence.cadence_types import WorkflowExecution, RecordActivityTaskHeartbeatRequest, ActivityType, \
-    PollForActivityTaskResponse
+    PollForActivityTaskResponse, RespondActivityTaskFailedRequest, RespondActivityTaskCompletedRequest
 from cadence.exceptions import ActivityCancelledException
 from cadence.workflowservice import WorkflowService
 
@@ -64,6 +65,7 @@ class ActivityContext:
     service: WorkflowService = None
     activity_task: ActivityTask = None
     domain: str = None
+    do_not_complete: bool = False
 
     @staticmethod
     def get() -> 'ActivityContext':
@@ -78,6 +80,9 @@ class ActivityContext:
 
     def get_heartbeat_details(self) -> object:
         return get_heartbeat_details(self.activity_task.heartbeat_details)
+
+    def do_not_complete_on_return(self):
+        self.do_not_complete = True
 
 
 class Activity:
@@ -105,3 +110,47 @@ class Activity:
     @staticmethod
     def get_activity_task() -> ActivityTask:
         return ActivityContext.get().activity_task
+
+    @staticmethod
+    def do_not_complete_on_return():
+        return ActivityContext.get().do_not_complete_on_return()
+
+
+@dataclass
+class ActivityCompletionClient:
+    service: WorkflowService
+
+    def heartbeat(self, task_token: bytes, details: object):
+        heartbeat(self.service, task_token, details)
+
+    def complete(self, task_token: bytes, return_value: object):
+        error = complete(self.service, task_token, return_value)
+        if error:
+            raise error
+
+    def complete_exceptionally(self, task_token: bytes, ex: Exception):
+        error = complete_exceptionally(self.service, task_token, ex)
+        if error:
+            raise error
+
+
+def complete_exceptionally(service, task_token, ex: Exception) -> Optional[Exception]:
+    respond: RespondActivityTaskFailedRequest = RespondActivityTaskFailedRequest()
+    respond.task_token = task_token
+    respond.identity = WorkflowService.get_identity()
+    respond.details = json.dumps({
+        "detailMessage": f"Python error: {type(ex).__name__}({ex})",
+        "class": "java.lang.Exception"
+    })
+    respond.reason = "java.lang.Exception"
+    _, error = service.respond_activity_task_failed(respond)
+    return error
+
+
+def complete(service, task_token, return_value: object) -> Optional[Exception]:
+    respond = RespondActivityTaskCompletedRequest()
+    respond.task_token = task_token
+    respond.result = json.dumps(return_value)
+    respond.identity = WorkflowService.get_identity()
+    _, error = service.respond_activity_task_completed(respond)
+    return error
