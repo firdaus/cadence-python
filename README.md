@@ -38,6 +38,7 @@ Post 2.0:
 - [ ] Timers
 - [ ] Cancellation Scopes
 - [ ] Child Workflows
+- [ ] Explicit activity ids for activity invocations
 
 ## Installation
 
