@@ -29,6 +29,9 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [x] UUID
 - [ ] Workflow Versioning
 
+1.1
+- [ ] ActivityStub and Workflow.newUntypedActivityStub
+
 2.0
 - [ ] Sticky workflows
 
