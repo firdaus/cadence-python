@@ -33,6 +33,7 @@ version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ Mar
 1.1
 - [ ] ActivityStub and Workflow.newUntypedActivityStub
 - [ ] Classes as arguments and return values to/from activity and workflow methods
+- [ ] WorkflowStub and WorkflowClient.newUntypedWorkflowStub
 
 2.0
 - [ ] Sticky workflows
