@@ -5,7 +5,7 @@
 ## Status / TODO
 
 cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
-version is targeted to be released in ~~September of 2019~~ January 2020.
+version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ March 2020.
 
 - [x] Tchannel implementation
 - [x] Python-friendly wrapper around Cadence's Thrift API
@@ -14,21 +14,26 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 - [x] Create workflows
 - [x] Workflow execution in coroutines
 - [x] Invoke activities from workflows
-- [ ] CompletionClient
-- [ ] Activity hearbeat, getHeartbeatDetails and doNotCompleteOnReturn
-- [ ] Activity retry
+- [x] ActivityCompletionClient heartbeat, complete, complete_exceptionally
+- [x] Activity heartbeat, getHeartbeatDetails and doNotCompleteOnReturn
+- [x] Activity retry
 - [x] Activity getDomain(), getTaskToken(), getWorkflowExecution()
 - [x] Signals
 - [ ] Queries
 - [x] Async workflow execution
 - [x] await
 - [x] now (currentTimeMillis)
-- [ ] Timers
 - [x] Sleep
 - [ ] Loggers
 - [x] newRandom
 - [x] UUID
 - [ ] Workflow Versioning
+- [ ] WorkflowClient.newWorkflowStub(Class workflowInterface, String workflowId);
+
+1.1
+- [ ] ActivityStub and Workflow.newUntypedActivityStub
+- [ ] Classes as arguments and return values to/from activity and workflow methods
+- [ ] WorkflowStub and WorkflowClient.newUntypedWorkflowStub
 
 2.0
 - [ ] Sticky workflows
@@ -36,8 +41,10 @@ version is targeted to be released in ~~September of 2019~~ January 2020.
 Post 2.0:
 - [ ] sideEffect/mutableSideEffect
 - [ ] Parallel activity execution
+- [ ] Timers
 - [ ] Cancellation Scopes
 - [ ] Child Workflows
+- [ ] Explicit activity ids for activity invocations
 
 ## Installation
 
