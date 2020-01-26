@@ -24,10 +24,11 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     RespondDecisionTaskCompletedRequest, \
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
-    CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes
+    CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes, \
+    FailWorkflowExecutionDecisionAttributes
 from cadence.conversions import json_to_args
 from cadence.decisions import DecisionId, DecisionTarget
-from cadence.exception_handling import deserialize_exception
+from cadence.exception_handling import serialize_exception, deserialize_exception
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, SignalNotFound
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
@@ -193,7 +194,6 @@ class WorkflowMethodTask(ITask):
     workflow_type: WorkflowType = None
     workflow_instance: object = None
     ret_value: object = None
-    exception_thrown: BaseException = None
 
     def __post_init__(self):
         logger.debug(f"[task-{self.task_id}] Created")
@@ -208,7 +208,7 @@ class WorkflowMethodTask(ITask):
         except Exception as ex:
             logger.error(
                 f"Initialization of Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
-            self.exception_thrown = ex
+            self.decider.fail_workflow_execution(ex)
             self.status = Status.DONE
 
     async def workflow_main(self):
@@ -221,8 +221,9 @@ class WorkflowMethodTask(ITask):
 
         if self.workflow_type.name not in self.worker.workflow_methods:
             self.status = Status.DONE
-            self.exception_thrown = WorkflowTypeNotFound(self.workflow_type.name)
+            ex = WorkflowTypeNotFound(self.workflow_type.name)
             logger.error(f"Workflow type not found: {self.workflow_type.name}")
+            self.decider.fail_workflow_execution(ex)
             return
 
         cls, workflow_proc = self.worker.workflow_methods[self.workflow_type.name]
@@ -238,7 +239,7 @@ class WorkflowMethodTask(ITask):
         except Exception as ex:
             logger.error(
                 f"Workflow {self.workflow_type.name}({str(self.workflow_input)[1:-1]}) failed", exc_info=1)
-            self.exception_thrown = ex
+            self.decider.fail_workflow_execution(ex)
         finally:
             self.status = Status.DONE
 
@@ -519,6 +520,18 @@ class ReplayDecider:
         attr.result = json.dumps(ret_value)
         decision.complete_workflow_execution_decision_attributes = attr
         decision.decision_type = DecisionType.CompleteWorkflowExecution
+        decision_id = DecisionId(DecisionTarget.SELF, 0)
+        self.add_decision(decision_id, CompleteWorkflowStateMachine(decision_id, decision))
+        self.completed = True
+
+    def fail_workflow_execution(self, exception):
+        # PORT: addAllMissingVersionMarker(false, Optional.empty());
+        decision = Decision()
+        fail_attributes = FailWorkflowExecutionDecisionAttributes()
+        fail_attributes.reason = "WorkflowFailureException"
+        fail_attributes.details = serialize_exception(exception)
+        decision.fail_workflow_execution_decision_attributes = fail_attributes
+        decision.decision_type = DecisionType.FailWorkflowExecution
         decision_id = DecisionId(DecisionTarget.SELF, 0)
         self.add_decision(decision_id, CompleteWorkflowStateMachine(decision_id, decision))
         self.completed = True

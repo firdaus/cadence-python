@@ -8,12 +8,15 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
+from six import reraise
+
 from cadence.activity import ActivityCompletionClient
 from cadence.activity_method import RetryParameters
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest
 from cadence.conversions import args_to_json
+from cadence.exception_handling import deserialize_exception
 from cadence.workflowservice import WorkflowService
 
 
@@ -116,9 +119,13 @@ class WorkflowClient:
                 return json.loads(attributes.result)
             elif history_event.event_type == EventType.WorkflowExecutionFailed:
                 attributes = history_event.workflow_execution_failed_event_attributes
-                details: Dict = json.loads(attributes.details)
-                detail_message = details.get("detailMessage", "")
-                raise WorkflowExecutionFailedException(attributes.reason, details=details, detail_message=detail_message)
+                if attributes.reason == "WorkflowFailureException":
+                    exception = deserialize_exception(attributes.details)
+                    reraise(type(exception), exception, exception.__traceback__)
+                else:
+                    details: Dict = json.loads(attributes.details)
+                    detail_message = details.get("detailMessage", "")
+                    raise WorkflowExecutionFailedException(attributes.reason, details=details, detail_message=detail_message)
             elif history_event.event_type == EventType.WorkflowExecutionTimedOut:
                 raise WorkflowExecutionTimedOutException()
             elif history_event.event_type == EventType.WorkflowExecutionTerminated:
