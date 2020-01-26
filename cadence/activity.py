@@ -5,6 +5,7 @@ from typing import Optional
 
 from cadence.cadence_types import WorkflowExecution, RecordActivityTaskHeartbeatRequest, ActivityType, \
     PollForActivityTaskResponse, RespondActivityTaskFailedRequest, RespondActivityTaskCompletedRequest
+from cadence.exception_handling import serialize_exception
 from cadence.exceptions import ActivityCancelledException
 from cadence.workflowservice import WorkflowService
 
@@ -138,11 +139,8 @@ def complete_exceptionally(service, task_token, ex: Exception) -> Optional[Excep
     respond: RespondActivityTaskFailedRequest = RespondActivityTaskFailedRequest()
     respond.task_token = task_token
     respond.identity = WorkflowService.get_identity()
-    respond.details = json.dumps({
-        "detailMessage": f"Python error: {type(ex).__name__}({ex})",
-        "class": "java.lang.Exception"
-    })
-    respond.reason = "java.lang.Exception"
+    respond.reason = "ActivityFailureException"
+    respond.details = serialize_exception(ex)
     _, error = service.respond_activity_task_failed(respond)
     return error
 
