@@ -335,14 +335,11 @@ class DecisionContext:
         scheduled_event_id = self.decider.schedule_activity_task(schedule=attr)
         future = self.decider.event_loop.create_future()
         self.scheduled_activities[scheduled_event_id] = future
-        await future
+        try:
+            await future
+        except ActivityTaskFailedException as exception:
+            raise exception.cause
         assert future.done()
-        exception = future.exception()
-        if exception:
-            if isinstance(exception, ActivityTaskFailedException):
-                raise exception.cause
-            else:
-                raise exception
         raw_bytes = future.result()
         return json.loads(str(raw_bytes, "utf-8"))
 
