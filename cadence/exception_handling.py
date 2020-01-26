@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict
+import traceback
 
 import tblib
 
@@ -38,11 +38,11 @@ def import_class_from_string(path):
 
 def serialize_exception(ex: Exception):
     exception_cls_name: str = exception_class_fqn(ex)
-    traceback: Dict = tblib.Traceback(ex.__traceback__).to_dict()
+    tb = "".join(traceback.format_exception(type(ex), ex, ex.__traceback__))
     details = json.dumps({
         "class": exception_cls_name,
         "args": ex.args,
-        "traceback": traceback,
+        "traceback": tb,
         "source": THIS_SOURCE
     })
     return details
@@ -58,8 +58,8 @@ def deserialize_exception(details) -> Exception:
         try:
             klass = import_class_from_string(exception_cls_name)
             exception = klass(*details_dict["args"])
-            traceback = tblib.Traceback.from_dict(details_dict["traceback"])
-            exception.with_traceback(traceback.as_traceback())
+            t = tblib.Traceback.from_string(details_dict["traceback"])
+            exception.with_traceback(t.as_traceback())
         except Exception as e:
             exception = None
             logger.error("Failed to deserialize exception (details=%s) cause=%r", details_dict, e)

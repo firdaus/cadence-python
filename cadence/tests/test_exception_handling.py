@@ -1,4 +1,7 @@
 import json
+import traceback
+
+import tblib
 
 from cadence.exception_handling import serialize_exception, deserialize_exception, THIS_SOURCE, ExternalException
 
@@ -7,10 +10,26 @@ class TestException(Exception):
     pass
 
 
+def a():
+    b()
+
+
+def b():
+    c()
+
+
+def c():
+    d()
+
+
+def d():
+    raise TestException("here")
+
+
 def test_serialize_deserialize_exception():
     try:
-        raise TestException("here")
-    except Exception as e:
+        a()
+    except TestException as e:
         ex = e
 
     details = serialize_exception(ex)
@@ -34,4 +53,3 @@ def test_deserialize_unknown_exception():
     exception = deserialize_exception(details)
     assert isinstance(exception, ExternalException)
     assert exception.details == details_dict
-
