@@ -10,16 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class ExternalException(Exception):
-    def __init__(self, reason, details):
-        super().__init__(reason, details)
-
-    @property
-    def reason(self):
-        return self.args[0]
+    def __init__(self, details):
+        super().__init__(details)
 
     @property
     def details(self):
-        return self.args[1]
+        return self.args[0]
 
 
 def exception_class_fqn(o):
@@ -40,35 +36,35 @@ def import_class_from_string(path):
     return klass
 
 
-def serialize_exception(ex):
-    reason: str = exception_class_fqn(ex)
+def serialize_exception(ex: Exception):
+    exception_cls_name: str = exception_class_fqn(ex)
     traceback: Dict = tblib.Traceback(ex.__traceback__).to_dict()
     details = json.dumps({
-        "repr": repr(ex),
+        "class": exception_cls_name,
+        "args": ex.args,
         "traceback": traceback,
         "source": THIS_SOURCE
     })
-    return reason, details
+    return details
 
 
-def deserialize_exception(reason, details) -> Exception:
-    details = json.loads(details)
-    source = details.get("source")
+def deserialize_exception(details) -> Exception:
     exception: Exception = None
+    details_dict = json.loads(details)
+    source = details_dict.get("source")
+    exception_cls_name: str = details_dict.get("class")
 
-    if source == THIS_SOURCE:
+    if source == THIS_SOURCE and exception_cls_name:
         try:
-            klass = import_class_from_string(reason)
-            r: str = details["repr"]
-            args = r[r.index("("):]
-            exception = eval("klass" + args)
-            traceback = tblib.Traceback.from_dict(details["traceback"])
+            klass = import_class_from_string(exception_cls_name)
+            exception = klass(*details_dict["args"])
+            traceback = tblib.Traceback.from_dict(details_dict["traceback"])
             exception.with_traceback(traceback.as_traceback())
         except Exception as e:
             exception = None
-            logger.error("Failed to deserialize exception (reason=%s details=%s) cause=%r", reason, details, e)
+            logger.error("Failed to deserialize exception (details=%s) cause=%r", details_dict, e)
 
     if not exception:
-        return ExternalException(reason, details)
+        return ExternalException(details_dict)
     else:
         return exception
