@@ -1,3 +1,5 @@
+import traceback
+
 from cadence.workerfactory import WorkerFactory
 from cadence.activity_method import activity_method, RetryParameters
 from cadence.workflow import workflow_method, Workflow, WorkflowClient
@@ -24,7 +26,7 @@ class GreetingActivitiesImpl:
         self.details = []
 
     def compose_greeting(self, greeting: str, name: str):
-        raise ComposeGreetingException("Failed to compose greeting")
+        raise ComposeGreetingException("Failed to compose greeting") # SOURCE OF EXCEPTION
 
 
 class TestActivityExceptionWorkflow:
@@ -64,6 +66,9 @@ def test_workflow_activity_exception():
     assert exception_caught
     assert isinstance(exception_caught, ComposeGreetingException)
     assert exception_caught.args == ("Failed to compose greeting",)
+
+    tb = "".join(traceback.format_exception(type(ComposeGreetingException), exception_caught, exception_caught.__traceback__))
+    assert "SOURCE OF EXCEPTION" in tb
 
     print("Stopping workers")
     worker.stop()

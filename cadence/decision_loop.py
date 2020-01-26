@@ -339,7 +339,9 @@ class DecisionContext:
         try:
             await future
         except ActivityTaskFailedException as exception:
-            raise exception.cause
+            from six import reraise
+            cause = exception.cause
+            reraise(type(cause), cause, cause.__traceback__)
         assert future.done()
         raw_bytes = future.result()
         return json.loads(str(raw_bytes, "utf-8"))
