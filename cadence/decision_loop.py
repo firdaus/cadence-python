@@ -27,6 +27,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes
 from cadence.conversions import json_to_args
 from cadence.decisions import DecisionId, DecisionTarget
+from cadence.exception_handling import deserialize_exception
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, SignalNotFound
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
@@ -338,7 +339,10 @@ class DecisionContext:
         assert future.done()
         exception = future.exception()
         if exception:
-            raise exception
+            if isinstance(exception, ActivityTaskFailedException):
+                raise exception.cause
+            else:
+                raise exception
         raw_bytes = future.result()
         return json.loads(str(raw_bytes, "utf-8"))
 
@@ -377,7 +381,7 @@ class DecisionContext:
             future = self.scheduled_activities.get(attr.scheduled_event_id)
             if future:
                 self.scheduled_activities.pop(attr.scheduled_event_id)
-                ex = ActivityTaskFailedException(attr.reason, attr.details)
+                ex = ActivityTaskFailedException(attr.reason, deserialize_exception(attr.details))
                 future.set_exception(ex)
             else:
                 raise NonDeterministicWorkflowException(
@@ -423,7 +427,7 @@ class DecisionContext:
 
     def random_uuid(self) -> uuid.UUID:
         return uuid.uuid3(uuid.UUID(self.current_run_id), str(self.decider.get_and_increment_next_id()))
-    
+
     def new_random(self) -> random.Random:
         random_uuid = self.random_uuid()
         lsb = random_uuid.bytes[:8]

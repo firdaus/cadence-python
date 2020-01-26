@@ -19,10 +19,10 @@ class NonDeterministicWorkflowException(BaseException):
 
 class ActivityTaskFailedException(Exception):
 
-    def __init__(self, reason: str, details: bytes) -> None:
+    def __init__(self, reason: str, cause: Exception) -> None:
         super().__init__(reason)
         self.reason = reason
-        self.details = details
+        self.cause = cause
 
 
 class ActivityTaskTimeoutException(Exception):
