@@ -17,6 +17,7 @@ from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionR
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest
 from cadence.conversions import args_to_json
 from cadence.exception_handling import deserialize_exception
+from cadence.exceptions import WorkflowFailureException
 from cadence.workflowservice import WorkflowService
 
 
@@ -75,6 +76,12 @@ class WorkflowStub:
 
 
 @dataclass
+class WorkflowExecutionContext:
+    workflow_type: str
+    workflow_execution: WorkflowExecution
+
+
+@dataclass
 class WorkflowClient:
     service: WorkflowService
     domain: domain
@@ -87,7 +94,7 @@ class WorkflowClient:
         return cls(service=service, domain=domain, options=options)
 
     @classmethod
-    def start(cls, stub_fn: Callable, *args) -> WorkflowExecution:
+    def start(cls, stub_fn: Callable, *args) -> WorkflowExecutionContext:
         stub = stub_fn.__self__
         assert stub._workflow_client is not None
         assert stub_fn._workflow_method is not None
@@ -105,9 +112,10 @@ class WorkflowClient:
         stub_cls = type(cls.__name__, (WorkflowStub,), attrs)
         return stub_cls()
 
-    def wait_for_close(self, execution: WorkflowExecution) -> object:
+    def wait_for_close(self, context: WorkflowExecutionContext) -> object:
         while True:
-            history_request = create_close_history_event_request(self, execution.workflow_id, execution.run_id)
+            history_request = create_close_history_event_request(self, context.workflow_execution.workflow_id,
+                                                                 context.workflow_execution.run_id)
             history_response, err = self.service.get_workflow_execution_history(history_request)
             if err:
                 raise Exception(err)
@@ -121,7 +129,8 @@ class WorkflowClient:
                 attributes = history_event.workflow_execution_failed_event_attributes
                 if attributes.reason == "WorkflowFailureException":
                     exception = deserialize_exception(attributes.details)
-                    reraise(type(exception), exception, exception.__traceback__)
+                    raise WorkflowFailureException(workflow_type=context.workflow_type,
+                                                   execution=context.execution) from exception
                 else:
                     details: Dict = json.loads(attributes.details)
                     detail_message = details.get("detailMessage", "")
@@ -141,20 +150,20 @@ class WorkflowClient:
         return ActivityCompletionClient(self.service)
 
 
-def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None, stub_instance: object = None) -> WorkflowExecution:
+def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None, stub_instance: object = None) -> WorkflowExecutionContext:
     start_request = create_start_workflow_request(workflow_client, wm, args)
     start_response, err = workflow_client.service.start_workflow(start_request)
     if err:
         raise Exception(err)
     execution = WorkflowExecution(workflow_id=start_request.workflow_id, run_id=start_response.run_id)
     stub_instance._execution = execution
-    return execution
+    return WorkflowExecutionContext(workflow_type=wm._name, workflow_execution=execution)
 
 
 def exec_workflow_sync(workflow_client: WorkflowClient, wm: WorkflowMethod, args: List,
                        workflow_options: WorkflowOptions = None, stub_instance: object = None):
-    execution: WorkflowExecution = exec_workflow(workflow_client, wm, args, workflow_options=workflow_options, stub_instance=stub_instance)
-    return workflow_client.wait_for_close(execution)
+    execution_context: WorkflowExecutionContext = exec_workflow(workflow_client, wm, args, workflow_options=workflow_options, stub_instance=stub_instance)
+    return workflow_client.wait_for_close(execution_context)
 
 
 def exec_signal(workflow_client: WorkflowClient, sm: SignalMethod, args, stub_instance: object = None):
