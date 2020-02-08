@@ -30,7 +30,7 @@ from cadence.conversions import json_to_args
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exception_handling import serialize_exception, deserialize_exception
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
-    ActivityTaskTimeoutException, SignalNotFound
+    ActivityTaskTimeoutException, SignalNotFound, ActivityFailureException
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
     TimerDecisionStateMachine
 from cadence.tchannel import TChannelException
@@ -338,10 +338,18 @@ class DecisionContext:
         self.scheduled_activities[scheduled_event_id] = future
         try:
             await future
-        except ActivityTaskFailedException as exception:
-            from six import reraise
-            cause = exception.cause
-            reraise(type(cause), cause, cause.__traceback__)
+        except CancelledError as e:
+            logger.debug("Coroutine cancelled (expected)")
+            raise e
+        except Exception as ex:
+            pass
+        ex = future.exception()
+        if ex:
+            activity_failure = ActivityFailureException(scheduled_event_id,
+                                                        parameters.activity_type.name,
+                                                        parameters.activity_id,
+                                                        serialize_exception(ex))
+            raise activity_failure
         assert future.done()
         raw_bytes = future.result()
         return json.loads(str(raw_bytes, "utf-8"))
@@ -381,7 +389,8 @@ class DecisionContext:
             future = self.scheduled_activities.get(attr.scheduled_event_id)
             if future:
                 self.scheduled_activities.pop(attr.scheduled_event_id)
-                ex = ActivityTaskFailedException(attr.reason, deserialize_exception(attr.details))
+                # TODO: attr.reason - what should we do with it?
+                ex = deserialize_exception(attr.details)
                 future.set_exception(ex)
             else:
                 raise NonDeterministicWorkflowException(

@@ -17,7 +17,7 @@ from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionR
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest
 from cadence.conversions import args_to_json
 from cadence.exception_handling import deserialize_exception
-from cadence.exceptions import WorkflowFailureException
+from cadence.exceptions import WorkflowFailureException, ActivityFailureException
 from cadence.workflowservice import WorkflowService
 
 
@@ -129,8 +129,10 @@ class WorkflowClient:
                 attributes = history_event.workflow_execution_failed_event_attributes
                 if attributes.reason == "WorkflowFailureException":
                     exception = deserialize_exception(attributes.details)
+                    if isinstance(exception, ActivityFailureException):
+                        exception.set_cause()
                     raise WorkflowFailureException(workflow_type=context.workflow_type,
-                                                   execution=context.execution) from exception
+                                                   execution=context.workflow_execution) from exception
                 else:
                     details: Dict = json.loads(attributes.details)
                     detail_message = details.get("detailMessage", "")
