@@ -1,5 +1,6 @@
 import traceback
 
+from cadence.exceptions import WorkflowFailureException
 from cadence.workerfactory import WorkerFactory
 from cadence.activity_method import activity_method, RetryParameters
 from cadence.workflow import workflow_method, Workflow, WorkflowClient
@@ -40,16 +41,15 @@ def test_workflow_workflow_exception():
     exception = None
     try:
         workflow.get_greetings("Bob")
-    except GreetingException as ex:
+    except WorkflowFailureException as ex:
         exception_caught = True
         exception = ex
 
     assert exception_caught
-    assert isinstance(exception, GreetingException)
     assert exception.__traceback__
-    tb = "".join(traceback.format_exception(type(GreetingException), exception, exception.__traceback__))
+    tb = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
     assert "get_greetings" in tb
     assert "Impl method" in tb
 
     print("Stopping workers")
-    worker.stop()
+    worker.stop(background=True)
