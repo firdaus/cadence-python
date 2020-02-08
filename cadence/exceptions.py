@@ -79,6 +79,12 @@ class ActivityFailureException(ActivityException):
             cause_ex = deserialize_exception(self.cause)
             self.__cause__ = cause_ex
 
+    def get_cause(self):
+        if self.cause:
+            return deserialize_exception(self.cause)
+        else:
+            return None
+
 
 @dataclass
 class WorkflowException(Exception):

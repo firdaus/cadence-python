@@ -1,10 +1,11 @@
 import traceback
 
+from cadence.activity_method import activity_method
+from cadence.exceptions import ActivityFailureException, WorkflowFailureException
 from cadence.workerfactory import WorkerFactory
-from cadence.activity_method import activity_method, RetryParameters
 from cadence.workflow import workflow_method, Workflow, WorkflowClient
 
-TASK_LIST = "TestActivityException"
+TASK_LIST = "TestWorkflowActivityException"
 DOMAIN = "sample"
 
 
@@ -35,7 +36,7 @@ class TestActivityExceptionWorkflow:
         raise NotImplementedError
 
 
-exception_caught = None
+exception_caught: Exception = None
 
 
 class TestActivityExceptionWorkflowImpl(TestActivityExceptionWorkflow):
@@ -46,9 +47,10 @@ class TestActivityExceptionWorkflowImpl(TestActivityExceptionWorkflow):
     async def get_greetings(self, name):
         global exception_caught
         try:
-            await self.greeting_activities.compose_greeting("Hello", name)
-        except ComposeGreetingException as ex:
+            await self.greeting_activities.compose_greeting("Hello", name)  # WORKFLOW METHOD INVOKING ACTIVITY
+        except ActivityFailureException as ex:
             exception_caught = ex
+            raise ex
 
 
 def test_workflow_activity_exception():
@@ -62,13 +64,39 @@ def test_workflow_activity_exception():
     client = WorkflowClient.new_client(domain=DOMAIN)
     workflow: TestActivityExceptionWorkflow = client.new_workflow_stub(TestActivityExceptionWorkflow)
 
-    workflow.get_greetings("Bob")
-    assert exception_caught
-    assert isinstance(exception_caught, ComposeGreetingException)
-    assert exception_caught.args == ("Failed to compose greeting",)
+    workflow_ex = None
+    try:
+        workflow.get_greetings("Bob")
+    except Exception as ex:
+        workflow_ex = ex
 
-    tb = "".join(traceback.format_exception(type(ComposeGreetingException), exception_caught, exception_caught.__traceback__))
+    assert isinstance(workflow_ex, WorkflowFailureException)
+    assert isinstance(workflow_ex.__cause__, ActivityFailureException)
+    assert isinstance(workflow_ex.__cause__.__cause__, ComposeGreetingException)
+
+    assert exception_caught
+    assert isinstance(exception_caught, ActivityFailureException)
+    assert isinstance(exception_caught.get_cause(), ComposeGreetingException)
+    exception_caught.set_cause()
+    cause = exception_caught.__cause__
+    assert isinstance(cause, ComposeGreetingException)
+    assert cause.args == ("Failed to compose greeting",)
+
+    tb = "".join(traceback.format_exception(type(cause), cause, cause.__traceback__))
     assert "SOURCE OF EXCEPTION" in tb
+
+    tb = "".join(traceback.format_exception(type(exception_caught), exception_caught, exception_caught.__traceback__))
+    assert "SOURCE OF EXCEPTION" in tb
+    assert "WORKFLOW METHOD INVOKING ACTIVITY" in tb
+
+    tb = "".join(traceback.format_exception(type(workflow_ex), workflow_ex, workflow_ex.__traceback__))
+    assert "SOURCE OF EXCEPTION" in tb
+    assert "WORKFLOW METHOD INVOKING ACTIVITY" in tb
 
     print("Stopping workers")
     worker.stop()
+
+
+if __name__ == "__main__":
+    test_workflow_activity_exception()
+
