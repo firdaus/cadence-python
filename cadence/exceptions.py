@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from cadence.cadence_types import TimeoutType, ActivityType, WorkflowExecution
+from cadence.exception_handling import deserialize_exception
 
 
 class IllegalStateException(BaseException):
@@ -54,25 +55,29 @@ class ActivityCancelledException(Exception):
     pass
 
 
-@dataclass
 class WorkflowOperationException(Exception):
-    event_id: int = None
+    def __init__(self, event_id: int):
+        self.event_id = event_id
 
 
-@dataclass
 class ActivityException(WorkflowOperationException):
-    activity_type: ActivityType = None
-    activity_id: str = ""
-
-    def __str__(self):
-        return f'{type(self).__name__}  ActivityType="{self.activity_type.name}", ActivityID="{self.activity_id}", ' \
-               f'EventID={self.event_id} '
+    def __init__(self, event_id: int, activity_type: str, activity_id: str):
+        super().__init__(event_id=event_id)
+        self.activity_type = activity_type
+        self.activity_id = activity_id
 
 
-@dataclass
 class ActivityFailureException(ActivityException):
-    attempt: int = None
-    backoff: int = 0
+    def __init__(self, event_id: int, activity_type: str, activity_id: str, cause: str):
+        super().__init__(event_id, activity_type, activity_id)
+        self.cause: str = cause
+        self.attempt: int = None
+        self.backoff: int = 0
+
+    def set_cause(self):
+        if self.cause:
+            cause_ex = deserialize_exception(self.cause)
+            self.__cause__ = cause_ex
 
 
 @dataclass
