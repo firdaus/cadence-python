@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple, List
 import inspect
 import threading
 import logging
@@ -63,6 +63,7 @@ class Worker:
     threads_started: int = 0
     threads_stopped: int = 0
     stop_requested: bool = False
+    service_instances: List[WorkflowService] = field(default_factory=list)
 
     def register_activities_implementation(self, activities_instance: object, activities_cls_name: str = None):
         cls_name = activities_cls_name if activities_cls_name else type(activities_instance).__name__
@@ -112,10 +113,14 @@ class Worker:
             decision_task_loop.start()
             self.threads_started += 1
 
-    def stop(self):
+    def stop(self, background=False):
         self.stop_requested = True
-        while self.threads_stopped != self.threads_started:
-            time.sleep(5)
+        if background:
+            for service in self.service_instances:
+                service.close()
+        else:
+            while self.threads_stopped != self.threads_started:
+                time.sleep(5)
 
     def is_stop_requested(self):
         return self.stop_requested
@@ -125,5 +130,8 @@ class Worker:
 
     def get_workflow_method(self, workflow_type_name: str) -> Tuple[type, Callable]:
         return self.workflow_methods[workflow_type_name]
+
+    def manage_service(self, service: WorkflowService):
+        self.service_instances.append(service)
 
 
