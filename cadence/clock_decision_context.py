@@ -2,10 +2,14 @@ import logging
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Any, Union
 
+import json
+
 from cadence.cadence_types import StartTimerDecisionAttributes, TimerFiredEventAttributes, HistoryEvent, \
     TimerCanceledEventAttributes
+from cadence.conversions import args_to_json
 from cadence.decision_loop import ReplayDecider
 from cadence.exceptions import CancellationException
+from cadence.marker import MarkerHandler
 from cadence.util import OpenRequestInfo
 
 logger = logging.getLogger(__name__)
@@ -14,6 +18,7 @@ SIDE_EFFECT_MARKER_NAME = "SideEffect"
 MUTABLE_SIDE_EFFECT_MARKER_NAME = "MutableSideEffect"
 VERSION_MARKER_NAME = "Version"
 
+DEFAULT_VERSION = -1
 
 @dataclass
 class ClockDecisionContext:
@@ -21,6 +26,10 @@ class ClockDecisionContext:
     scheduled_timers: Dict[int, OpenRequestInfo] = field(default_factory=dict)
     replay_current_time_milliseconds: int = -1
     replaying: bool = True
+    version_handler: MarkerHandler = None
+
+    def __post_init__(self):
+        self.version_handler = MarkerHandler(self.decider.decision_context, VERSION_MARKER_NAME)
 
     def set_replay_current_time_milliseconds(self, s):
         self.replay_current_time_milliseconds = s
@@ -72,6 +81,26 @@ class ClockDecisionContext:
         started_event_id: int = attributes.started_event_id
         if self.decider.handle_timer_canceled(event):
             self.timer_cancelled(started_event_id, None)
+
+    def get_version(self, change_id: str, min_supported: int, max_supported) -> int:
+        def func(stored):
+            if stored:
+                return None
+            else:
+                return json.dumps(max_supported)
+
+        result: bytes = self.version_handler.handle(change_id, func)
+        if not result:
+            return DEFAULT_VERSION
+
+        version: int = json.loads(result)
+        self.validate_version(change_id, version, min_supported, max_supported)
+        return version
+
+    def validate_version(self, change_id: str, version: int, min_supported: int, max_supported: int):
+        if version < min_supported or version > max_supported:
+            raise Exception(f"Version {version} of changeID {change_id} is not supported. "
+                            f"Supported version is between {min_supported} and {max_supported}.")
 
 
 @dataclass

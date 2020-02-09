@@ -108,6 +108,8 @@ def marker_recorded_event(marker_header_json):
 def decision_context(marker_recorded_event):
     decider = ReplayDecider(execution_id=Mock(), workflow_type=Mock(), worker=Mock())
     decision_context = DecisionContext(decider=decider)
+    decider.decision_context = decision_context
+    decider.decision_context.workflow_clock.version_handler.decision_context = decision_context
     decision_context.decider.decision_events = DecisionEvents(events=[],
                                                               decision_events=[marker_recorded_event],
                                                               replay=False,
