@@ -25,14 +25,14 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes, \
-    FailWorkflowExecutionDecisionAttributes
+    FailWorkflowExecutionDecisionAttributes, RecordMarkerDecisionAttributes, Header
 from cadence.conversions import json_to_args
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exception_handling import serialize_exception, deserialize_exception
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, SignalNotFound, ActivityFailureException
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
-    TimerDecisionStateMachine
+    TimerDecisionStateMachine, MarkerDecisionStateMachine
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
 from cadence.workflowservice import WorkflowService
@@ -121,6 +121,13 @@ class DecisionEvents:
     replay: bool
     replay_current_time_milliseconds: int
     next_decision_event_id: int
+
+    def get_optional_decision_event(self, event_id) -> HistoryEvent:
+        index = event_id - self.next_decision_event_id
+        if index < 0 or index >= len(self.decision_events):
+            return None
+        else:
+            return self.decision_events[index]
 
 
 class Status(Enum):
@@ -444,6 +451,17 @@ class DecisionContext:
         generator.seed(lsb, version=2)
         return generator
 
+    def record_marker(self, marker_name: str, header: Header, details: bytes):
+        marker = RecordMarkerDecisionAttributes()
+        marker.marker_name = marker_name
+        marker.header = header
+        marker.details = details
+        decision = Decision()
+        decision.decision_type = DecisionType.RecordMarker
+        decision.record_marker_decision_attributes = marker
+        next_decision_event_id = self.decider.next_decision_event_id
+        decision_id = DecisionId(DecisionTarget.MARKER, next_decision_event_id)
+        self.decider.add_decision(decision_id, MarkerDecisionStateMachine(id=decision_id, decision=decision))
 
 @dataclass
 class ReplayDecider:
@@ -691,6 +709,8 @@ class ReplayDecider:
         attributes = event.timer_fired_event_attributes
         self.decision_context.handle_timer_fired(attributes)
 
+    def get_optional_decision_event(self, event_id: int) -> HistoryEvent:
+        return self.decision_events.get_optional_decision_event(event_id)
 
 # noinspection PyUnusedLocal
 def noop(*args):

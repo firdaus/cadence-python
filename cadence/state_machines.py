@@ -291,3 +291,17 @@ class TimerDecisionStateMachine(DecisionStateMachineBase):
         decision.start_timer_decision_attributes = self.start_timer_attributes
         decision.decision_type = DecisionType.StartTimer
         return decision
+
+
+@dataclass
+class MarkerDecisionStateMachine(DecisionStateMachineBase):
+    decision: Decision = None
+
+    def get_decision(self) -> Optional[Decision]:
+        if self.state == DecisionState.CREATED:
+            return self.decision
+        else:
+            return None
+
+
+
