@@ -27,7 +27,7 @@ version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ Mar
 - [ ] Loggers
 - [x] newRandom
 - [x] UUID
-- [ ] Workflow Versioning
+- [x] Workflow Versioning
 - [ ] WorkflowClient.newWorkflowStub(Class workflowInterface, String workflowId);
 
 1.1
