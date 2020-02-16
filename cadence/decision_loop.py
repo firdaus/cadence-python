@@ -463,6 +463,9 @@ class DecisionContext:
         decision_id = DecisionId(DecisionTarget.MARKER, next_decision_event_id)
         self.decider.add_decision(decision_id, MarkerDecisionStateMachine(id=decision_id, decision=decision))
 
+    def get_version(self, change_id: str, min_supported: int, max_supported: int) -> int:
+        return self.workflow_clock.get_version(change_id, min_supported, max_supported)
+
 @dataclass
 class ReplayDecider:
     execution_id: str
@@ -715,6 +718,7 @@ class ReplayDecider:
     def get_optional_decision_event(self, event_id: int) -> HistoryEvent:
         return self.decision_events.get_optional_decision_event(event_id)
 
+
 # noinspection PyUnusedLocal
 def noop(*args):
     pass
@@ -740,7 +744,7 @@ event_handlers = {
     EventType.TimerStarted: ReplayDecider.handle_timer_started,
     EventType.TimerCanceled: on_timer_canceled,
     EventType.CancelTimerFailed: ReplayDecider.handle_cancel_timer_failed,
-    EventType.MarkerRecorded: ReplayDecider.handler_marker_recorded
+    EventType.MarkerRecorded: ReplayDecider.handle_marker_recorded
 }
 
 

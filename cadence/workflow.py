@@ -71,6 +71,15 @@ class Workflow:
         task: ITask = ITask.current()
         return task.decider.decision_context.new_random()
 
+    @staticmethod
+    def get_version(change_id: str, min_supported: int, max_supported: int):
+        from cadence.decision_loop import ITask
+        from cadence.decision_loop import DecisionContext
+        task: ITask = ITask.current()
+        decision_context: DecisionContext = task.decider.decision_context
+        return decision_context.get_version(change_id, min_supported, max_supported)
+
+
 class WorkflowStub:
     pass
 
