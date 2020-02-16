@@ -320,7 +320,7 @@ class DecisionContext:
 
     def __post_init__(self):
         if not self.workflow_clock:
-            self.workflow_clock = ClockDecisionContext(self.decider)
+            self.workflow_clock = ClockDecisionContext(self.decider, self)
 
     async def schedule_activity_task(self, parameters: ExecuteActivityParameters):
         attr = ScheduleActivityTaskDecisionAttributes()

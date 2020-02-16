@@ -7,7 +7,7 @@ import json
 from cadence.cadence_types import StartTimerDecisionAttributes, TimerFiredEventAttributes, HistoryEvent, \
     TimerCanceledEventAttributes
 from cadence.conversions import args_to_json
-from cadence.decision_loop import ReplayDecider
+from cadence.decision_loop import ReplayDecider, DecisionContext
 from cadence.exceptions import CancellationException
 from cadence.marker import MarkerHandler
 from cadence.util import OpenRequestInfo
@@ -25,13 +25,14 @@ DEFAULT_VERSION = -1
 @dataclass
 class ClockDecisionContext:
     decider: ReplayDecider
+    decision_context: DecisionContext
     scheduled_timers: Dict[int, OpenRequestInfo] = field(default_factory=dict)
     replay_current_time_milliseconds: int = -1
     replaying: bool = True
     version_handler: MarkerHandler = None
 
     def __post_init__(self):
-        self.version_handler = MarkerHandler(self.decider.decision_context, VERSION_MARKER_NAME)
+        self.version_handler = MarkerHandler(self.decision_context, VERSION_MARKER_NAME)
 
     def set_replay_current_time_milliseconds(self, s):
         self.replay_current_time_milliseconds = s
