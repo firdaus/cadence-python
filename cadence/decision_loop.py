@@ -709,6 +709,9 @@ class ReplayDecider:
         attributes = event.timer_fired_event_attributes
         self.decision_context.handle_timer_fired(attributes)
 
+    def handle_marker_recorded(self, event: HistoryEvent):
+        self.decision_context.workflow_clock.handle_marker_recorded(event)
+
     def get_optional_decision_event(self, event_id: int) -> HistoryEvent:
         return self.decision_events.get_optional_decision_event(event_id)
 
@@ -736,7 +739,8 @@ event_handlers = {
     EventType.TimerFired: ReplayDecider.handle_timer_fired,
     EventType.TimerStarted: ReplayDecider.handle_timer_started,
     EventType.TimerCanceled: on_timer_canceled,
-    EventType.CancelTimerFailed: ReplayDecider.handle_cancel_timer_failed
+    EventType.CancelTimerFailed: ReplayDecider.handle_cancel_timer_failed,
+    EventType.MarkerRecorded: ReplayDecider.handler_marker_recorded
 }
 
 

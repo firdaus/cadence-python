@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 SIDE_EFFECT_MARKER_NAME = "SideEffect"
 MUTABLE_SIDE_EFFECT_MARKER_NAME = "MutableSideEffect"
 VERSION_MARKER_NAME = "Version"
+LOCAL_ACTIVITY_MARKER_NAME = "LocalActivity"
+
 
 DEFAULT_VERSION = -1
 
@@ -101,6 +103,25 @@ class ClockDecisionContext:
         if version < min_supported or version > max_supported:
             raise Exception(f"Version {version} of changeID {change_id} is not supported. "
                             f"Supported version is between {min_supported} and {max_supported}.")
+
+    def handle_marker_recorded(self, event: HistoryEvent):
+        attributes = event.marker_recorded_event_attributes
+        name: str = attributes.marker_name
+        if SIDE_EFFECT_MARKER_NAME == name:
+            # TODO
+            # sideEffectResults.put(event.getEventId(), attributes.getDetails());
+            pass
+        elif LOCAL_ACTIVITY_MARKER_NAME == name:
+            # TODO
+            # handleLocalActivityMarker(attributes);
+            pass
+        elif MUTABLE_SIDE_EFFECT_MARKER_NAME != name and VERSION_MARKER_NAME != name:
+            # TODO
+            # if (log.isWarnEnabled()) {
+            #       log.warn("Unexpected marker: " + event);
+            # }
+            pass
+
 
 
 @dataclass
