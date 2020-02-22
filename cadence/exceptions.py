@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from cadence.cadence_types import TimeoutType, ActivityType, WorkflowExecution
+from cadence.cadence_types import TimeoutType, ActivityType, WorkflowExecution, WorkflowExecutionCloseStatus
 from cadence.exception_handling import deserialize_exception
 
 
@@ -40,6 +40,13 @@ class ActivityTaskTimeoutException(Exception):
 class SignalNotFound(Exception):
     pass
 
+
+class QueryNotFound(Exception):
+    pass
+
+
+class QueryDidNotComplete(Exception):
+    pass
 
 class CancellationException(Exception):
 
@@ -99,3 +106,21 @@ class WorkflowException(Exception):
 @dataclass
 class WorkflowFailureException(WorkflowException):
     decision_task_completed_event_id: int = None
+
+
+@dataclass
+class QueryFailureException(Exception):
+    query_type: str = None
+    execution: WorkflowExecution = None
+
+    def __str__(self):
+        return f'{type(self).__name__}: QueryType="{self.query_type}", ' \
+               f'WorkflowID="{self.execution.workflow_id}", RunID="{self.execution.run_id} '
+
+
+
+class QueryRejectedException(Exception):
+    close_status: WorkflowExecutionCloseStatus
+
+    def __init__(self, close_status: WorkflowExecutionCloseStatus):
+        self.close_status = close_status

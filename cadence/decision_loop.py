@@ -25,16 +25,18 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     CompleteWorkflowExecutionDecisionAttributes, Decision, DecisionType, RespondDecisionTaskCompletedResponse, \
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes, \
-    FailWorkflowExecutionDecisionAttributes, RecordMarkerDecisionAttributes, Header
-from cadence.conversions import json_to_args
+    FailWorkflowExecutionDecisionAttributes, RecordMarkerDecisionAttributes, Header, WorkflowQuery, \
+    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse
+from cadence.conversions import json_to_args, args_to_json
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exception_handling import serialize_exception, deserialize_exception
 from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowException, ActivityTaskFailedException, \
-    ActivityTaskTimeoutException, SignalNotFound, ActivityFailureException
+    ActivityTaskTimeoutException, SignalNotFound, ActivityFailureException, QueryNotFound, QueryDidNotComplete
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
     TimerDecisionStateMachine, MarkerDecisionStateMachine
 from cadence.tchannel import TChannelException
 from cadence.worker import Worker
+from cadence.workflow import QueryMethod
 from cadence.workflowservice import WorkflowService
 
 logger = logging.getLogger(__name__)
@@ -252,6 +254,47 @@ class WorkflowMethodTask(ITask):
 
     def get_workflow_instance(self):
         return self.workflow_instance
+
+
+@dataclass
+class QueryMethodTask(ITask):
+    task_id: str = None
+    workflow_instance: object = None
+    query_name: str = None
+    query_input: List = None
+    exception_thrown: BaseException = None
+    ret_value: object = None
+
+    def start(self):
+        logger.debug(f"[query-task-{self.task_id}-{self.query_name}] Created")
+        self.task = asyncio.get_event_loop().create_task(self.query_main())
+
+    async def query_main(self):
+        logger.debug(f"[query-task-{self.task_id}-{self.query_name}] Running")
+        current_task.set(self)
+
+        if not self.query_name in self.workflow_instance._query_methods:
+            self.status = Status.DONE
+            self.exception_thrown = QueryNotFound(self.query_name)
+            logger.error(f"Query not found: {self.query_name}")
+            return
+
+        query_proc = self.workflow_instance._query_methods[self.query_name]
+        self.status = Status.RUNNING
+
+        try:
+            logger.info(f"Invoking query {self.query_name}({str(self.query_input)[1:-1]})")
+            self.ret_value = await query_proc(self.workflow_instance, *self.query_input)
+            logger.info(
+                f"Query {self.query_name}({str(self.query_input)[1:-1]}) returned {self.ret_value}")
+        except CancelledError:
+            logger.debug("Coroutine cancelled (expected)")
+        except Exception as ex:
+            logger.error(
+                f"Query {self.query_name}({str(self.query_input)[1:-1]}) failed", exc_info=1)
+            self.exception_thrown = ex
+        finally:
+            self.status = Status.DONE
 
 
 @dataclass
@@ -718,6 +761,28 @@ class ReplayDecider:
     def get_optional_decision_event(self, event_id: int) -> HistoryEvent:
         return self.decision_events.get_optional_decision_event(event_id)
 
+    def query(self, decision_task: PollForDecisionTaskResponse, query: WorkflowQuery) -> bytes:
+        query_args = query.query_args
+        if query_args is None:
+            args = []
+        else:
+            args = json_to_args(query_args)
+        task = QueryMethodTask(task_id=self.execution_id,
+                               workflow_instance=self.workflow_task.workflow_instance,
+                               query_name=query.query_type,
+                               query_input=args,
+                               decider=self)
+        self.tasks.append(task)
+        task.start()
+        self.event_loop.run_event_loop_once()
+        if task.status == Status.DONE:
+            if task.exception_thrown:
+                raise task.exception_thrown
+            else:  # ret_value might be None, need to put it in else
+                return task.ret_value
+        else:
+            raise QueryDidNotComplete(f"Query method {query.query_type} with args {query.query_args} did not complete")
+
 
 # noinspection PyUnusedLocal
 def noop(*args):
@@ -774,8 +839,16 @@ class DecisionTaskLoop:
                 decision_task: PollForDecisionTaskResponse = self.poll()
                 if not decision_task:
                     continue
-                decisions = self.process_task(decision_task)
-                self.respond_decisions(decision_task.task_token, decisions)
+                if decision_task.query:
+                    try:
+                        result = self.process_query(decision_task)
+                        self.respond_query(decision_task.task_token, result, None)
+                    except Exception as ex:
+                        logger.error("Error")
+                        self.respond_query(decision_task.task_token, None, serialize_exception(ex))
+                else:
+                    decisions = self.process_task(decision_task)
+                    self.respond_decisions(decision_task.task_token, decisions)
         finally:
             # noinspection PyPep8,PyBroadException
             try:
@@ -814,6 +887,32 @@ class DecisionTaskLoop:
         decisions: List[Decision] = decider.decide(decision_task.history.events)
         decider.destroy()
         return decisions
+
+    def process_query(self, decision_task: PollForDecisionTaskResponse) -> bytes:
+        execution_id = str(decision_task.workflow_execution)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider.decide(decision_task.history.events)
+        try:
+            result = decider.query(decision_task, decision_task.query)
+            return json.dumps(result)
+        finally:
+            decider.destroy()
+
+    def respond_query(self, task_token: bytes, result: bytes = None, error_message: str = None):
+        service = self.service
+        request = RespondQueryTaskCompletedRequest()
+        request.task_token = task_token
+        if result:
+            request.query_result = result
+            request.completed_type = QueryTaskCompletedType.COMPLETED
+        else:
+            request.error_message = error_message
+            request.completed_type = QueryTaskCompletedType.FAILED
+        _, err = service.respond_query_task_completed(request)
+        if err:
+            logger.error("Error invoking RespondDecisionTaskCompleted: %s", err)
+        else:
+            logger.debug("RespondQueryTaskCompleted successful")
 
     def respond_decisions(self, task_token: bytes, decisions: List[Decision]):
         service = self.service

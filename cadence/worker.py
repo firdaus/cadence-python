@@ -6,7 +6,7 @@ import logging
 import time
 
 from cadence.conversions import camel_to_snake, snake_to_camel
-from cadence.workflow import WorkflowMethod, SignalMethod
+from cadence.workflow import WorkflowMethod, SignalMethod, QueryMethod
 from cadence.workflowservice import WorkflowService
 
 logger = logging.getLogger(__name__)
@@ -50,6 +50,11 @@ def _get_sm(cls: type, method_name: str) -> SignalMethod:
     return _find_metadata_field(cls, metadata_field, method_name)
 
 
+def _get_qm(cls: type, method_name: str) -> QueryMethod:
+    metadata_field = "_query_method"
+    return _find_metadata_field(cls, metadata_field, method_name)
+
+
 @dataclass
 class Worker:
     host: str = None
@@ -77,6 +82,8 @@ class Worker:
         cls_name = workflow_cls_name if workflow_cls_name else _find_interface_class(impl_cls).__name__
         if not hasattr(impl_cls, "_signal_methods"):
             impl_cls._signal_methods = {}
+        if not hasattr(impl_cls, "_query_methods"):
+            impl_cls._query_methods = {}
         for method_name, fn in inspect.getmembers(impl_cls, predicate=inspect.isfunction):
             wm: WorkflowMethod = _get_wm(impl_cls, method_name)
             if wm:
@@ -96,6 +103,14 @@ class Worker:
                     impl_cls._signal_methods[f'{cls_name}::{camel_to_snake(method_name)}'] = impl_fn
                     impl_cls._signal_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = impl_fn
                 continue
+            qm: QueryMethod = _get_qm(impl_cls, method_name)
+            if qm:
+                impl_fn = getattr(impl_cls, method_name)
+                impl_cls._query_methods[qm.name] = impl_fn
+                if "::" in qm.name:
+                    _, method_name = qm.name.split("::")
+                    impl_cls._query_methods[f'{cls_name}::{camel_to_snake(method_name)}'] = impl_fn
+                    impl_cls._query_methods[f'{cls_name}::{snake_to_camel(method_name)}'] = impl_fn
 
 
     def start(self):
