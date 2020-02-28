@@ -19,7 +19,7 @@ version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ Mar
 - [x] Activity retry
 - [x] Activity getDomain(), getTaskToken(), getWorkflowExecution()
 - [x] Signals
-- [ ] Queries
+- [x] Queries
 - [x] Async workflow execution
 - [x] await
 - [x] now (currentTimeMillis)
