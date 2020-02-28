@@ -151,8 +151,8 @@ def test_handle_replaying_get_from_history(decision_context):
     handler = MarkerHandler(decision_context=decision_context, marker_name="the-marker-name")
     handler.mutable_marker_results["the-id"] = MarkerResult(data=b'123', access_count=35)
     ret = handler.handle("the-id", callback)
-    assert ret == b'blah-blah'
-    assert len(decision_context.decider.decisions) == 1
+    assert ret == b'123'
+    assert len(decision_context.decider.decisions) == 0
 
 
 def test_handle_replaying_no_history(decision_context):
@@ -175,8 +175,8 @@ def test_handle_not_replaying_callback_returns_not_none(decision_context):
     handler = MarkerHandler(decision_context=decision_context, marker_name="the-marker-name")
     handler.mutable_marker_results["the-id"] = MarkerResult(data=b'123', access_count=35)
     ret = handler.handle("the-id", callback)
-    assert ret == b'456'
-    assert len(decision_context.decider.decisions) == 1
+    assert ret == b'123'
+    assert len(decision_context.decider.decisions) == 0
 
 
 def test_handle_not_replaying_callback_returns_none(decision_context):

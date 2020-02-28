@@ -9,7 +9,7 @@ from cadence.cadence_types import StartTimerDecisionAttributes, TimerFiredEventA
 from cadence.conversions import args_to_json
 from cadence.decision_loop import ReplayDecider, DecisionContext
 from cadence.exceptions import CancellationException
-from cadence.marker import MarkerHandler
+from cadence.marker import MarkerHandler, MarkerInterface, MarkerResult
 from cadence.util import OpenRequestInfo
 
 logger = logging.getLogger(__name__)
@@ -86,15 +86,14 @@ class ClockDecisionContext:
             self.timer_cancelled(started_event_id, None)
 
     def get_version(self, change_id: str, min_supported: int, max_supported) -> int:
-        def func(stored):
-            if stored:
-                return None
-            else:
-                return json.dumps(max_supported)
+        def func():
+            return json.dumps(max_supported)
 
         result: bytes = self.version_handler.handle(change_id, func)
-        if not result:
-            return DEFAULT_VERSION
+        if result is None:
+            result = json.dumps(DEFAULT_VERSION)
+            self.version_handler.set_data(change_id, result)
+            self.version_handler.mark_replayed(change_id)  # so that we don't ever emit a MarkerRecorded for this
 
         version: int = json.loads(result)
         self.validate_version(change_id, version, min_supported, max_supported)
@@ -106,6 +105,9 @@ class ClockDecisionContext:
                             f"Supported version is between {min_supported} and {max_supported}.")
 
     def handle_marker_recorded(self, event: HistoryEvent):
+        """
+        Will be executed more than once for the same event.
+        """
         attributes = event.marker_recorded_event_attributes
         name: str = attributes.marker_name
         if SIDE_EFFECT_MARKER_NAME == name:
@@ -116,7 +118,12 @@ class ClockDecisionContext:
             # TODO
             # handleLocalActivityMarker(attributes);
             pass
-        elif MUTABLE_SIDE_EFFECT_MARKER_NAME != name and VERSION_MARKER_NAME != name:
+        elif VERSION_MARKER_NAME == name:
+            marker_data = MarkerInterface.from_event_attributes(attributes)
+            change_id: str = marker_data.get_id()
+            data: bytes = marker_data.get_data()
+            self.version_handler.mutable_marker_results[change_id] = MarkerResult(data=data)
+        elif MUTABLE_SIDE_EFFECT_MARKER_NAME != name:
             # TODO
             # if (log.isWarnEnabled()) {
             #       log.warn("Unexpected marker: " + event);

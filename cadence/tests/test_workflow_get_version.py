@@ -11,8 +11,10 @@ DOMAIN = "sample"
 v1_hits = 0
 v2_hits = 0
 
-version_found_in_v2_step_1 = None
-version_found_in_v2_step_2 = None
+version_found_in_v2_step_1_0 = None
+version_found_in_v2_step_1_1 = None
+version_found_in_v2_step_2_0 = None
+version_found_in_v2_step_2_1 = None
 
 v2_done = False
 
@@ -41,13 +43,16 @@ class TestWorkflowGetVersionImplV2(TestWorkflowGetVersion):
 
     async def get_greetings(self):
         global v2_hits
-        global version_found_in_v2_step_1, version_found_in_v2_step_2
+        global version_found_in_v2_step_1_0, version_found_in_v2_step_1_1
+        global version_found_in_v2_step_2_0, version_found_in_v2_step_2_1
         global v2_done
         v2_hits += 1
 
-        version_found_in_v2_step_1 = Workflow.get_version("first-item", DEFAULT_VERSION, 2)
+        version_found_in_v2_step_1_0 = Workflow.get_version("first-item", DEFAULT_VERSION, 2)
+        version_found_in_v2_step_1_1 = Workflow.get_version("first-item", DEFAULT_VERSION, 2)
         await Workflow.sleep(60)
-        version_found_in_v2_step_2 = Workflow.get_version("first-item", DEFAULT_VERSION, 2)
+        version_found_in_v2_step_2_0 = Workflow.get_version("first-item", DEFAULT_VERSION, 2)
+        version_found_in_v2_step_2_1 = Workflow.get_version("first-item", DEFAULT_VERSION, 2)
         v2_done = True
 
 
@@ -74,8 +79,12 @@ def test_workflow_workflow_get_version():
 
     assert v1_hits == 1
     assert v2_hits == 1
-    assert version_found_in_v2_step_1 == DEFAULT_VERSION
-    assert version_found_in_v2_step_2 == 2
+    assert version_found_in_v2_step_1_0 == DEFAULT_VERSION
+    assert version_found_in_v2_step_1_1 == DEFAULT_VERSION
+    assert version_found_in_v2_step_2_0 == DEFAULT_VERSION
+    assert version_found_in_v2_step_2_1 == DEFAULT_VERSION
+
+    # TODO: Assert that there are no markers recorded
 
     print("Stopping workers")
     worker.stop(background=True)

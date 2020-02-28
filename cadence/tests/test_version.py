@@ -88,8 +88,8 @@ def version_decision_context(version_marker_recorded_event):
 def test_clock_decision_context_from_replay(version_decision_context):
     version_decision_context.workflow_clock.set_replaying(True)
     version = version_decision_context.workflow_clock.get_version("abc", 1, 5)
-    assert version == 4
-    assert len(version_decision_context.decider.decisions) == 1
+    assert version == -1
+    assert len(version_decision_context.decider.decisions) == 0
 
 
 def test_validate_version(version_decision_context):

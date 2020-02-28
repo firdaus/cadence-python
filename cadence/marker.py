@@ -70,6 +70,7 @@ class MarkerData(MarkerInterface):
 class MarkerResult:
     data: bytes = None
     access_count: int = 0
+    replayed = False
 
 
 @dataclass
@@ -80,29 +81,42 @@ class MarkerHandler:
 
     def record_mutable_marker(self, id: str, event_id: int, data: bytes, access_count: int):
         marker = MarkerData.create(id=id, event_id=event_id, data=data, access_count=access_count)
-        self.mutable_marker_results[id] = MarkerResult(data=data)
+        if id in self.mutable_marker_results:
+            self.mutable_marker_results[id].replayed = True
+        else:
+            self.mutable_marker_results[id] = MarkerResult(data=data)
         self.decision_context.record_marker(self.marker_name, marker.get_header(), data)
 
-    def handle(self, id: str, func) -> bytes:
-        result: MarkerResult = self.mutable_marker_results.get(id)
-        stored: bytes = None
-        if result:
-            stored = result.data
-        event_id = self.decision_context.decider.next_decision_event_id
-        access_count = 0 if result is None else result.access_count
-        if self.decision_context.is_replaying():
-            data: bytes = self.get_marker_data_from_history(event_id, id, access_count)
-            if data:
-                self.record_mutable_marker(id, event_id, data, access_count)
-                return data
-            return stored
-        to_store = func(stored)
-        if to_store:
-            data = to_store
-            self.record_mutable_marker(id, event_id, data, access_count)
-            return to_store
-        return stored
+    # Sets data without creating a decision - used when DEFAULT_VERSION is the implicit current version
+    def set_data(self, id, data: bytes):
+        self.mutable_marker_results[id] = MarkerResult(data=data)
 
+    def mark_replayed(self, id):
+        self.mutable_marker_results[id].replayed = True
+
+    def handle(self, id: str, func) -> Optional[bytes]:
+        event_id = self.decision_context.decider.next_decision_event_id
+        result: MarkerResult = self.mutable_marker_results.get(id)
+        if result or self.decision_context.is_replaying():
+            if result:
+                if self.decision_context.is_replaying() and not result.replayed:
+                    # Need to insert marker to ensure that event_id is incremented
+                    self.record_mutable_marker(id, event_id, result.data, 0)
+                return result.data
+            else:
+                return None
+        else:
+            to_store = func()
+            if to_store:
+                data = to_store
+                self.record_mutable_marker(id, event_id, data, 0)
+                return to_store
+            else:
+                # TODO: Should this ever happen? - at least for version it will never happen
+                pass
+
+    # This method is currently not being used - after adopting the version logic from the
+    # Golang client
     def get_marker_data_from_history(self, event_id: int, marker_id: str, expected_access_count: int) -> \
             Optional[bytes]:
         event: HistoryEvent = self.decision_context.decider.get_optional_decision_event(event_id)
