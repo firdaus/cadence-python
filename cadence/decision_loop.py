@@ -123,6 +123,12 @@ class DecisionEvents:
     replay: bool
     replay_current_time_milliseconds: int
     next_decision_event_id: int
+    markers: List[HistoryEvent] = field(default_factory=list)
+
+    def __post_init__(self):
+        for event in self.decision_events:
+            if event.event_type == EventType.MarkerRecorded:
+                self.markers.append(event)
 
     def get_optional_decision_event(self, event_id) -> HistoryEvent:
         index = event_id - self.next_decision_event_id
@@ -542,6 +548,9 @@ class ReplayDecider:
         self.decision_context.set_replay_current_time_milliseconds(decision_events.replay_current_time_milliseconds)
 
         self.handle_decision_task_started(decision_events)
+        for event in decision_events.markers:
+            if not event.marker_recorded_event_attributes.marker_name == LOCAL_ACTIVITY_MARKER_NAME:
+                self.process_event(event);
         for event in decision_events.events:
             self.process_event(event)
         if self.completed:
@@ -929,4 +938,4 @@ class DecisionTaskLoop:
             logger.debug("RespondDecisionTaskCompleted: %s", response)
 
 
-from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler
+from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler, LOCAL_ACTIVITY_MARKER_NAME
