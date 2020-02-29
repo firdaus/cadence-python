@@ -24,7 +24,7 @@ version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ Mar
 - [x] await
 - [x] now (currentTimeMillis)
 - [x] Sleep
-- [ ] Loggers
+- [x] Loggers
 - [x] newRandom
 - [x] UUID
 - [x] Workflow Versioning
