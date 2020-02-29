@@ -515,6 +515,12 @@ class DecisionContext:
     def get_version(self, change_id: str, min_supported: int, max_supported: int) -> int:
         return self.workflow_clock.get_version(change_id, min_supported, max_supported)
 
+    def get_logger(self, name) -> logging.Logger:
+        replay_aware_logger = logging.getLogger(name)
+        make_replay_aware(replay_aware_logger)
+        return replay_aware_logger
+
+
 @dataclass
 class ReplayDecider:
     execution_id: str
@@ -939,3 +945,4 @@ class DecisionTaskLoop:
 
 
 from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler, LOCAL_ACTIVITY_MARKER_NAME
+from cadence.replay_interceptor import make_replay_aware

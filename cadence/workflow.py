@@ -82,6 +82,12 @@ class Workflow:
         decision_context: DecisionContext = task.decider.decision_context
         return decision_context.get_version(change_id, min_supported, max_supported)
 
+    @staticmethod
+    def get_logger(name):
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.decision_context.get_logger(name)
+
 
 class WorkflowStub:
     pass
