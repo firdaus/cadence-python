@@ -133,10 +133,24 @@ class WorkflowClient:
         stub_cls = type(cls.__name__, (WorkflowStub,), attrs)
         return stub_cls()
 
+    def new_workflow_stub_from_workflow_id(self, cls: Type, workflow_id: str):
+        """
+        Use it to send signals or queries to a running workflow.
+        Do not call workflow methods on it
+        """
+        stub_instance = self.new_workflow_stub(cls)
+        execution = WorkflowExecution(workflow_id=workflow_id, run_id=None)
+        stub_instance._execution = execution
+        return stub_instance
+
     def wait_for_close(self, context: WorkflowExecutionContext) -> object:
+        return self.wait_for_close_with_workflow_id(workflow_id=context.workflow_execution.workflow_id,
+                                                    run_id=context.workflow_execution.run_id,
+                                                    workflow_type=context.workflow_type)
+
+    def wait_for_close_with_workflow_id(self, workflow_id: str, run_id: str = None, workflow_type: str = None):
         while True:
-            history_request = create_close_history_event_request(self, context.workflow_execution.workflow_id,
-                                                                 context.workflow_execution.run_id)
+            history_request = create_close_history_event_request(self, workflow_id, run_id)
             history_response, err = self.service.get_workflow_execution_history(history_request)
             if err:
                 raise Exception(err)
@@ -152,8 +166,9 @@ class WorkflowClient:
                     exception = deserialize_exception(attributes.details)
                     if isinstance(exception, ActivityFailureException):
                         exception.set_cause()
-                    raise WorkflowFailureException(workflow_type=context.workflow_type,
-                                                   execution=context.workflow_execution) from exception
+                    workflow_execution = WorkflowExecution(workflow_id=workflow_id, run_id=run_id)
+                    raise WorkflowFailureException(workflow_type=workflow_type,
+                                                   execution=workflow_execution) from exception
                 else:
                     details: Dict = json.loads(attributes.details)
                     detail_message = details.get("detailMessage", "")
