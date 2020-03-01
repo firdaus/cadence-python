@@ -7,6 +7,7 @@
 cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
 version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ March 2020.
 
+1.0
 - [x] Tchannel implementation
 - [x] Python-friendly wrapper around Cadence's Thrift API
 - [x] Author activities in Python
