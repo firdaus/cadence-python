@@ -37,6 +37,8 @@ version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ Mar
 - [ ] WorkflowStub and WorkflowClient.newUntypedWorkflowStub
 - [ ] Custom workflow ids through start() and new_workflow_stub()
 - [ ] ContinueAsNew
+- [ ] Compatibility with Java client
+- [ ] Compatibility with Golang client
 
 2.0
 - [ ] Sticky workflows
