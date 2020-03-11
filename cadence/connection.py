@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import getpass
 import os
 import socket
 from dataclasses import dataclass
@@ -194,7 +195,7 @@ class ThriftFunctionCall(ThriftArgScheme):
     @staticmethod
     def default_application_headers():
         return {
-            "user-name": os.environ.get("LOGNAME", os.getlogin()),
+            "user-name": getpass.getuser(),
             "host-name": socket.gethostname(),
             # Copied from Java client
             "cadence-client-library-version": "2.2.0",
