@@ -237,6 +237,7 @@ class TestDecideNextDecisionId(TestCase):
         worker.get_workflow_method = MagicMock(return_value=(DummyWorkflow, lambda *args: None))
         self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=worker)
         self.decider.event_loop = Mock()
+        self.decider.process_event = Mock()
 
     def test_first_decision_next_decision_id(self):
         self.decider.process_decision_events(self.decision_events)
