@@ -80,6 +80,7 @@ class ActivityMethodTest(TestCase):
 
         stub = HelloActivities()
         stub._decision_context = self.decision_context
+        stub._retry_parameters = None
 
         async def fn():
             await stub.hello()
@@ -100,6 +101,7 @@ class ActivityMethodTest(TestCase):
 
         stub = HelloActivities()
         stub._decision_context = self.decision_context
+        stub._retry_parameters = None
 
         async def fn():
             await stub.hello(1)
@@ -120,6 +122,7 @@ class ActivityMethodTest(TestCase):
 
         stub = HelloActivities()
         stub._decision_context = self.decision_context
+        stub._retry_parameters = None
 
         async def fn():
             await stub.hello(1, "one")
