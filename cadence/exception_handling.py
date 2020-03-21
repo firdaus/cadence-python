@@ -49,6 +49,9 @@ def serialize_exception(ex: Exception):
 
 
 def deserialize_exception(details) -> Exception:
+    """
+    TODO: Support built-in types like Exception
+    """
     exception: Exception = None
     details_dict = json.loads(details)
     source = details_dict.get("source")

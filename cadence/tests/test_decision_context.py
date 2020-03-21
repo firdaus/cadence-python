@@ -11,7 +11,7 @@ from cadence.cadence_types import ActivityType, ScheduleActivityTaskDecisionAttr
     TimeoutType
 from cadence.decision_loop import DecisionContext, ReplayDecider
 from cadence.exceptions import NonDeterministicWorkflowException, ActivityTaskFailedException, \
-    ActivityTaskTimeoutException
+    ActivityTaskTimeoutException, ActivityFailureException
 
 
 def run_once(loop):
@@ -87,16 +87,21 @@ class TestScheduleActivity(TestCase):
         self.assertFalse(self.task.done())
 
         future = self.context.scheduled_activities[20]
-        exception = Exception("thrown by activity")
+        exception = DummyUserLevelException("thrown by activity")
         future.set_exception(exception)
         run_once(self.event_loop)
         self.assertTrue(self.task.done())
 
         raised_exception = self.task.exception()
-        self.assertEqual(exception, raised_exception)
+        self.assertIsInstance(raised_exception, ActivityFailureException)
+        self.assertEqual(repr(exception), repr(raised_exception.get_cause()))
 
     def tearDown(self) -> None:
         self.task.cancel()
+
+
+class DummyUserLevelException(Exception):
+    pass
 
 
 class TestHandleActivityTaskEvents(TestCase):
