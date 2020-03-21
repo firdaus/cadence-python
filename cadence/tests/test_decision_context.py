@@ -10,6 +10,7 @@ from cadence.cadence_types import ActivityType, ScheduleActivityTaskDecisionAttr
     ActivityTaskCompletedEventAttributes, ActivityTaskFailedEventAttributes, ActivityTaskTimedOutEventAttributes, \
     TimeoutType
 from cadence.decision_loop import DecisionContext, ReplayDecider
+from cadence.exception_handling import ExternalException, serialize_exception
 from cadence.exceptions import NonDeterministicWorkflowException, ActivityTaskFailedException, \
     ActivityTaskTimeoutException, ActivityFailureException
 
@@ -140,13 +141,16 @@ class TestHandleActivityTaskEvents(TestCase):
         attr.scheduled_event_id = 20
         event.activity_task_failed_event_attributes = attr
         attr.reason = "the-reason"
-        attr.details = bytes("details", "utf-8")
+        ex = None
+        try:
+            raise DummyUserLevelException("abc")
+        except Exception as e:
+            ex = e
+        attr.details = serialize_exception(ex)
         self.context.handle_activity_task_failed(event)
         self.assertTrue(self.future.done())
         exception = self.future.exception()
-        self.assertIsInstance(exception, ActivityTaskFailedException)
-        self.assertEqual(attr.reason, exception.reason)
-        self.assertEqual(attr.details, exception.details)
+        self.assertIsInstance(exception, DummyUserLevelException)
         self.assertEqual(0, len(self.context.scheduled_activities))
 
     def test_activity_task_timed_out(self):
