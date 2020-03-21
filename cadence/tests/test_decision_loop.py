@@ -311,6 +311,7 @@ class TestReplayDecider(TestCase):
                                          replay_current_time_milliseconds=0,
                                          next_decision_event_id=5)
         self.decider.notify_decision_sent = MagicMock()
+        self.decider.process_event = Mock()
         self.decider.process_decision_events(decision_events)
         self.decider.notify_decision_sent.assert_called_once()
 
