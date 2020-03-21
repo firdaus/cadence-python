@@ -811,6 +811,7 @@ def on_timer_canceled(self: ReplayDecider, event: HistoryEvent):
 event_handlers = {
     EventType.WorkflowExecutionStarted: ReplayDecider.handle_workflow_execution_started,
     EventType.WorkflowExecutionCancelRequested: ReplayDecider.handle_workflow_execution_cancel_requested,
+    EventType.WorkflowExecutionCompleted: noop,
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
     EventType.DecisionTaskTimedOut: noop,  # TODO: check
