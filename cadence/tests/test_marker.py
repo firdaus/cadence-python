@@ -5,6 +5,7 @@ import pytest
 
 from cadence.cadence_types import WorkflowType, DecisionType, MarkerRecordedEventAttributes, Header, HistoryEvent, \
     EventType
+from cadence.clock_decision_context import VERSION_MARKER_NAME
 from cadence.decision_loop import ReplayDecider, DecisionContext, DecisionEvents
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.marker import MarkerData, MUTABLE_MARKER_HEADER_KEY, MarkerHandler, MarkerInterface, PlainMarkerData, \
@@ -189,3 +190,17 @@ def test_handle_not_replaying_callback_returns_none(decision_context):
     ret = handler.handle("the-id", callback)
     assert ret == b'123'
     assert len(decision_context.decider.decisions) == 0
+
+
+def test_marker_handler_set_data():
+    handler = MarkerHandler(decision_context=Mock(), marker_name=VERSION_MARKER_NAME)
+    handler.set_data("abc", b"stuff")
+    assert "abc" in handler.mutable_marker_results
+    assert handler.mutable_marker_results["abc"].data == b"stuff"
+
+
+def test_marker_handler_mark_replayed():
+    handler = MarkerHandler(decision_context=Mock(), marker_name=VERSION_MARKER_NAME)
+    handler.set_data("abc", b"stuff")
+    handler.mark_replayed("abc")
+    assert handler.mutable_marker_results["abc"].replayed
