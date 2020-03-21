@@ -45,6 +45,7 @@ version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ Mar
 
 Post 2.0:
 - [ ] sideEffect/mutableSideEffect
+- [ ] Local activity
 - [ ] Parallel activity execution
 - [ ] Timers
 - [ ] Cancellation Scopes
