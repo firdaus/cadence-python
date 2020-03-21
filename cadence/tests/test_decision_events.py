@@ -6,7 +6,7 @@ from cadence.decision_loop import DecisionEvents
 
 @pytest.fixture()
 def event_object():
-    return object()
+    return HistoryEvent()
 
 
 @pytest.fixture()
