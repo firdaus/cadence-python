@@ -6,7 +6,8 @@ from unittest.mock import Mock, MagicMock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision, \
-    ActivityTaskStartedEventAttributes
+    ActivityTaskStartedEventAttributes, MarkerRecordedEventAttributes
+from cadence.clock_decision_context import VERSION_MARKER_NAME
 from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents, \
     nano_to_milli
 from cadence.decisions import DecisionId, DecisionTarget
@@ -311,6 +312,27 @@ class TestReplayDecider(TestCase):
         self.decider.notify_decision_sent = MagicMock()
         self.decider.process_decision_events(decision_events)
         self.decider.notify_decision_sent.assert_called_once()
+
+    def test_process_decision_events_markers_first(self):
+        self.decider.event_loop = Mock()
+        marker_event = HistoryEvent(event_type=EventType.MarkerRecorded)
+        marker_event.marker_recorded_event_attributes = MarkerRecordedEventAttributes()
+        marker_event.marker_recorded_event_attributes.marker_name = VERSION_MARKER_NAME
+        events = [
+            HistoryEvent(event_type=EventType.WorkflowExecutionStarted,
+                         workflow_execution_started_event_attributes=WorkflowExecutionStartedEventAttributes()),
+            HistoryEvent(event_type=EventType.DecisionTaskScheduled),
+            marker_event
+        ]
+        decision_events = DecisionEvents([], events, replay=True,
+                                         replay_current_time_milliseconds=0,
+                                         next_decision_event_id=5)
+        self.decider.process_event = Mock()
+        self.decider.process_decision_events(decision_events)
+        self.decider.process_event.assert_called()
+        assert len(self.decider.process_event.call_args_list ) == 4
+        args, kwargs = self.decider.process_event.call_args_list[0]
+        assert id(args[0]) == id(marker_event)
 
     def test_activity_task_closed(self):
         state_machine: DecisionStateMachine = Mock()
