@@ -70,7 +70,7 @@ class MarkerData(MarkerInterface):
 class MarkerResult:
     data: bytes = None
     access_count: int = 0
-    replayed = False
+    replayed: bool = False
 
 
 @dataclass
