@@ -156,6 +156,17 @@ def test_handle_replaying_get_from_history_before_replay(decision_context):
     assert len(decision_context.decider.decisions) == 0
 
 
+def test_handle_replaying_get_from_history_after_replay(decision_context):
+    def callback(stored):
+        raise Exception("Should not be executed")
+
+    handler = MarkerHandler(decision_context=decision_context, marker_name="the-marker-name")
+    handler.mutable_marker_results["the-id"] = MarkerResult(data=b'123', access_count=35, replayed=False)
+    ret = handler.handle("the-id", callback)
+    assert ret == b'123'
+    assert len(decision_context.decider.decisions) == 1
+
+
 def test_handle_replaying_no_history(decision_context):
     def callback(stored):
         raise Exception("Should not be executed")
