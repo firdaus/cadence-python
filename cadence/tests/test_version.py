@@ -50,10 +50,12 @@ def test_clock_decision_context_get_version(decision_context):
 
 
 def test_clock_decision_context_get_version_stored(decision_context):
+    # is_replaying=True
     decision_context.workflow_clock.version_handler.mutable_marker_results["abc"] = MarkerResult(data="3")
     version = decision_context.workflow_clock.get_version("abc", 1, 5)
     assert version == 3
-    assert len(decision_context.decider.decisions) == 0
+    # decision needs to be emitted during replay to make things deterministic
+    assert len(decision_context.decider.decisions) == 1
 
 
 @pytest.fixture()
