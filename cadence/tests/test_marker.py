@@ -145,12 +145,12 @@ def test_get_marker_data_lower_access_count(marker_recorded_event, decision_cont
     assert data is None
 
 
-def test_handle_replaying_get_from_history(decision_context):
+def test_handle_replaying_get_from_history_before_replay(decision_context):
     def callback(stored):
         raise Exception("Should not be executed")
 
     handler = MarkerHandler(decision_context=decision_context, marker_name="the-marker-name")
-    handler.mutable_marker_results["the-id"] = MarkerResult(data=b'123', access_count=35)
+    handler.mutable_marker_results["the-id"] = MarkerResult(data=b'123', access_count=35, replayed=True)
     ret = handler.handle("the-id", callback)
     assert ret == b'123'
     assert len(decision_context.decider.decisions) == 0
