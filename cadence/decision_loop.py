@@ -581,7 +581,7 @@ class ReplayDecider:
     def handle_workflow_execution_started(self, event: HistoryEvent):
         start_event_attributes = event.workflow_execution_started_event_attributes
         self.decision_context.set_current_run_id(start_event_attributes.original_execution_run_id)
-        if start_event_attributes.input is None:
+        if start_event_attributes.input is None or start_event_attributes.input == b'':
             workflow_input = []
         else:
             workflow_input = json_to_args(start_event_attributes.input)
