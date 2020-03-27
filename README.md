@@ -5,7 +5,7 @@
 ## Status / TODO
 
 cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
-version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ March 2020.
+version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ ~~March 2020~~ April 2020.
 
 1.0
 - [x] Tchannel implementation
