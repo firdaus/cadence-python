@@ -16,7 +16,20 @@ Behind the scenes, cadence-python uses [Cadence](https://github.com/uber/cadence
 
 For more information about the fault-oblivious programming model refer to the Cadence documentation [here](https://cadenceworkflow.io/docs/03_concepts/01_workflows)
 
-## Installation
+## Install Cadencce
+
+```
+wget https://raw.githubusercontent.com/uber/cadence/master/docker/docker-compose.yml
+docker-compose up
+```
+
+## Register `sample` domain
+
+```
+docker run --network=host --rm ubercadence/cli:master --do sample domain register -rd 1
+```
+
+## Installation cadence-python
 
 ```
 pip install cadence-client==1.0.0b1
