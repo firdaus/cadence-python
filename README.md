@@ -13,6 +13,7 @@ This programming model is useful whenever you need to ensure that a function run
 - Zapier/IFTTT like end user automation.
 - Chat bots
 - Multi-step forms
+- Scheduler/Cron jobs
 
 Behind the scenes, cadence-python uses [Cadence](https://github.com/uber/cadence) as its backend. 
 
