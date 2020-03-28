@@ -8,9 +8,11 @@ This programming model is useful whenever you need to ensure that a function run
 - CI/CD pipelines
 - Data pipelines
 - RPA
+- ETL
 - Marketing automation / Customer journeys / Customer engagement
 - Zapier/IFTTT like end user automation.
 - Chat bots
+- Multi-step forms
 
 Behind the scenes, cadence-python uses [Cadence](https://github.com/uber/cadence) as its backend. 
 
