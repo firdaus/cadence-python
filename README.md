@@ -12,7 +12,7 @@ This programming model is useful whenever you need to ensure that a function run
 - Zapier/IFTTT like end user automation.
 - Chat bots
 
-Behind the scenes, cadence-python uses the [Cadence](https://github.com/uber/cadence) as its backend. 
+Behind the scenes, cadence-python uses [Cadence](https://github.com/uber/cadence) as its backend. 
 
 For more information about the fault-oblivious programming model refer to the Cadence documentation [here](https://cadenceworkflow.io/docs/03_concepts/01_workflows)
 
