@@ -1,61 +1,25 @@
-# Python framework for Cadence Workflow Service
+# Fault-Oblivious Stateful Python Code
 
-[Cadence](https://github.com/uber/cadence) is a workflow engine developed at Uber Engineering. With this framework, workflows and activities managed by Cadence can be implemented in Python code.
+cadence-python allows you to create Python functions that have their state (local variables etc..) implicitly saved such that if the process/machine fails the state of the function is not lost and can resume from where it left off. 
 
-## Status / TODO
+This programming model is useful whenever you need to ensure that a function runs to completion. For example:
 
-cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
-version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ ~~March 2020~~ April 2020.
+- Business logic involving multiple micro services
+- CI/CD pipelines
+- Data pipelines
+- RPA
+- Marketing automation / Customer journeys / Customer engagement
+- Zapier/IFTTT like end user automation.
+- Chat bots
 
-1.0
-- [x] Tchannel implementation
-- [x] Python-friendly wrapper around Cadence's Thrift API
-- [x] Author activities in Python
-- [x] Start workflows (synchronously)
-- [x] Create workflows
-- [x] Workflow execution in coroutines
-- [x] Invoke activities from workflows
-- [x] ActivityCompletionClient heartbeat, complete, complete_exceptionally
-- [x] Activity heartbeat, getHeartbeatDetails and doNotCompleteOnReturn
-- [x] Activity retry
-- [x] Activity getDomain(), getTaskToken(), getWorkflowExecution()
-- [x] Signals
-- [x] Queries
-- [x] Async workflow execution
-- [x] await
-- [x] now (currentTimeMillis)
-- [x] Sleep
-- [x] Loggers
-- [x] newRandom
-- [x] UUID
-- [x] Workflow Versioning
-- [x] WorkflowClient.newWorkflowStub(Class workflowInterface, String workflowId);
+Behind the scenes, cadence-python uses the [Cadence](https://github.com/uber/cadence) as its backend. 
 
-1.1
-- [ ] ActivityStub and Workflow.newUntypedActivityStub
-- [ ] Classes as arguments and return values to/from activity and workflow methods
-- [ ] WorkflowStub and WorkflowClient.newUntypedWorkflowStub
-- [ ] Custom workflow ids through start() and new_workflow_stub()
-- [ ] ContinueAsNew
-- [ ] Compatibility with Java client
-- [ ] Compatibility with Golang client
-
-2.0
-- [ ] Sticky workflows
-
-Post 2.0:
-- [ ] sideEffect/mutableSideEffect
-- [ ] Local activity
-- [ ] Parallel activity execution
-- [ ] Timers
-- [ ] Cancellation Scopes
-- [ ] Child Workflows
-- [ ] Explicit activity ids for activity invocations
+For more information about the fault-oblivious programming model refer to the Cadence documentation [here](https://cadenceworkflow.io/docs/03_concepts/01_workflows)
 
 ## Installation
 
 ```
-pip install cadence-client
+pip install cadence-client==1.0.0b1
 ```
 
 ## Hello World Sample
@@ -119,4 +83,56 @@ if __name__ == '__main__':
     worker.stop()
     print("Workers stopped...")
     sys.exit(0)
-```
+``` 
+
+## Status / TODO
+
+cadence-python is still under going heavy development. It should be considered EXPERIMENTAL at the moment. A production
+version is targeted to be released in ~~September of 2019~~ ~~January 2020~~ ~~March 2020~~ April 2020.
+
+1.0
+- [x] Tchannel implementation
+- [x] Python-friendly wrapper around Cadence's Thrift API
+- [x] Author activities in Python
+- [x] Start workflows (synchronously)
+- [x] Create workflows
+- [x] Workflow execution in coroutines
+- [x] Invoke activities from workflows
+- [x] ActivityCompletionClient heartbeat, complete, complete_exceptionally
+- [x] Activity heartbeat, getHeartbeatDetails and doNotCompleteOnReturn
+- [x] Activity retry
+- [x] Activity getDomain(), getTaskToken(), getWorkflowExecution()
+- [x] Signals
+- [x] Queries
+- [x] Async workflow execution
+- [x] await
+- [x] now (currentTimeMillis)
+- [x] Sleep
+- [x] Loggers
+- [x] newRandom
+- [x] UUID
+- [x] Workflow Versioning
+- [x] WorkflowClient.newWorkflowStub(Class workflowInterface, String workflowId);
+
+1.1
+- [ ] ActivityStub and Workflow.newUntypedActivityStub
+- [ ] Classes as arguments and return values to/from activity and workflow methods
+- [ ] WorkflowStub and WorkflowClient.newUntypedWorkflowStub
+- [ ] Custom workflow ids through start() and new_workflow_stub()
+- [ ] ContinueAsNew
+- [ ] Compatibility with Java client
+- [ ] Compatibility with Golang client
+
+2.0
+- [ ] Sticky workflows
+
+Post 2.0:
+- [ ] sideEffect/mutableSideEffect
+- [ ] Local activity
+- [ ] Parallel activity execution
+- [ ] Timers
+- [ ] Cancellation Scopes
+- [ ] Child Workflows
+- [ ] Explicit activity ids for activity invocations
+
+
