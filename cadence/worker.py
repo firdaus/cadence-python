@@ -5,6 +5,7 @@ import threading
 import logging
 import time
 
+from cadence.constants import DEFAULT_SOCKET_TIMEOUT_SECONDS
 from cadence.conversions import camel_to_snake, snake_to_camel
 from cadence.workflow import WorkflowMethod, SignalMethod, QueryMethod
 from cadence.workflowservice import WorkflowService
@@ -69,6 +70,7 @@ class Worker:
     threads_stopped: int = 0
     stop_requested: bool = False
     service_instances: List[WorkflowService] = field(default_factory=list)
+    timeout: int = DEFAULT_SOCKET_TIMEOUT_SECONDS
 
     def register_activities_implementation(self, activities_instance: object, activities_cls_name: str = None):
         cls_name = activities_cls_name if activities_cls_name else type(activities_instance).__name__
@@ -149,4 +151,9 @@ class Worker:
     def manage_service(self, service: WorkflowService):
         self.service_instances.append(service)
 
+    def set_timeout(self, timeout):
+        self.timeout = timeout
+
+    def get_timeout(self):
+        return self.timeout
 

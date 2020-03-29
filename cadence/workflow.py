@@ -16,6 +16,7 @@ from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionR
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest, QueryWorkflowRequest, WorkflowQuery, \
     QueryWorkflowResponse
+from cadence.constants import DEFAULT_SOCKET_TIMEOUT_SECONDS
 from cadence.conversions import args_to_json, json_to_args
 from cadence.errors import QueryFailedError
 from cadence.exception_handling import deserialize_exception
@@ -107,8 +108,8 @@ class WorkflowClient:
 
     @classmethod
     def new_client(cls, host: str = "localhost", port: int = 7933, domain: str = "",
-                   options: WorkflowClientOptions = None) -> WorkflowClient:
-        service = WorkflowService.create(host, port)
+                   options: WorkflowClientOptions = None, timeout: int = DEFAULT_SOCKET_TIMEOUT_SECONDS) -> WorkflowClient:
+        service = WorkflowService.create(host, port, timeout=timeout)
         return cls(service=service, domain=domain, options=options)
 
     @classmethod

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def activity_task_loop(worker: Worker):
-    service: WorkflowService = WorkflowService.create(worker.host, worker.port)
+    service: WorkflowService = WorkflowService.create(worker.host, worker.port, timeout=worker.get_timeout())
     worker.manage_service(service)
     logger.info(f"Activity task worker started: {WorkflowService.get_identity()}")
     try:

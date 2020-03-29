@@ -847,7 +847,7 @@ class DecisionTaskLoop:
             logger.info(f"Decision task worker started: {WorkflowService.get_identity()}")
             event_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(event_loop)
-            self.service = WorkflowService.create(self.worker.host, self.worker.port)
+            self.service = WorkflowService.create(self.worker.host, self.worker.port, timeout=self.worker.get_timeout())
             self.worker.manage_service(self.service)
             while True:
                 if self.worker.is_stop_requested():
