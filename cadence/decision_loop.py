@@ -4,6 +4,7 @@ import asyncio
 import contextvars
 import datetime
 import json
+import socket
 import uuid
 import random
 import logging
@@ -35,7 +36,7 @@ from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowExc
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
     TimerDecisionStateMachine, MarkerDecisionStateMachine
 from cadence.tchannel import TChannelException
-from cadence.worker import Worker
+from cadence.worker import Worker, StopRequestedException
 from cadence.workflow import QueryMethod
 from cadence.workflowservice import WorkflowService
 
@@ -850,23 +851,27 @@ class DecisionTaskLoop:
             self.service = WorkflowService.create(self.worker.host, self.worker.port, timeout=self.worker.get_timeout())
             self.worker.manage_service(self.service)
             while True:
-                if self.worker.is_stop_requested():
+                try:
+                    if self.worker.is_stop_requested():
+                        return
+                    self.service.set_next_timeout_cb(self.worker.raise_if_stop_requested)
+                    decision_task: PollForDecisionTaskResponse = self.poll()
+                    if not decision_task:
+                        continue
+                    if decision_task.query:
+                        try:
+                            result = self.process_query(decision_task)
+                            self.respond_query(decision_task.task_token, result, None)
+                        except Exception as ex:
+                            logger.error("Error")
+                            self.respond_query(decision_task.task_token, None, serialize_exception(ex))
+                    else:
+                        decisions = self.process_task(decision_task)
+                        self.respond_decisions(decision_task.task_token, decisions)
+                except StopRequestedException:
                     return
-                decision_task: PollForDecisionTaskResponse = self.poll()
-                if not decision_task:
-                    continue
-                if decision_task.query:
-                    try:
-                        result = self.process_query(decision_task)
-                        self.respond_query(decision_task.task_token, result, None)
-                    except Exception as ex:
-                        logger.error("Error")
-                        self.respond_query(decision_task.task_token, None, serialize_exception(ex))
-                else:
-                    decisions = self.process_task(decision_task)
-                    self.respond_decisions(decision_task.task_token, decisions)
         finally:
-            # noinspection PyPep8,PyBroadException
+        # noinspection PyPep8,PyBroadException
             try:
                 self.service.close()
             except:

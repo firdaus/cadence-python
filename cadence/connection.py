@@ -4,7 +4,7 @@ import os
 import socket
 from dataclasses import dataclass
 from io import BytesIO
-from typing import IO, List, Union, Optional, Dict
+from typing import IO, List, Union, Optional, Dict, Callable
 
 from cadence.frames import InitReqFrame, Frame, Arg, CallReqFrame, CallReqContinueFrame, CallResFrame, \
     CallResContinueFrame, FrameWithArgs, CallFlags, ErrorFrame
@@ -312,6 +312,9 @@ class TChannelConnection:
         self.current_id = -1
 
         self.handshake()
+
+    def set_next_timeout_cb(self, cb: Callable):
+        self.wrapper.set_next_timeout_cb(cb)
 
     def new_id(self):
         self.current_id += 1

@@ -157,3 +157,10 @@ class Worker:
     def get_timeout(self):
         return self.timeout
 
+    def raise_if_stop_requested(self):
+        if self.is_stop_requested():
+            raise StopRequestedException()
+
+
+class StopRequestedException(Exception):
+    pass

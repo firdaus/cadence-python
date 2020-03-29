@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Tuple, Callable
 from uuid import uuid4
 
 import os
@@ -31,8 +31,8 @@ TCHANNEL_SERVICE = "cadence-frontend"
 class WorkflowService:
 
     @classmethod
-    def create(cls, host: str, port: int):
-        connection = TChannelConnection.open(host, port)
+    def create(cls, host: str, port: int, timeout: int = 0):
+        connection = TChannelConnection.open(host, port, timeout=timeout)
         return cls(connection)
 
     @classmethod
@@ -170,3 +170,6 @@ class WorkflowService:
 
     def close(self):
         self.connection.close()
+
+    def set_next_timeout_cb(self, cb: Callable):
+        self.connection.set_next_timeout_cb(cb)
