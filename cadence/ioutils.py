@@ -64,3 +64,6 @@ class IOWrapper:
 
     def flush(self):
         self.io_stream.flush()
+
+    def close(self):
+        self.io_stream.close()

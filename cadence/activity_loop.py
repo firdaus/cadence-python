@@ -79,4 +79,8 @@ def activity_task_loop(worker: Worker):
                 process_end = datetime.datetime.now()
                 logger.info("Process ActivityTask: %dms", (process_end - process_start).total_seconds() * 1000)
     finally:
+        try:
+            service.close()
+        except:
+            logger.warning("service.close() failed", exc_info=1)
         worker.notify_thread_stopped()

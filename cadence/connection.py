@@ -343,6 +343,7 @@ class TChannelConnection:
 
     def close(self):
         self.s.close()
+        self.wrapper.close()
 
     def call_function(self, call: ThriftFunctionCall) -> ThriftFunctionResponse:
         frames = call.build_frames(self.new_id())

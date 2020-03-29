@@ -31,7 +31,7 @@ TCHANNEL_SERVICE = "cadence-frontend"
 class WorkflowService:
 
     @classmethod
-    def create(cls, host: str, port: int, timeout: int = 0):
+    def create(cls, host: str, port: int, timeout: int = None):
         connection = TChannelConnection.open(host, port, timeout=timeout)
         return cls(connection)
 
