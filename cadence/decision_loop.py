@@ -9,7 +9,7 @@ import uuid
 import random
 import logging
 import threading
-from asyncio.base_futures import CancelledError
+from asyncio import CancelledError
 from asyncio.events import AbstractEventLoop
 from asyncio.futures import Future
 from asyncio.tasks import Task
