@@ -11,7 +11,7 @@ from uuid import uuid4
 from six import reraise
 
 from cadence.activity import ActivityCompletionClient
-from cadence.activity_method import RetryParameters
+from cadence.activity_method import RetryParameters, ActivityOptions
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest, QueryWorkflowRequest, WorkflowQuery, \
@@ -28,13 +28,14 @@ from cadence.workflowservice import WorkflowService
 class Workflow:
 
     @staticmethod
-    def new_activity_stub(activities_cls, retry_parameters: RetryParameters = None):
+    def new_activity_stub(activities_cls, retry_parameters: RetryParameters = None, activity_options: ActivityOptions = None):
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         assert task
         cls = activities_cls()
         cls._decision_context = task.decider.decision_context
         cls._retry_parameters = retry_parameters
+        cls._activity_options = activity_options
         return cls
 
     @staticmethod
@@ -428,3 +429,4 @@ class WorkflowExecutionTerminatedException(Exception):
 
     def __str__(self) -> str:
         return self.reason
+

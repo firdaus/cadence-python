@@ -2,7 +2,7 @@ from _asyncio import get_event_loop
 from unittest import TestCase
 from unittest.mock import Mock, MagicMock
 
-from cadence.activity_method import activity_method, ExecuteActivityParameters
+from cadence.activity_method import activity_method, ExecuteActivityParameters, ActivityOptions
 from cadence.decision_loop import DecisionContext
 from cadence.tests.test_decision_context import run_once
 
@@ -134,3 +134,34 @@ class ActivityMethodTest(TestCase):
         self.decision_context.schedule_activity_task.assert_called_once()
         args, kwargs = self.decision_context.schedule_activity_task.call_args_list[0]
         self.assertEqual(b'[1, "one"]', kwargs["parameters"].input)
+
+    def test_invoke_with_activity_options(self):
+        class HelloActivities:
+            @activity_method(task_list="test-tasklist")
+            def hello(self, arg1, arg2):
+                pass
+
+        stub = HelloActivities()
+        stub._decision_context = self.decision_context
+        stub._retry_parameters = None
+        stub._activity_options = ActivityOptions(schedule_to_close_timeout_seconds=50,
+                                                 schedule_to_start_timeout_seconds=100,
+                                                 start_to_close_timeout_seconds=150,
+                                                 heartbeat_timeout_seconds=200,
+                                                 task_list="tasklist-tasklist-tasklist")
+
+        async def fn():
+            await stub.hello(1, "one")
+
+        loop = get_event_loop()
+        self.task = loop.create_task(fn())
+        run_once(loop)
+
+        self.decision_context.schedule_activity_task.assert_called_once()
+        args, kwargs = self.decision_context.schedule_activity_task.call_args_list[0]
+        parameters: ExecuteActivityParameters = kwargs["parameters"]
+        self.assertEquals(parameters.schedule_to_close_timeout_seconds, 50)
+        self.assertEquals(parameters.schedule_to_start_timeout_seconds, 100)
+        self.assertEquals(parameters.start_to_close_timeout_seconds, 150)
+        self.assertEquals(parameters.heartbeat_timeout_seconds, 200)
+        self.assertEquals(parameters.task_list, "tasklist-tasklist-tasklist")
