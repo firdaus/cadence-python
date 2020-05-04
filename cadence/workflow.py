@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
-from six import reraise
 
 from cadence.activity import ActivityCompletionClient
 from cadence.activity_method import RetryParameters, ActivityOptions

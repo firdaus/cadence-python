@@ -17,7 +17,6 @@ setuptools.setup(
         "dataclasses-json>=0.3.8",
         "more-itertools>=7.0.0",
         "ply>=3.11",
-        "six>=1.12.0",
         "tblib>=1.6.0",
         "thriftrw>=1.7.2",
     ],
