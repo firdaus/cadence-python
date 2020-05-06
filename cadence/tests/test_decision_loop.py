@@ -6,7 +6,8 @@ from unittest.mock import Mock, MagicMock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision, \
-    ActivityTaskStartedEventAttributes, MarkerRecordedEventAttributes
+    ActivityTaskStartedEventAttributes, MarkerRecordedEventAttributes, DecisionTaskFailedEventAttributes, \
+    DecisionTaskFailedCause
 from cadence.clock_decision_context import VERSION_MARKER_NAME
 from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents, \
     nano_to_milli
@@ -364,6 +365,18 @@ class TestReplayDecider(TestCase):
         state_machine.handle_started_event.assert_called()
         args, kwargs = state_machine.handle_started_event.call_args_list[0]
         self.assertIn(event, args)
+
+    def test_handle_decision_task_failed(self):
+        event = HistoryEvent(event_id=15)
+        event.event_type = EventType.DecisionTaskFailed
+        event.decision_task_failed_event_attributes = DecisionTaskFailedEventAttributes()
+        event.decision_task_failed_event_attributes.cause = DecisionTaskFailedCause.RESET_WORKFLOW
+        event.decision_task_failed_event_attributes.new_run_id = "the-new-run-id"
+        self.decider.decision_context = decision_context = MagicMock()
+        self.decider.handle_decision_task_failed(event)
+        decision_context.set_current_run_id.assert_called()
+        args, kwargs = decision_context.set_current_run_id.call_args_list[0]
+        assert args[0] == "the-new-run-id"
 
     def tearDown(self) -> None:
         self.decider.destroy()
