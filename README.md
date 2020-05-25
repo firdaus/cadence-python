@@ -1,3 +1,6 @@
+> I'm doing a survey to figure out the way forward for this library - https://airtable.com/shrJWfd63yBWSJKoI
+> Your feedback is very much appreciated!
+
 # Intro: Fault-Oblivious Stateful Python Code
 
 cadence-python allows you to create Python functions that have their state (local variables etc..) implicitly saved such that if the process/machine fails the state of the function is not lost and can resume from where it left off. 
