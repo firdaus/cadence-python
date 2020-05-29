@@ -1,3 +1,6 @@
+> I'm doing a survey to figure out the way forward for this library - https://airtable.com/shrJWfd63yBWSJKoI <br/>
+> Your feedback is very much appreciated!
+
 <p>
 <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/cadence-client">
 </p>

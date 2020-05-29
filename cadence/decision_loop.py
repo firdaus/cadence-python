@@ -27,7 +27,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes, \
     FailWorkflowExecutionDecisionAttributes, RecordMarkerDecisionAttributes, Header, WorkflowQuery, \
-    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse
+    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse, DecisionTaskFailedCause
 from cadence.conversions import json_to_args, args_to_json
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exception_handling import serialize_exception, deserialize_exception
@@ -674,6 +674,11 @@ class ReplayDecider:
     def handle_activity_task_timed_out(self, event: HistoryEvent):
         self.decision_context.handle_activity_task_timed_out(event)
 
+    def handle_decision_task_failed(self, event: HistoryEvent):
+        attr = event.decision_task_failed_event_attributes
+        if attr and attr.cause == DecisionTaskFailedCause.RESET_WORKFLOW:
+            self.decision_context.set_current_run_id(attr.new_run_id)
+
     def handle_workflow_execution_signaled(self, event: HistoryEvent):
         signaled_event_attributes = event.workflow_execution_signaled_event_attributes
         signal_input = signaled_event_attributes.input
@@ -816,6 +821,7 @@ event_handlers = {
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
     EventType.DecisionTaskTimedOut: noop,  # TODO: check
+    EventType.DecisionTaskFailed: ReplayDecider.handle_decision_task_failed,
     EventType.ActivityTaskScheduled: ReplayDecider.handle_activity_task_scheduled,
     EventType.ActivityTaskStarted: ReplayDecider.handle_activity_task_started,
     EventType.ActivityTaskCompleted: ReplayDecider.handle_activity_task_completed,
