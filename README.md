@@ -47,7 +47,7 @@ pip install cadence-client==1.0.0b2
 
 ## Hello World Sample
 
-```
+```python
 import sys
 import logging
 from cadence.activity_method import activity_method
@@ -70,7 +70,7 @@ class GreetingActivities:
 # Activities Implementation
 class GreetingActivitiesImpl:
     def compose_greeting(self, greeting: str, name: str):
-        return greeting + " " + name + "!"
+        return f"{greeting} {name}!"
 
 
 # Workflow Interface
