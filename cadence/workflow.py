@@ -89,6 +89,19 @@ class Workflow:
         task: ITask = ITask.current()
         return task.decider.decision_context.get_logger(name)
 
+    @staticmethod
+    def get_workflow_id():
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.workflow_id
+
+    @staticmethod
+    def get_execution_id():
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.execution_id
+
+
 
 class WorkflowStub:
     pass

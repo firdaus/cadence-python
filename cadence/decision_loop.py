@@ -537,6 +537,7 @@ class ReplayDecider:
     decision_events: DecisionEvents = None
     decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
     decision_context: DecisionContext = None
+    workflow_id: str = None
 
     activity_id_to_scheduled_event_id: Dict[str, int] = field(default_factory=dict)
 
@@ -910,14 +911,16 @@ class DecisionTaskLoop:
 
     def process_task(self, decision_task: PollForDecisionTaskResponse) -> List[Decision]:
         execution_id = str(decision_task.workflow_execution)
-        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker,
+                                workflow_id=decision_task.workflow_execution.workflow_id)
         decisions: List[Decision] = decider.decide(decision_task.history.events)
         decider.destroy()
         return decisions
 
     def process_query(self, decision_task: PollForDecisionTaskResponse) -> bytes:
         execution_id = str(decision_task.workflow_execution)
-        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker,
+                                workflow_id=decision_task.workflow_execution.workflow_id)
         decider.decide(decision_task.history.events)
         try:
             result = decider.query(decision_task, decision_task.query)
