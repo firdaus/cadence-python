@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
-from six import reraise
 
 from cadence.activity import ActivityCompletionClient
 from cadence.activity_method import RetryParameters, ActivityOptions
@@ -89,6 +88,19 @@ class Workflow:
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         return task.decider.decision_context.get_logger(name)
+
+    @staticmethod
+    def get_workflow_id():
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.workflow_id
+
+    @staticmethod
+    def get_execution_id():
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.execution_id
+
 
 
 class WorkflowStub:

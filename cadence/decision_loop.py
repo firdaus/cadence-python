@@ -27,7 +27,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes, \
     FailWorkflowExecutionDecisionAttributes, RecordMarkerDecisionAttributes, Header, WorkflowQuery, \
-    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse
+    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse, DecisionTaskFailedCause
 from cadence.conversions import json_to_args, args_to_json
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exception_handling import serialize_exception, deserialize_exception
@@ -537,6 +537,7 @@ class ReplayDecider:
     decision_events: DecisionEvents = None
     decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
     decision_context: DecisionContext = None
+    workflow_id: str = None
 
     activity_id_to_scheduled_event_id: Dict[str, int] = field(default_factory=dict)
 
@@ -673,6 +674,11 @@ class ReplayDecider:
 
     def handle_activity_task_timed_out(self, event: HistoryEvent):
         self.decision_context.handle_activity_task_timed_out(event)
+
+    def handle_decision_task_failed(self, event: HistoryEvent):
+        attr = event.decision_task_failed_event_attributes
+        if attr and attr.cause == DecisionTaskFailedCause.RESET_WORKFLOW:
+            self.decision_context.set_current_run_id(attr.new_run_id)
 
     def handle_workflow_execution_signaled(self, event: HistoryEvent):
         signaled_event_attributes = event.workflow_execution_signaled_event_attributes
@@ -816,6 +822,7 @@ event_handlers = {
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
     EventType.DecisionTaskTimedOut: noop,  # TODO: check
+    EventType.DecisionTaskFailed: ReplayDecider.handle_decision_task_failed,
     EventType.ActivityTaskScheduled: ReplayDecider.handle_activity_task_scheduled,
     EventType.ActivityTaskStarted: ReplayDecider.handle_activity_task_started,
     EventType.ActivityTaskCompleted: ReplayDecider.handle_activity_task_completed,
@@ -904,14 +911,16 @@ class DecisionTaskLoop:
 
     def process_task(self, decision_task: PollForDecisionTaskResponse) -> List[Decision]:
         execution_id = str(decision_task.workflow_execution)
-        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker,
+                                workflow_id=decision_task.workflow_execution.workflow_id)
         decisions: List[Decision] = decider.decide(decision_task.history.events)
         decider.destroy()
         return decisions
 
     def process_query(self, decision_task: PollForDecisionTaskResponse) -> bytes:
         execution_id = str(decision_task.workflow_execution)
-        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker,
+                                workflow_id=decision_task.workflow_execution.workflow_id)
         decider.decide(decision_task.history.events)
         try:
             result = decider.query(decision_task, decision_task.query)
