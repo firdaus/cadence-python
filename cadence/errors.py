@@ -8,6 +8,9 @@ from typing import Optional
 class BadRequestError(Exception):
     message: str
 
+    def __str__(self):
+        return self.message
+
 
 @dataclass
 class InternalServiceError(Exception):
@@ -37,6 +40,9 @@ class WorkflowExecutionAlreadyStartedError(Exception):
 @dataclass
 class EntityNotExistsError(Exception):
     message: str
+
+    def __str__(self):
+        return self.message
 
 
 @dataclass

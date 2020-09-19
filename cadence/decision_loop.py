@@ -4,11 +4,12 @@ import asyncio
 import contextvars
 import datetime
 import json
+import socket
 import uuid
 import random
 import logging
 import threading
-from asyncio.base_futures import CancelledError
+from asyncio import CancelledError
 from asyncio.events import AbstractEventLoop
 from asyncio.futures import Future
 from asyncio.tasks import Task
@@ -26,7 +27,7 @@ from cadence.cadence_types import PollForDecisionTaskRequest, TaskList, PollForD
     HistoryEvent, EventType, WorkflowType, ScheduleActivityTaskDecisionAttributes, \
     CancelWorkflowExecutionDecisionAttributes, StartTimerDecisionAttributes, TimerFiredEventAttributes, \
     FailWorkflowExecutionDecisionAttributes, RecordMarkerDecisionAttributes, Header, WorkflowQuery, \
-    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse
+    RespondQueryTaskCompletedRequest, QueryTaskCompletedType, QueryWorkflowResponse, DecisionTaskFailedCause
 from cadence.conversions import json_to_args, args_to_json
 from cadence.decisions import DecisionId, DecisionTarget
 from cadence.exception_handling import serialize_exception, deserialize_exception
@@ -35,7 +36,7 @@ from cadence.exceptions import WorkflowTypeNotFound, NonDeterministicWorkflowExc
 from cadence.state_machines import ActivityDecisionStateMachine, DecisionStateMachine, CompleteWorkflowStateMachine, \
     TimerDecisionStateMachine, MarkerDecisionStateMachine
 from cadence.tchannel import TChannelException
-from cadence.worker import Worker
+from cadence.worker import Worker, StopRequestedException
 from cadence.workflow import QueryMethod
 from cadence.workflowservice import WorkflowService
 
@@ -536,6 +537,7 @@ class ReplayDecider:
     decision_events: DecisionEvents = None
     decisions: OrderedDict[DecisionId, DecisionStateMachine] = field(default_factory=OrderedDict)
     decision_context: DecisionContext = None
+    workflow_id: str = None
 
     activity_id_to_scheduled_event_id: Dict[str, int] = field(default_factory=dict)
 
@@ -581,7 +583,7 @@ class ReplayDecider:
     def handle_workflow_execution_started(self, event: HistoryEvent):
         start_event_attributes = event.workflow_execution_started_event_attributes
         self.decision_context.set_current_run_id(start_event_attributes.original_execution_run_id)
-        if start_event_attributes.input is None:
+        if start_event_attributes.input is None or start_event_attributes.input == b'':
             workflow_input = []
         else:
             workflow_input = json_to_args(start_event_attributes.input)
@@ -672,6 +674,11 @@ class ReplayDecider:
 
     def handle_activity_task_timed_out(self, event: HistoryEvent):
         self.decision_context.handle_activity_task_timed_out(event)
+
+    def handle_decision_task_failed(self, event: HistoryEvent):
+        attr = event.decision_task_failed_event_attributes
+        if attr and attr.cause == DecisionTaskFailedCause.RESET_WORKFLOW:
+            self.decision_context.set_current_run_id(attr.new_run_id)
 
     def handle_workflow_execution_signaled(self, event: HistoryEvent):
         signaled_event_attributes = event.workflow_execution_signaled_event_attributes
@@ -811,9 +818,11 @@ def on_timer_canceled(self: ReplayDecider, event: HistoryEvent):
 event_handlers = {
     EventType.WorkflowExecutionStarted: ReplayDecider.handle_workflow_execution_started,
     EventType.WorkflowExecutionCancelRequested: ReplayDecider.handle_workflow_execution_cancel_requested,
+    EventType.WorkflowExecutionCompleted: noop,
     EventType.DecisionTaskScheduled: noop,
     EventType.DecisionTaskStarted: noop,  # Filtered by HistoryHelper
     EventType.DecisionTaskTimedOut: noop,  # TODO: check
+    EventType.DecisionTaskFailed: ReplayDecider.handle_decision_task_failed,
     EventType.ActivityTaskScheduled: ReplayDecider.handle_activity_task_scheduled,
     EventType.ActivityTaskStarted: ReplayDecider.handle_activity_task_started,
     EventType.ActivityTaskCompleted: ReplayDecider.handle_activity_task_completed,
@@ -846,26 +855,30 @@ class DecisionTaskLoop:
             logger.info(f"Decision task worker started: {WorkflowService.get_identity()}")
             event_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(event_loop)
-            self.service = WorkflowService.create(self.worker.host, self.worker.port)
+            self.service = WorkflowService.create(self.worker.host, self.worker.port, timeout=self.worker.get_timeout())
             self.worker.manage_service(self.service)
             while True:
-                if self.worker.is_stop_requested():
+                try:
+                    if self.worker.is_stop_requested():
+                        return
+                    self.service.set_next_timeout_cb(self.worker.raise_if_stop_requested)
+                    decision_task: PollForDecisionTaskResponse = self.poll()
+                    if not decision_task:
+                        continue
+                    if decision_task.query:
+                        try:
+                            result = self.process_query(decision_task)
+                            self.respond_query(decision_task.task_token, result, None)
+                        except Exception as ex:
+                            logger.error("Error")
+                            self.respond_query(decision_task.task_token, None, serialize_exception(ex))
+                    else:
+                        decisions = self.process_task(decision_task)
+                        self.respond_decisions(decision_task.task_token, decisions)
+                except StopRequestedException:
                     return
-                decision_task: PollForDecisionTaskResponse = self.poll()
-                if not decision_task:
-                    continue
-                if decision_task.query:
-                    try:
-                        result = self.process_query(decision_task)
-                        self.respond_query(decision_task.task_token, result, None)
-                    except Exception as ex:
-                        logger.error("Error")
-                        self.respond_query(decision_task.task_token, None, serialize_exception(ex))
-                else:
-                    decisions = self.process_task(decision_task)
-                    self.respond_decisions(decision_task.task_token, decisions)
         finally:
-            # noinspection PyPep8,PyBroadException
+        # noinspection PyPep8,PyBroadException
             try:
                 self.service.close()
             except:
@@ -898,14 +911,16 @@ class DecisionTaskLoop:
 
     def process_task(self, decision_task: PollForDecisionTaskResponse) -> List[Decision]:
         execution_id = str(decision_task.workflow_execution)
-        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker,
+                                workflow_id=decision_task.workflow_execution.workflow_id)
         decisions: List[Decision] = decider.decide(decision_task.history.events)
         decider.destroy()
         return decisions
 
     def process_query(self, decision_task: PollForDecisionTaskResponse) -> bytes:
         execution_id = str(decision_task.workflow_execution)
-        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker)
+        decider = ReplayDecider(execution_id, decision_task.workflow_type, self.worker,
+                                workflow_id=decision_task.workflow_execution.workflow_id)
         decider.decide(decision_task.history.events)
         try:
             result = decider.query(decision_task, decision_task.query)

@@ -1,13 +1,30 @@
-from typing import IO
+from select import select
+from socket import socket
+from typing import IO, Callable
 
 
 class IOWrapper:
-    io_stream: IO
-
-    def __init__(self, io_stream: IO):
+    def __init__(self, io_stream: IO, socket_: socket = None):
         self.io_stream = io_stream
+        self.socket = socket_
+        self.next_timeout_cb = None
+
+    def set_next_timeout_cb(self, cb: Callable):
+        self.next_timeout_cb = cb
 
     def read_or_eof(self, size, field):
+        if self.next_timeout_cb and self.socket:
+            timeout = self.socket.gettimeout()
+            self.socket.setblocking(False)
+            while True:
+                ready_to_read, _, _ = select([self.socket], [], [], 1)
+                if ready_to_read:
+                    break
+                else:
+                    self.next_timeout_cb()
+            self.next_timeout_cb = None
+            self.socket.setblocking(True)
+            self.socket.settimeout(timeout)
         buf: bytes = self.io_stream.read(size)
         if len(buf) != size:
             raise EOFError(field)
@@ -31,7 +48,7 @@ class IOWrapper:
         return str(buf, "utf-8")
 
     def write_short(self, v: int):
-        self.io_stream.write(v.to_bytes(2, byteorder='big', signed= False))
+        self.io_stream.write(v.to_bytes(2, byteorder='big', signed=False))
 
     def write_long(self, v: int):
         self.io_stream.write(v.to_bytes(4, byteorder='big', signed=False))
@@ -47,3 +64,6 @@ class IOWrapper:
 
     def flush(self):
         self.io_stream.flush()
+
+    def close(self):
+        self.io_stream.close()

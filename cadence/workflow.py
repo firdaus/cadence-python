@@ -8,14 +8,14 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Type, Dict, Tuple
 from uuid import uuid4
 
-from six import reraise
 
 from cadence.activity import ActivityCompletionClient
-from cadence.activity_method import RetryParameters
+from cadence.activity_method import RetryParameters, ActivityOptions
 from cadence.cadence_types import WorkflowIdReusePolicy, StartWorkflowExecutionRequest, TaskList, WorkflowType, \
     GetWorkflowExecutionHistoryRequest, WorkflowExecution, HistoryEventFilterType, EventType, HistoryEvent, \
     StartWorkflowExecutionResponse, SignalWorkflowExecutionRequest, QueryWorkflowRequest, WorkflowQuery, \
     QueryWorkflowResponse
+from cadence.constants import DEFAULT_SOCKET_TIMEOUT_SECONDS
 from cadence.conversions import args_to_json, json_to_args
 from cadence.errors import QueryFailedError
 from cadence.exception_handling import deserialize_exception
@@ -27,13 +27,14 @@ from cadence.workflowservice import WorkflowService
 class Workflow:
 
     @staticmethod
-    def new_activity_stub(activities_cls, retry_parameters: RetryParameters = None):
+    def new_activity_stub(activities_cls, retry_parameters: RetryParameters = None, activity_options: ActivityOptions = None):
         from cadence.decision_loop import ITask
         task: ITask = ITask.current()
         assert task
         cls = activities_cls()
         cls._decision_context = task.decider.decision_context
         cls._retry_parameters = retry_parameters
+        cls._activity_options = activity_options
         return cls
 
     @staticmethod
@@ -88,6 +89,19 @@ class Workflow:
         task: ITask = ITask.current()
         return task.decider.decision_context.get_logger(name)
 
+    @staticmethod
+    def get_workflow_id():
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.workflow_id
+
+    @staticmethod
+    def get_execution_id():
+        from cadence.decision_loop import ITask
+        task: ITask = ITask.current()
+        return task.decider.execution_id
+
+
 
 class WorkflowStub:
     pass
@@ -107,8 +121,8 @@ class WorkflowClient:
 
     @classmethod
     def new_client(cls, host: str = "localhost", port: int = 7933, domain: str = "",
-                   options: WorkflowClientOptions = None) -> WorkflowClient:
-        service = WorkflowService.create(host, port)
+                   options: WorkflowClientOptions = None, timeout: int = DEFAULT_SOCKET_TIMEOUT_SECONDS) -> WorkflowClient:
+        service = WorkflowService.create(host, port, timeout=timeout)
         return cls(service=service, domain=domain, options=options)
 
     @classmethod
@@ -427,3 +441,4 @@ class WorkflowExecutionTerminatedException(Exception):
 
     def __str__(self) -> str:
         return self.reason
+

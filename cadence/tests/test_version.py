@@ -50,10 +50,12 @@ def test_clock_decision_context_get_version(decision_context):
 
 
 def test_clock_decision_context_get_version_stored(decision_context):
+    # is_replaying=True
     decision_context.workflow_clock.version_handler.mutable_marker_results["abc"] = MarkerResult(data="3")
     version = decision_context.workflow_clock.get_version("abc", 1, 5)
     assert version == 3
-    assert len(decision_context.decider.decisions) == 0
+    # decision needs to be emitted during replay to make things deterministic
+    assert len(decision_context.decider.decisions) == 1
 
 
 @pytest.fixture()
@@ -86,10 +88,10 @@ def version_decision_context(version_marker_recorded_event):
 
 
 def test_clock_decision_context_from_replay(version_decision_context):
-    version_decision_context.workflow_clock.set_replaying(True)
-    version = version_decision_context.workflow_clock.get_version("abc", 1, 5)
-    assert version == -1
-    assert len(version_decision_context.decider.decisions) == 0
+    with pytest.raises(Exception) as exc_info:
+        version_decision_context.workflow_clock.set_replaying(True)
+        version = version_decision_context.workflow_clock.get_version("abc", 1, 5)
+    assert "Version -1 of changeID abc is not supported. Supported version is between 1 and 5" in str(exc_info.value)
 
 
 def test_validate_version(version_decision_context):

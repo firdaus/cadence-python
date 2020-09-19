@@ -53,7 +53,7 @@ if __name__ == '__main__':
     client = WorkflowClient.new_client(domain=DOMAIN)
     greeting_workflow: GreetingWorkflow = client.new_workflow_stub(GreetingWorkflow)
     execution = WorkflowClient.start(greeting_workflow.get_greeting, "Python")
-    print("Started: workflow_id={} run_id={}".format(execution.workflow_id, execution.run_id))
+    print("Started: workflow_id={} run_id={}".format(execution.workflow_execution.workflow_id, execution.workflow_execution.run_id))
     print("Result: " + str(client.wait_for_close(execution)))
 
     print("Stopping workers....")

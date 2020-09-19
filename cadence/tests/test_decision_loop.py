@@ -6,7 +6,9 @@ from unittest.mock import Mock, MagicMock
 
 from cadence.cadence_types import HistoryEvent, EventType, PollForDecisionTaskResponse, \
     ScheduleActivityTaskDecisionAttributes, WorkflowExecutionStartedEventAttributes, Decision, \
-    ActivityTaskStartedEventAttributes
+    ActivityTaskStartedEventAttributes, MarkerRecordedEventAttributes, DecisionTaskFailedEventAttributes, \
+    DecisionTaskFailedCause
+from cadence.clock_decision_context import VERSION_MARKER_NAME
 from cadence.decision_loop import HistoryHelper, is_decision_event, DecisionTaskLoop, ReplayDecider, DecisionEvents, \
     nano_to_milli
 from cadence.decisions import DecisionId, DecisionTarget
@@ -236,6 +238,7 @@ class TestDecideNextDecisionId(TestCase):
         worker.get_workflow_method = MagicMock(return_value=(DummyWorkflow, lambda *args: None))
         self.decider = ReplayDecider(execution_id="", workflow_type=Mock(), worker=worker)
         self.decider.event_loop = Mock()
+        self.decider.process_event = Mock()
 
     def test_first_decision_next_decision_id(self):
         self.decider.process_decision_events(self.decision_events)
@@ -309,8 +312,30 @@ class TestReplayDecider(TestCase):
                                          replay_current_time_milliseconds=0,
                                          next_decision_event_id=5)
         self.decider.notify_decision_sent = MagicMock()
+        self.decider.process_event = Mock()
         self.decider.process_decision_events(decision_events)
         self.decider.notify_decision_sent.assert_called_once()
+
+    def test_process_decision_events_markers_first(self):
+        self.decider.event_loop = Mock()
+        marker_event = HistoryEvent(event_type=EventType.MarkerRecorded)
+        marker_event.marker_recorded_event_attributes = MarkerRecordedEventAttributes()
+        marker_event.marker_recorded_event_attributes.marker_name = VERSION_MARKER_NAME
+        events = [
+            HistoryEvent(event_type=EventType.WorkflowExecutionStarted,
+                         workflow_execution_started_event_attributes=WorkflowExecutionStartedEventAttributes()),
+            HistoryEvent(event_type=EventType.DecisionTaskScheduled),
+            marker_event
+        ]
+        decision_events = DecisionEvents([], events, replay=True,
+                                         replay_current_time_milliseconds=0,
+                                         next_decision_event_id=5)
+        self.decider.process_event = Mock()
+        self.decider.process_decision_events(decision_events)
+        self.decider.process_event.assert_called()
+        assert len(self.decider.process_event.call_args_list ) == 4
+        args, kwargs = self.decider.process_event.call_args_list[0]
+        assert id(args[0]) == id(marker_event)
 
     def test_activity_task_closed(self):
         state_machine: DecisionStateMachine = Mock()
@@ -340,6 +365,18 @@ class TestReplayDecider(TestCase):
         state_machine.handle_started_event.assert_called()
         args, kwargs = state_machine.handle_started_event.call_args_list[0]
         self.assertIn(event, args)
+
+    def test_handle_decision_task_failed(self):
+        event = HistoryEvent(event_id=15)
+        event.event_type = EventType.DecisionTaskFailed
+        event.decision_task_failed_event_attributes = DecisionTaskFailedEventAttributes()
+        event.decision_task_failed_event_attributes.cause = DecisionTaskFailedCause.RESET_WORKFLOW
+        event.decision_task_failed_event_attributes.new_run_id = "the-new-run-id"
+        self.decider.decision_context = decision_context = MagicMock()
+        self.decider.handle_decision_task_failed(event)
+        decision_context.set_current_run_id.assert_called()
+        args, kwargs = decision_context.set_current_run_id.call_args_list[0]
+        assert args[0] == "the-new-run-id"
 
     def tearDown(self) -> None:
         self.decider.destroy()
