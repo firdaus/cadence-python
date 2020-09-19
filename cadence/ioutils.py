@@ -1,8 +1,10 @@
 from select import select
 from socket import socket
 from typing import IO, Callable
+import logging
 
 
+logger = logging.getLogger(__name__)
 class IOWrapper:
     def __init__(self, io_stream: IO, socket_: socket = None):
         self.io_stream = io_stream
@@ -26,6 +28,8 @@ class IOWrapper:
             self.socket.setblocking(True)
             self.socket.settimeout(timeout)
         buf: bytes = self.io_stream.read(size)
+        logger.info(f"buffer content bytes: {buf.decode('utf-8')}")
+        logger.info(f"buffer contents: {buf.decode('utf-8')}")
         if len(buf) != size:
             raise EOFError(field)
         return buf
