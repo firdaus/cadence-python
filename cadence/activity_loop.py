@@ -42,6 +42,7 @@ def activity_task_loop(worker: Worker):
             if err:
                 logger.error("PollForActivityTask failed: %s", err)
                 try:
+                    logger.info(f"Possible that connection with cadence broke - so trying to re-establish")
                     service: WorkflowService = WorkflowService.create(worker.host, worker.port,
                                                                   timeout=worker.get_timeout())
                     worker.manage_service(service)
