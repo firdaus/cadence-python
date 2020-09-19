@@ -41,6 +41,7 @@ def activity_task_loop(worker: Worker):
                 try:
                     logger.info(f"Possible that connection with cadence broke - so trying to re-establish")
                     del worker.service_instances[worker.service_instances.index(service)]
+                    service.close()
                     service: WorkflowService = WorkflowService.create(worker.host, worker.port,
                                                                       timeout=worker.get_timeout())
                     worker.manage_service(service)
