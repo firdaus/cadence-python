@@ -29,7 +29,6 @@ class IOWrapper:
             self.socket.settimeout(timeout)
         buf: bytes = self.io_stream.read(size)
         logger.info(f"buffer content bytes: {buf}")
-        logger.info(f"buffer contents string: {buf.decode('utf-8')}")
         logger.info(f"buffer size: {len(buf)}")
         logger.info(f"size: {size}")
         if len(buf) != size:
