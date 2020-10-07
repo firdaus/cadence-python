@@ -1,3 +1,5 @@
+# TODO: Re-enable once interoperability is a design goal again
+"""
 from unittest import TestCase
 import logging.config
 from uuid import uuid4
@@ -39,4 +41,4 @@ class TestWorkflowExecutionFromJava(TestCase):
         greeting = stub.getGreeting("World")
         self.assertEqual("Hello World", greeting)
 
-
+"""

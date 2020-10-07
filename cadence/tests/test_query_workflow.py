@@ -60,7 +60,7 @@ def test_query_workflow():
 
     client = WorkflowClient.new_client(domain=DOMAIN)
     workflow: TestQueryWorkflow = client.new_workflow_stub(TestQueryWorkflow)
-    WorkflowClient.start(workflow.get_greetings)
+    workflow_ec = WorkflowClient.start(workflow.get_greetings)
 
     assert workflow.get_message() == "initial-message"
     workflow.put_message("second-message")
@@ -72,6 +72,10 @@ def test_query_workflow():
     assert isinstance(ex.__cause__, GreetingException)
 
     workflow.put_message("done")
+
+    client.wait_for_close(workflow_ec)
+
+    assert workflow.get_message() == "done"
 
     print("Stopping workers")
     worker.stop()

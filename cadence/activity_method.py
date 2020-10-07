@@ -54,6 +54,8 @@ def activity_method(func: Callable = None, name: str = "", schedule_to_close_tim
             assert self._decision_context
             assert stub_activity_fn._execute_parameters
             parameters = copy.deepcopy(stub_activity_fn._execute_parameters)
+            if hasattr(self, "_activity_options") and self._activity_options:
+                self._activity_options.fill_execute_activity_parameters(parameters)
             if self._retry_parameters:
                 parameters.retry_parameters = self._retry_parameters
             parameters.input = args_to_json(args).encode("utf-8")
@@ -80,3 +82,24 @@ def activity_method(func: Callable = None, name: str = "", schedule_to_close_tim
         raise Exception("activity_method must be called with arguments")
     else:
         return wrapper
+
+
+@dataclass
+class ActivityOptions:
+    schedule_to_close_timeout_seconds: int = None
+    schedule_to_start_timeout_seconds: int = None
+    start_to_close_timeout_seconds: int = None
+    heartbeat_timeout_seconds: int = None
+    task_list: str = None
+
+    def fill_execute_activity_parameters(self, execute_parameters: ExecuteActivityParameters):
+        if self.schedule_to_close_timeout_seconds is not None:
+            execute_parameters.schedule_to_close_timeout_seconds = self.schedule_to_close_timeout_seconds
+        if self.schedule_to_start_timeout_seconds is not None:
+            execute_parameters.schedule_to_start_timeout_seconds = self.schedule_to_start_timeout_seconds
+        if self.start_to_close_timeout_seconds is not None:
+            execute_parameters.start_to_close_timeout_seconds = self.start_to_close_timeout_seconds
+        if self.heartbeat_timeout_seconds is not None:
+            execute_parameters.heartbeat_timeout_seconds = self.heartbeat_timeout_seconds
+        if self.task_list is not None:
+            execute_parameters.task_list = self.task_list

@@ -6,13 +6,13 @@ from cadence.activity import ActivityContext, ActivityTask, complete_exceptional
 from cadence.cadence_types import PollForActivityTaskRequest, TaskListMetadata, TaskList, PollForActivityTaskResponse
 from cadence.conversions import json_to_args
 from cadence.workflowservice import WorkflowService
-from cadence.worker import Worker
+from cadence.worker import Worker, StopRequestedException
 
 logger = logging.getLogger(__name__)
 
 
 def activity_task_loop(worker: Worker):
-    service: WorkflowService = WorkflowService.create(worker.host, worker.port)
+    service: WorkflowService = WorkflowService.create(worker.host, worker.port, timeout=worker.get_timeout())
     worker.manage_service(service)
     logger.info(f"Activity task worker started: {WorkflowService.get_identity()}")
     try:
@@ -20,6 +20,8 @@ def activity_task_loop(worker: Worker):
             if worker.is_stop_requested():
                 return
             try:
+                service.set_next_timeout_cb(worker.raise_if_stop_requested)
+
                 polling_start = datetime.datetime.now()
                 polling_request = PollForActivityTaskRequest()
                 polling_request.task_list_metadata = TaskListMetadata()
@@ -32,6 +34,8 @@ def activity_task_loop(worker: Worker):
                 task, err = service.poll_for_activity_task(polling_request)
                 polling_end = datetime.datetime.now()
                 logger.debug("PollForActivityTask: %dms", (polling_end - polling_start).total_seconds() * 1000)
+            except StopRequestedException:
+                return
             except Exception as ex:
                 logger.error("PollForActivityTask error: %s", ex)
                 continue
@@ -75,4 +79,8 @@ def activity_task_loop(worker: Worker):
                 process_end = datetime.datetime.now()
                 logger.info("Process ActivityTask: %dms", (process_end - process_start).total_seconds() * 1000)
     finally:
+        try:
+            service.close()
+        except:
+            logger.warning("service.close() failed", exc_info=1)
         worker.notify_thread_stopped()

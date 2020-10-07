@@ -1,12 +1,14 @@
+import json
 from typing import Callable
 from unittest.mock import MagicMock, Mock
 
 import pytest
 
 from cadence.cadence_types import StartTimerDecisionAttributes, TimerFiredEventAttributes, HistoryEvent, \
-    TimerCanceledEventAttributes
-from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler
+    TimerCanceledEventAttributes, EventType, MarkerRecordedEventAttributes, Header
+from cadence.clock_decision_context import ClockDecisionContext, TimerCancellationHandler, VERSION_MARKER_NAME
 from cadence.exceptions import CancellationException
+from cadence.marker import MUTABLE_MARKER_HEADER_KEY
 from cadence.util import OpenRequestInfo
 
 TIMER_ID = 20
@@ -26,7 +28,7 @@ def decider():
 
 @pytest.fixture
 def clock_decision_context(decider):
-    context = ClockDecisionContext(decider=decider)
+    context = ClockDecisionContext(decider=decider, decision_context=MagicMock())
     context.set_replay_current_time_milliseconds(REPLAY_CURRENT_TIME_MS)
     return context
 
@@ -146,3 +148,18 @@ def test_handle_timer_canceled(clock_decision_context, decider, request_info):
     assert args[0] is None
     assert isinstance(args[1], Exception)
 
+
+def test_handle_marker_recorded_version(clock_decision_context):
+    event = HistoryEvent(event_type=EventType.MarkerRecorded)
+    event.marker_recorded_event_attributes = MarkerRecordedEventAttributes()
+    event.marker_recorded_event_attributes.details = "Blahh"
+    event.marker_recorded_event_attributes.marker_name = VERSION_MARKER_NAME
+    event.marker_recorded_event_attributes.header = Header()
+    event.marker_recorded_event_attributes.header.fields[MUTABLE_MARKER_HEADER_KEY] = bytes(json.dumps({
+        "id": "the-id",
+        "eventId": 20,
+        "accessCount": 0
+    }), "utf-8")
+    clock_decision_context.handle_marker_recorded(event)
+    assert "the-id" in clock_decision_context.version_handler.mutable_marker_results
+    assert clock_decision_context.version_handler.mutable_marker_results["the-id"].data == "Blahh"

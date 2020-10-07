@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import getpass
-import os
 import socket
 from dataclasses import dataclass
 from io import BytesIO
-from typing import IO, List, Union, Optional, Dict
+from typing import IO, List, Union, Optional, Dict, Callable
 
 from cadence.frames import InitReqFrame, Frame, Arg, CallReqFrame, CallReqContinueFrame, CallResFrame, \
     CallResContinueFrame, FrameWithArgs, CallFlags, ErrorFrame
@@ -300,18 +299,22 @@ class TChannelConnection:
     s: socket.socket
 
     @classmethod
-    def open(cls, host: object, port: object) -> TChannelConnection:
+    def open(cls, host: object, port: object, timeout: int = None) -> TChannelConnection:
         s: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
         s.connect((host, port))
         return cls(s)
 
     def __init__(self, s: socket):
         self.s = s
         self.file = self.s.makefile("rwb")
-        self.wrapper = IOWrapper(self.file)
+        self.wrapper = IOWrapper(self.file, socket_=s)
         self.current_id = -1
 
         self.handshake()
+
+    def set_next_timeout_cb(self, cb: Callable):
+        self.wrapper.set_next_timeout_cb(cb)
 
     def new_id(self):
         self.current_id += 1
@@ -340,6 +343,7 @@ class TChannelConnection:
 
     def close(self):
         self.s.close()
+        self.wrapper.close()
 
     def call_function(self, call: ThriftFunctionCall) -> ThriftFunctionResponse:
         frames = call.build_frames(self.new_id())

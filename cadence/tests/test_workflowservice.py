@@ -341,19 +341,6 @@ class TestStartWorkflow(TestCase):
         self.assertIsNone(err)
         self.assertIsNotNone(response)
 
-    def test_query_workflow_timeout(self):
-        start_response, _ = self.service.start_workflow(self.request)
-        request = QueryWorkflowRequest()
-        request.domain = "test-domain"
-        request.execution = WorkflowExecution()
-        request.execution.workflow_id = self.request.workflow_id
-        request.execution.run_id = start_response.run_id
-        request.query = WorkflowQuery()
-        request.query.query_type = "getDummy"
-        request.query.query_args = None
-        with self.assertRaisesRegex(TChannelException, "timeout") as context:
-            self.service.query_workflow(request)
-
     def test_describe_workflow_execution(self):
         start_response, _ = self.service.start_workflow(self.request)
         request = DescribeWorkflowExecutionRequest()
