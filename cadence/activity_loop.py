@@ -38,10 +38,7 @@ def activity_task_loop(worker: Worker):
                 return
             except Exception as ex:
                 logger.error("PollForActivityTask error: %s", ex)
-                logger.info(f"trying to restart worker and returning from current method")
-                worker.stop()
-                worker.start()
-                return
+                raise
             if err:
                 logger.error("PollForActivityTask failed: %s", err)
                 continue
