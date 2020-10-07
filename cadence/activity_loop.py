@@ -42,6 +42,7 @@ def activity_task_loop(worker: Worker):
             if err:
                 logger.error("PollForActivityTask failed: %s", err)
                 logger.info(f"trying to restart worker and returning from current method")
+                worker.stop()
                 worker.start()
                 return
             task_token = task.task_token
