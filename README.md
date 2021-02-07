@@ -35,7 +35,7 @@ docker run --network=host --rm ubercadence/cli:master --do sample domain registe
 ## Installation cadence-python
 
 ```
-pip install cadence-client==1.0.0b3
+pip install cadence-client==1.0.0
 ```
 
 ## Hello World Sample

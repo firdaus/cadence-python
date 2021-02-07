@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="cadence-client",
-    version="1.0.0-beta4",
+    version="1.0.0",
     author="Mohammed Firdaus",
     author_email="firdaus.halim@gmail.com",
     description="Python framework for Cadence Workflow Service",
