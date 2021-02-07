@@ -139,7 +139,7 @@ def complete_exceptionally(service, task_token, ex: Exception) -> Optional[Excep
     respond: RespondActivityTaskFailedRequest = RespondActivityTaskFailedRequest()
     respond.task_token = task_token
     respond.identity = WorkflowService.get_identity()
-    respond.reason = "ActivityFailureException"
+    respond.reason = type(ex).__name__
     respond.details = serialize_exception(ex)
     _, error = service.respond_activity_task_failed(respond)
     return error
