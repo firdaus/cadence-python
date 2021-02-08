@@ -208,7 +208,7 @@ def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: W
     start_request = create_start_workflow_request(workflow_client, wm, args)
     start_response, err = workflow_client.service.start_workflow(start_request)
     if err:
-        raise Exception(err)
+        raise Exception(repr(err))
     execution = WorkflowExecution(workflow_id=start_request.workflow_id, run_id=start_response.run_id)
     stub_instance._execution = execution
     return WorkflowExecutionContext(workflow_type=wm._name, workflow_execution=execution)
