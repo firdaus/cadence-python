@@ -99,6 +99,11 @@ enum WorkflowIdReusePolicy {
    * do not allow start a workflow execution using the same workflow ID at all
    */
   RejectDuplicate,
+  /*
+   * Terminate existing runs before starting
+   * always allow new runs
+   */
+  TerminateIfRunning,
 }
 
 enum DomainStatus {
