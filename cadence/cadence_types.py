@@ -97,6 +97,7 @@ class WorkflowIdReusePolicy(IntEnum):
     AllowDuplicateFailedOnly = 0
     AllowDuplicate = 1
     RejectDuplicate = 2
+    TerminateIfRunning = 3
     
     @classmethod
     def value_for(cls, n: int) -> WorkflowIdReusePolicy:

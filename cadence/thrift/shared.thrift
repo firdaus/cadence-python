@@ -99,6 +99,16 @@ enum WorkflowIdReusePolicy {
    * do not allow start a workflow execution using the same workflow ID at all
    */
   RejectDuplicate,
+  /*
+   * Terminate any existing runs before starting
+   * Always allow starting a workflow execution using the same workflow ID,
+   * regardless of whether the last execution state was any of
+   * [completed, terminated, cancelled, timeouted, failed]
+   * This is the best option when:
+   *   1. Retriggering a workflow after it already completed
+   *   2. Changing the CRON schedule of a workflow
+   */
+  TerminateIfRunning,
 }
 
 enum DomainStatus {
