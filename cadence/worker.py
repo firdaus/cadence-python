@@ -15,15 +15,15 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class WorkerOptions:
-    max_concurrent_activity_execution_size: int = 1000
-    worker_activities_per_second: float = 100000
-    max_concurrent_local_activity_execution_size: int = 1000
-    worker_local_activities_per_second: float = 100000
-    task_list_activities_per_second: float = 100000
-    max_concurrent_activity_task_pollers: int = 2
-    max_concurrent_decision_task_execution_size: int = 1000
-    worker_decision_tasks_per_second: float = 100000
-    max_concurrent_decision_task_pollers: int = 2
+    max_concurrent_activity_execution_size: int = None
+    worker_activities_per_second: float = None
+    max_concurrent_local_activity_execution_size: int = None
+    worker_local_activities_per_second: float = None
+    task_list_activities_per_second: float = None
+    max_concurrent_activity_task_pollers: int = None
+    max_concurrent_decision_task_execution_size: int = None
+    worker_decision_tasks_per_second: float = None
+    max_concurrent_decision_task_pollers: int = None
 
 
 def _find_interface_class(impl_cls) -> type:
