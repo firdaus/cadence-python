@@ -20,12 +20,11 @@ def activity_task_loop(worker: Worker):
             if worker.is_stop_requested():
                 return
             try:
+                task_list_activities_per_second = (worker.options.task_list_activities_per_second if worker.options else None) or 20000
                 service.set_next_timeout_cb(worker.raise_if_stop_requested)
-
                 polling_start = datetime.datetime.now()
                 polling_request = PollForActivityTaskRequest()
-                polling_request.task_list_metadata = TaskListMetadata()
-                polling_request.task_list_metadata.max_tasks_per_second = 200000
+                polling_request.task_list_metadata = TaskListMetadata(max_tasks_per_second=task_list_activities_per_second)
                 polling_request.domain = worker.domain
                 polling_request.identity = WorkflowService.get_identity()
                 polling_request.task_list = TaskList()

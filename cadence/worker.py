@@ -70,7 +70,7 @@ class Worker:
     port: int = None
     domain: str = None
     task_list: str = None
-    options: WorkerOptions = None
+    options: WorkerOptions = WorkerOptions()
     activities: Dict[str, Callable] = field(default_factory=dict)
     workflow_methods: Dict[str, Tuple[type, Callable]] = field(default_factory=dict)
     service: WorkflowService = None
