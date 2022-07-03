@@ -203,7 +203,7 @@ class WorkflowClient:
         return ActivityCompletionClient(self.service)
 
 
-def exec_workflow(workflow_client, wm: WorkflowMethod, args, workflow_options: WorkflowOptions = None,
+def exec_workflow(workflow_client: WorkflowClient, wm: WorkflowMethod, args: List, workflow_options: WorkflowOptions = None,
                   stub_instance: object = None) -> WorkflowExecutionContext:
     start_request = create_start_workflow_request(workflow_client, wm, args)
     start_response, err = workflow_client.service.start_workflow(start_request)
